@@ -9,13 +9,10 @@ OBJ = $(SRC:.c=.o)
 all: a.out
 
 a.out: $(OBJ)
-	$(CC) $(CFLAGS) -o $* $^
-
-%.c:
-	$(CC) $(CFLAGS) -o $* $<
-
-%: $(OBJ)
 	$(CC) $(CFLAGS) -o $@ $^
+
+%: %.c
+	$(CC) $(CFLAGS) -o $@ $<
 
 clean:
 	rm -f *.o a.out $(basename $(SRC))
