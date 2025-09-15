@@ -11,5 +11,6 @@ void upper(char *grid) {
 
 void main() {
     char *grid = "awerz";
-    printf("%s", upper(grid));
+    upper(grid);
+    printf("%s", grid);
 }
