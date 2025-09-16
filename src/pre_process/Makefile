@@ -3,7 +3,7 @@ TARGET = test
 
 CC = gcc
 CFLAGS = -Wall -Wextra -g `sdl2-config --cflags`
-LDFLAGS = `sdl2-config --libs` -lSDL2_image
+LDFLAGS = `sdl2-config --libs` -lSDL2_image -lm
 
 SRCS = $(wildcard *.c)
 

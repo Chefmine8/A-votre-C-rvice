@@ -20,7 +20,7 @@ Image *createImage(int width, int height)
 }
 
 // get pixel at (x, y) return struct Pixel
-Pixel *getPixel(Image *img, int x, int y) 
+Pixel *getPixel(Image *img, int x, int y)
 {
     if (!(x >= 0 && x < img->width && y >= 0 && y < img->height))
     {
@@ -37,6 +37,21 @@ void setPixel(Image *img, int x, int y, Pixel *p)
     {
         img->pixels[y][x] = *p;
     }
+}
+
+// create a new image from a image struct
+Image *copyImage(Image *img)
+{
+    Image *new = createImage(img->width, img->height);
+    for (int y = 0; y < img->height; y++)
+    {
+        for (int x = 0; x < img->width; x++)
+        {
+            Pixel *newP = getPixel(img, x, y);
+            setPixel(new, x, y, newP);
+        }
+    }
+    return new;
 }
 
 // load a image (bmp, png, jpg..) and convert to custom struc Image to process
