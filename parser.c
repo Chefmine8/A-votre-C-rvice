@@ -11,30 +11,33 @@ void upper(char *grid) {
 
 char **read_file(char *file) {
     FILE *fichier = fopen(file, "r");
-    size_t n_ligne = 1;
-    size_t n_c = 1;
-    size_t i_ligne = 0;
-    size_t i_c = 0;
-    char **matrice = malloc(n_ligne);
     int c;
-
+    size_t n_c = 1;
+    size_t n_ligne = 1;
+    char **matrice = malloc(n_ligne * sizeof(char *));
+    char **final = matrice;
+    char *tmp = malloc(n_c * sizeof(char));
+    *matrice = tmp;
     while ((c = fgetc(fichier)) != EOF) {
         if (c == '\n') {
-            if (++i_ligne > n_ligne) matrice = realloc(matrice, ++n_ligne * sizeof(char*));
+            **matrice = '\0';
+            matrice = realloc(matrice, ++n_ligne * sizeof(char*));
             matrice++;
             n_c = 1;
-            *matrice = malloc(n_c);
+            *matrice = malloc(n_c * sizeof(char));
             continue;
         }
-        if (++i_c > n_c) *matrice = realloc(*matrice, ++n_c * sizeof(char));
+        *matrice = realloc(*matrice, ++n_c * sizeof(char));
+        **matrice++ = (char)c;
     }
+    *matrice = NULL;
+    return final;
 }
 
 
 
 int main() {
-    char grid[] = "awerz";
-    upper(grid);
-    printf("%s", grid);
+    char **test = read_file("test");
+    printf("%s", *test);
     return 0;
 }
