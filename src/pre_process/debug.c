@@ -8,7 +8,7 @@ int main()
 
     grayscaleImage(img);
 
-    Image *copy = sauvola(img, 10, 128, 0.7);
+    Image *copy = sauvola(img, 5, 128, 0.5);
 
     exportImage(copy, "output.bmp");
 }
