@@ -19,8 +19,8 @@ typedef struct
 
 // func
 Image *createImage(int width, int height);
-Pixel *getPixel(Image *img, int x, int y);
-void setPixel(Image *img, int x, int y, Pixel *p);
+Pixel *getPixel(const Image *img, int x, int y);
+void setPixel(const Image *img, int x, int y, const Pixel *p);
 Image *loadImage(const char *file);
-void exportImage(Image *img, const char *file);
-Image *copyImage(Image *img);
+void exportImage(const Image *img, const char *file);
+Image *copyImage(const Image *img);

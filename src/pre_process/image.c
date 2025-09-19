@@ -4,7 +4,7 @@
 #include <stdlib.h>
 
 // use to alloc memory for a new image
-Image *createImage(int width, int height)
+Image *createImage(const int width, const int height)
 {
     Image *img = malloc(sizeof(Image));
     img->width = width;
@@ -20,7 +20,7 @@ Image *createImage(int width, int height)
 }
 
 // get pixel at (x, y) return struct Pixel
-Pixel *getPixel(Image *img, int x, int y)
+Pixel *getPixel(const Image *img, const int x, const int y)
 {
     if (!(x >= 0 && x < img->width && y >= 0 && y < img->height))
     {
@@ -31,7 +31,7 @@ Pixel *getPixel(Image *img, int x, int y)
 }
 
 // change tu pixel at (x, y)
-void setPixel(Image *img, int x, int y, Pixel *p)
+void setPixel(const Image *img, const int x, const int y, const Pixel *p)
 {
     if (x >= 0 && x < img->width && y >= 0 && y < img->height)
     {
@@ -40,7 +40,7 @@ void setPixel(Image *img, int x, int y, Pixel *p)
 }
 
 // create a new image from a image struct
-Image *copyImage(Image *img)
+Image *copyImage(const Image *img)
 {
     Image *new = createImage(img->width, img->height);
     for (int y = 0; y < img->height; y++)
@@ -57,7 +57,7 @@ Image *copyImage(Image *img)
 // load a image (bmp, png, jpg..) and convert to custom struc Image to process
 Image *loadImage(const char *file)
 {
-    SDL_Surface *img = IMG_Load(file);
+    const SDL_Surface *img = IMG_Load(file);
     if (img == NULL)
     {
         printf("Failed to load the file\n");
@@ -70,11 +70,13 @@ Image *loadImage(const char *file)
     {
         for (int x = 0; x < img->w; x++)
         {
-            Uint32 *pixels = (Uint32 *)img->pixels;
-            Uint32 pixel = pixels[y * img->w + x];
+            Uint8 *pixels = (Uint8 *)img->pixels;
+            int bpp = img->format->BytesPerPixel;
+
+            Uint8 *pPixel = pixels + y * img->pitch + x * bpp;
 
             Uint8 r, g, b;
-            SDL_GetRGB(pixel, img->format, &r, &g, &b);
+            SDL_GetRGB(*(Uint32 *)pPixel, img->format, &r, &g, &b);
             Pixel p = {r, g, b};
             setPixel(img_load, x, y, &p);
             // printf("Pixel (%d,%d) = R:%d G:%d B:%d\n", x, y, r, g, b);
@@ -84,7 +86,7 @@ Image *loadImage(const char *file)
 }
 
 // export bmp file of image
-void exportImage(Image *img, const char *file)
+void exportImage(const Image *img, const char *file)
 {
     SDL_Surface *surf =
         SDL_CreateRGBSurfaceWithFormat(0,           // flags

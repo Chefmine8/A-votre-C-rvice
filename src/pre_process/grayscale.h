@@ -2,5 +2,5 @@
 
 #include "image.h"
 #include <stdint.h>
-void grayscaleImage(Image *img);
-Image *sauvola(Image *img, int n, int R, float k);
+void grayscaleImage(const Image *img);
+Image *sauvola(const Image *img, int n, int R, float k);
