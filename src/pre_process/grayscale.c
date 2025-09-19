@@ -19,7 +19,7 @@ void grayscaleImage(const Image *img) {
 }
 
 // Calculate the avarge grey level in a block of radius of a Image struc
-double avarage(const Image *img, const int x, const int y, const int radius) {
+double average(const Image *img, const int x, const int y, const int radius) {
     double sum = 0.0;
     const int count = (2 * radius + 1) * (2 * radius + 1);
     for (int i = x - radius; i <= x + radius; i++) {
@@ -36,11 +36,11 @@ double avarage(const Image *img, const int x, const int y, const int radius) {
 // of a Image struct
 double std_deviation(const Image *img, const int x, const int y, const int radius, const double avg) {
     double sum = 0.0;
-    int count = (2 * radius + 1) * (2 * radius + 1);
+    const int count = (2 * radius + 1) * (2 * radius + 1);
     for (int i = x - radius; i <= x + radius; i++) {
         for (int j = y - radius; j <= y + radius; j++) {
-            Pixel *p = getPixel(img, i, j);
-            double val = (double) (p->r);
+            const Pixel *p = getPixel(img, i, j);
+            const double val = (double) (p->r);
             sum += (val - avg) * (val - avg);
         }
     }
@@ -48,7 +48,7 @@ double std_deviation(const Image *img, const int x, const int y, const int radiu
     return sqrt(sum / count);
 }
 
-// sauvola algo
+// sauvola algo (https://craftofcoding.wordpress.com/2021/10/06/thresholding-algorithms-sauvola-local/)
 // n is radius for block size 
 // R is dynamic range of standard deviation (default=128)
 // k is constant value in range 0.2..0.5 (default = 0.5)
@@ -63,8 +63,8 @@ Image *sauvola(const Image *img, const int n, const int R, const float k) {
     for (int i = radius; i < w - radius; i++) {
         for (int j = radius; j < h - radius; j++) {
             // avarage
-            const double m = avarage(img, i, j, radius);
-            // standard deviation
+            const double m = average(img, i, j, radius);
+            // standard deviation (ecart type)
             const double s = std_deviation(img, i, j, radius, m);
 
             // result

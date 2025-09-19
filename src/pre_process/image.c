@@ -35,7 +35,8 @@ void setPixel(const Image *img, const int x, const int y, const Pixel *p)
 {
     if (x >= 0 && x < img->width && y >= 0 && y < img->height)
     {
-        img->pixels[y][x] = *p;
+        if(img->pixels != NULL)
+            img->pixels[y][x] = *p;
     }
 }
 
