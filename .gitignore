@@ -1,3 +1,6 @@
+#
+resources/dataset/data/
+resources/dataset/data2/
 # Prerequisites
 *.d
 
