@@ -1,16 +1,17 @@
 #include "grayscale.h"
 #include "image.h"
+#include "rotation.h"
 
 int main()
 {
     Image *img =
-        loadImage("../../resources/pre_process/input/level_2_image_2.png");
+        load_image("../../resources/pre_process/input/level_2_image_2.png");
 
-    Image *rot = rotateImage(img, 20);
+    Image *rot = manual_rotate_image(img, 20);
 
-    grayscaleImage(rot);
+    grayscale_image(rot);
 
     Image *bin = sauvola(rot, 10, 128, 0.07);
 
-    exportImage(getSDL_Surface(bin), "output.bmp");
+    export_image(get_sdl_surface(bin), "output.bmp");
 }

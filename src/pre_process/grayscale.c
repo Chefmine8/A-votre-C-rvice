@@ -5,19 +5,19 @@
 #include <stdio.h>
 
 // take custom Image struct amd process itch pixel to make it grey
-void grayscaleImage(const Image *img)
+void grayscale_image(const Image *img)
 {
     for (int y = 0; y < img->height; y++)
     {
         for (int x = 0; x < img->width; x++)
         {
-            Pixel *p = getPixel(img, x, y);
+            Pixel *p = get_pixel(img, x, y);
             const Uint8 gray =
                 (Uint8)(p->r * 0.2125 + p->g * 0.7154 + p->b * 0.0721);
             p->r = gray;
             p->g = gray;
             p->b = gray;
-            setPixel(img, x, y, p);
+            set_pixel(img, x, y, p);
         }
     }
 }
@@ -31,7 +31,7 @@ double average(const Image *img, const int x, const int y, const int radius)
     {
         for (int j = y - radius; j <= y + radius; j++)
         {
-            const Pixel *p = getPixel(img, i, j);
+            const Pixel *p = get_pixel(img, i, j);
             sum += (double)(p->r);
         }
     }
@@ -50,7 +50,7 @@ double std_deviation(const Image *img, const int x, const int y,
     {
         for (int j = y - radius; j <= y + radius; j++)
         {
-            const Pixel *p = getPixel(img, i, j);
+            const Pixel *p = get_pixel(img, i, j);
             const double val = (double)(p->r);
             sum += (val - avg) * (val - avg);
         }
@@ -69,7 +69,7 @@ Image *sauvola(const Image *img, const int n, const int R, const float k)
     const int w = img->width;
     const int h = img->height;
 
-    Image *copy = copyImage(img);
+    Image *copy = copy_image(img);
 
     const int radius = (n - 1) / 2;
 
@@ -85,7 +85,7 @@ Image *sauvola(const Image *img, const int n, const int R, const float k)
             // result
             const double threshold = m * (1 + k * ((s / R) - 1));
 
-            Pixel *p = getPixel(copy, i, j);
+            Pixel *p = get_pixel(copy, i, j);
             const double val = (double)(p->r);
 
             if (val < threshold)
@@ -93,14 +93,14 @@ Image *sauvola(const Image *img, const int n, const int R, const float k)
                 p->r = 0;
                 p->g = 0;
                 p->b = 0;
-                setPixel(copy, i, j, p);
+                set_pixel(copy, i, j, p);
             }
             else
             {
                 p->r = 255;
                 p->g = 255;
                 p->b = 255;
-                setPixel(copy, i, j, p);
+                set_pixel(copy, i, j, p);
             }
         }
     }

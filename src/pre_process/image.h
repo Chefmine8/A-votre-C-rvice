@@ -19,11 +19,10 @@ typedef struct
 } Image;
 
 // func
-Image *createImage(int width, int height);
-Pixel *getPixel(const Image *img, int x, int y);
-void setPixel(const Image *img, int x, int y, const Pixel *p);
-Image *loadImage(const char *file);
-void exportImage(SDL_Surface *surf, const char *file);
-SDL_Surface *getSDL_Surface(const Image *img);
-Image *copyImage(const Image *img);
-Image *rotateImage(const Image *src, double angle);
+Image *create_image(int width, int height);
+Pixel *get_pixel(const Image *img, int x, int y);
+void set_pixel(const Image *img, int x, int y, const Pixel *p);
+Image *load_image(const char *file);
+void export_image(SDL_Surface *surf, const char *file);
+SDL_Surface *get_sdl_surface(const Image *img);
+Image *copy_image(const Image *img);
