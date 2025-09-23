@@ -6,9 +6,11 @@ int main()
     Image *img =
         loadImage("../../resources/pre_process/input/level_2_image_2.png");
 
-    grayscaleImage(img);
+    Image *rot = rotateImage(img, 20);
 
-    Image *copy = sauvola(img, 10, 128, 0.07);
+    grayscaleImage(rot);
 
-    exportImage(copy, "output.bmp");
+    Image *bin = sauvola(rot, 10, 128, 0.07);
+
+    exportImage(getSDL_Surface(bin), "output.bmp");
 }

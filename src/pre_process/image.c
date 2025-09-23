@@ -35,7 +35,7 @@ void setPixel(const Image *img, const int x, const int y, const Pixel *p)
 {
     if (x >= 0 && x < img->width && y >= 0 && y < img->height)
     {
-        if(img->pixels != NULL)
+        if (img->pixels != NULL)
             img->pixels[y][x] = *p;
     }
 }
@@ -86,8 +86,7 @@ Image *loadImage(const char *file)
     return img_load;
 }
 
-// export bmp file of image
-void exportImage(const Image *img, const char *file)
+SDL_Surface *getSDL_Surface(const Image *img)
 {
     SDL_Surface *surf =
         SDL_CreateRGBSurfaceWithFormat(0,           // flags
@@ -115,5 +114,81 @@ void exportImage(const Image *img, const char *file)
         }
     }
 
+    return surf;
+}
+
+// export bmp file of image
+void exportImage(SDL_Surface *surf, const char *file)
+{
     SDL_SaveBMP(surf, file);
+}
+
+// roate Image using SDL Texture
+Image *rotateImage(const Image *src, double angle)
+{
+    if (!src)
+        return NULL;
+
+    SDL_Init(SDL_INIT_VIDEO);
+    IMG_Init(IMG_INIT_PNG);
+
+    SDL_Window *win =
+        SDL_CreateWindow("Hidden", SDL_WINDOWPOS_UNDEFINED,
+                         SDL_WINDOWPOS_UNDEFINED, 1, 1, SDL_WINDOW_HIDDEN);
+    SDL_Renderer *renderer =
+        SDL_CreateRenderer(win, -1, SDL_RENDERER_ACCELERATED);
+
+    SDL_Texture *tex =
+        SDL_CreateTextureFromSurface(renderer, getSDL_Surface(src));
+
+    double rad = angle * M_PI / 180;
+
+    int new_w = src->width * fabs(cos(rad)) + src->height * fabs(sin(rad));
+    int new_h = src->width * fabs(sin(rad)) + src->height * fabs(cos(rad));
+
+    SDL_Texture *target =
+        SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGBA8888,
+                          SDL_TEXTUREACCESS_TARGET, new_w, new_h);
+    SDL_SetRenderTarget(renderer, target);
+    SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
+    SDL_RenderClear(renderer);
+
+    SDL_Point center = {src->width / 2, src->height / 2};
+    SDL_Rect dstRect = {(new_w - src->width) / 2, (new_h - src->height) / 2,
+                        src->width, src->height};
+    SDL_RenderCopyEx(renderer, tex, NULL, &dstRect, angle, &center,
+                     SDL_FLIP_NONE);
+
+    SDL_Surface *resultSurf = SDL_CreateRGBSurfaceWithFormat(
+        0, new_w, new_h, 32, SDL_PIXELFORMAT_RGBA8888);
+    SDL_RenderReadPixels(renderer, NULL, SDL_PIXELFORMAT_RGBA8888,
+                         resultSurf->pixels, resultSurf->pitch);
+
+    Image *result = createImage(new_w, new_h);
+
+    for (int y = 0; y < new_h; y++)
+    {
+        for (int x = 0; x < new_w; x++)
+        {
+            Uint8 *pixels = (Uint8 *)resultSurf->pixels;
+            int bpp = resultSurf->format->BytesPerPixel;
+
+            Uint8 *pPixel = pixels + y * resultSurf->pitch + x * bpp;
+
+            Uint8 r, g, b;
+            SDL_GetRGB(*(Uint32 *)pPixel, resultSurf->format, &r, &g, &b);
+            Pixel p = {r, g, b};
+            setPixel(result, x, y, &p);
+            // printf("Pixel (%d,%d) = R:%d G:%d B:%d\n", x, y, r, g, b);
+        }
+    }
+
+    SDL_DestroyTexture(tex);
+    SDL_DestroyTexture(target);
+    SDL_FreeSurface(resultSurf);
+    SDL_DestroyRenderer(renderer);
+    SDL_DestroyWindow(win);
+    SDL_Quit();
+
+    return result;
 }
