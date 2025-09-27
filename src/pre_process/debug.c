@@ -13,5 +13,5 @@ int main()
 
     Image *bin = sauvola(rot, 10, 128, 0.07);
 
-    export_image(get_sdl_surface(bin), "output.bmp");
+    export_image(image_to_sdl_surface(bin), "output.bmp");
 }

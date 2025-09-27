@@ -1,7 +1,4 @@
 #include "image.h"
-#include <SDL2/SDL.h>
-#include <SDL2/SDL_image.h>
-#include <stdlib.h>
 
 // use to alloc memory for a new image
 Image *create_image(const int width, const int height)
@@ -55,38 +52,35 @@ Image *copy_image(const Image *img)
     return new;
 }
 
-// load a image (bmp, png, jpg..) and convert to custom struc Image to process
-Image *load_image(const char *file)
+
+// convert SDL_Surface to custom struct Image
+// if img is NULL a new image is created else the surface is copied in img inplace
+Image *sdl_surface_to_image(const SDL_Surface *surf, Image *img)
 {
-    const SDL_Surface *img = IMG_Load(file);
-    if (img == NULL)
+    if (!img)
     {
-        printf("Failed to load the file\n");
-        exit(EXIT_FAILURE);
+        img = create_image(surf->w, surf->h);
     }
-
-    Image *img_load = create_image(img->w, img->h);
-
-    for (int y = 0; y < img->h; y++)
+    for (int y = 0; y < img->width; y++)
     {
-        for (int x = 0; x < img->w; x++)
+        for (int x = 0; x < img->width; x++)
         {
-            Uint8 *pixels = (Uint8 *)img->pixels;
-            const int bpp = img->format->BytesPerPixel;
+            Uint8 *pixels = (Uint8 *)surf->pixels;
+            const int bpp = surf->format->BytesPerPixel;
 
-            Uint8 *pPixel = pixels + y * img->pitch + x * bpp;
+            Uint8 *pPixel = pixels + y * surf->pitch + x * bpp;
 
             Uint8 r, g, b;
-            SDL_GetRGB(*(Uint32 *)pPixel, img->format, &r, &g, &b);
+            SDL_GetRGB(*(Uint32 *)pPixel, surf->format, &r, &g, &b);
             Pixel p = {r, g, b};
-            set_pixel(img_load, x, y, &p);
-            // printf("Pixel (%d,%d) = R:%d G:%d B:%d\n", x, y, r, g, b);
+            set_pixel(img, x, y, &p);
         }
     }
-    return img_load;
+    return img;
 }
 
-SDL_Surface *get_sdl_surface(const Image *img)
+// convert a custom struct Image to a SDL_Surface to export or display
+SDL_Surface *image_to_sdl_surface(const Image *img)
 {
     SDL_Surface *surf =
         SDL_CreateRGBSurfaceWithFormat(0,           // flags
@@ -106,7 +100,7 @@ SDL_Surface *get_sdl_surface(const Image *img)
     {
         for (int x = 0; x < img->width; x++)
         {
-            Pixel *p = get_pixel(img, x, y);
+            const Pixel *p = get_pixel(img, x, y);
             Uint8 *pixel = (Uint8 *)surf->pixels + y * surf->pitch + x * 3;
             pixel[0] = p->r;
             pixel[1] = p->g;
@@ -115,6 +109,19 @@ SDL_Surface *get_sdl_surface(const Image *img)
     }
 
     return surf;
+}
+
+// load a image (bmp, png, jpg..) and convert to custom struc Image to process
+Image *load_image(const char *file)
+{
+    const SDL_Surface *img = IMG_Load(file);
+    if (img == NULL)
+    {
+        printf("Failed to load the file\n");
+        exit(EXIT_FAILURE);
+    }
+    Image *img_load = sdl_surface_to_image(img, NULL);
+    return img_load;
 }
 
 // export bmp file of image

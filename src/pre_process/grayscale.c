@@ -1,8 +1,5 @@
 #include "grayscale.h"
-#include <SDL2/SDL.h>
-#include <SDL2/SDL_image.h>
-#include <math.h>
-#include <stdio.h>
+
 
 // take custom Image struct amd process itch pixel to make it grey
 void grayscale_image(const Image *img)
@@ -23,7 +20,7 @@ void grayscale_image(const Image *img)
 }
 
 // Calculate the avarge grey level in a block of radius of a Image struc
-double average(const Image *img, const int x, const int y, const int radius)
+static double average(const Image *img, const int x, const int y, const int radius)
 {
     double sum = 0.0;
     const int count = (2 * radius + 1) * (2 * radius + 1);
@@ -41,7 +38,7 @@ double average(const Image *img, const int x, const int y, const int radius)
 
 // returm standard deviation (ecart type) of the grey level in a block of radius
 // of a Image struct
-double std_deviation(const Image *img, const int x, const int y,
+static double std_deviation(const Image *img, const int x, const int y,
                      const int radius, const double avg)
 {
     double sum = 0.0;
