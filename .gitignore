@@ -53,3 +53,8 @@ dkms.conf
 
 # debug information files
 *.dwo
+
+
+#Clion ignore
+*.idea/
+/CMakeLists.txt
