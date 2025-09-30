@@ -1,5 +1,5 @@
 #include "grayscale.h"
-#include "image.h"
+#include "../core/image.h"
 #include "rotation.h"
 
 int main()

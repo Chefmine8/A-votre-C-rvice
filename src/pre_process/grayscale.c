@@ -56,7 +56,7 @@ static double std_deviation(const Image *img, const int x, const int y,
     return sqrt(sum / count);
 }
 
-// sauvola algo
+// sauvola algo for binarization of a grayscale image
 // (https://craftofcoding.wordpress.com/2021/10/06/thresholding-algorithms-sauvola-local/)
 // n is radius for block size
 // R is dynamic range of standard deviation (default=128)

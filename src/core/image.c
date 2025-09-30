@@ -61,7 +61,7 @@ Image *sdl_surface_to_image(const SDL_Surface *surf, Image *img)
     {
         img = create_image(surf->w, surf->h);
     }
-    for (int y = 0; y < img->width; y++)
+    for (int y = 0; y < img->height; y++)
     {
         for (int x = 0; x < img->width; x++)
         {
