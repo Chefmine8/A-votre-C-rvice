@@ -32,6 +32,7 @@ char **read_file(char *file)
         if (c == '\n')
         {
             current_line[n_c] = '\0';
+            //upper(current_line);
             matrice = realloc(matrice, (n_line + 2) * sizeof(char *));
 
             capacity_c = n_c;
@@ -85,9 +86,11 @@ void free_matrix(char **matrice)
     free(matrice);
 }
 
+
+
 int main()
 {
-    char **test = read_file("test");
+    char **test = read_file("grid");
     char **tmp = test;
     while (*test)
     {
