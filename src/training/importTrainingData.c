@@ -3,7 +3,7 @@
 #include <stdio.h>
 #include <string.h>
 
-void import(char* path)
+void import()
 {
     // Image *img = load_image(path);
 
@@ -13,22 +13,26 @@ void import(char* path)
 
     while ((entry = readdir(directory)) != NULL)
     {
-        if (entry->d_name != ".." && entry->d_name != ".")
-        {
-            char* path = strcat( "../../resources/dataset/data/training_data/", entry->d_name);
-            DIR *letter = opendir( path );
+        printf("%s\n", entry->d_name);
 
+        if ( strcmp(entry->d_name, "..") != 0 && strcmp(entry->d_name, ".") != 0)
+        {
+            printf("aaaaa");
+            char* path = strcat( "../../resources/dataset/data/training_data/", entry->d_name);
+            printf("bbbbb");
+            DIR *letter = opendir( path );
+            printf("%s\n", path);
             while ((entry2 = readdir(letter)) != NULL)
             {
                 printf("%s\n", entry2->d_name);
             }
         }
-        printf("%s\n", entry->d_name);
+
     }
 
 }
 
 int main()
 {
-    import("");
+    import();
 }
