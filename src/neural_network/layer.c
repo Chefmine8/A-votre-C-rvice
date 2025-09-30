@@ -1,20 +1,18 @@
 //
 // Created by Evan on 30/09/2025.
 //
-
 #include "layer.h"
-
 #include <stdlib.h>
 
 struct layer
 {
     /**
-     * the layer_size of the previous layer (or input)
+     * The layer_size of the previous layer (or input of the neural network).
      */
     int prev_layer_size;
 
     /**
-     * number of neuron on this layer
+     * Number of neuron on this layer.
      */
     int layer_size;
 
@@ -36,14 +34,23 @@ struct layer
     int *biases;
 };
 
-struct layer create_layer(const int prev_layer_size, const int layer_size, int *input, int **weight, int *biases)
+/**
+ * /!\ Use only when you know every value of each inputs of the layer
+ * @param prev_layer_size Size of the previous layer (or input of the neural network).
+ * @param layer_size Size of this layer.
+ * @param inputs Array of prev_layer_size int (representing the output of the previous layer).
+ * @param weights Array of layer_size * previous_layer_size int representing the weights of each inputs for each neuron of the layer.
+ * @param biases Array of layer_size int representing the bias of each neuron of the layer.
+ * @return the layer structure with good values
+ */
+struct layer create_layer(const int prev_layer_size, const int layer_size, int *inputs, int **weights, int *biases)
 {
     struct layer res;
 
     res.prev_layer_size = prev_layer_size;
     res.layer_size = layer_size;
-    res.inputs = input;
-    res.weights = weight;
+    res.inputs = inputs;
+    res.weights = weights;
     res.biases = biases;
 
     return res;
@@ -51,8 +58,8 @@ struct layer create_layer(const int prev_layer_size, const int layer_size, int *
 
 /**
  *
- * @param layer the layer to calculate the output
- * @return the output /!\ DON'T FORGET TO FREE THE OUTPUT ONCE DONE
+ * @param layer The layer to calculate the output.
+ * @return The output. \n /!\ DON'T FORGET TO FREE THE OUTPUT ONCE DONE
  */
 int *calculate_outputs(const struct layer layer)
 {
