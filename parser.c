@@ -31,8 +31,13 @@ char **read_file(char *file)
     {
         if (c == '\n')
         {
+            if (n_c >= capacity_c) {
+                ++capacity_c;
+                current_line = realloc(current_line, capacity_c * sizeof(char));
+            }
+
             current_line[n_c] = '\0';
-            //upper(current_line);
+            upper(current_line);
             matrice = realloc(matrice, (n_line + 2) * sizeof(char *));
 
             capacity_c = n_c;
@@ -43,7 +48,6 @@ char **read_file(char *file)
             current_line = malloc(capacity_c * sizeof(char));
             continue;
         }
-
         if (n_c >= capacity_c)
         {
             ++capacity_c;
@@ -85,8 +89,6 @@ void free_matrix(char **matrice)
     }
     free(matrice);
 }
-
-
 
 int main()
 {
