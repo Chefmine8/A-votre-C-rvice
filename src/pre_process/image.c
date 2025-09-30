@@ -1,10 +1,7 @@
 #include "image.h"
-#include <SDL2/SDL.h>
-#include <SDL2/SDL_image.h>
-#include <stdlib.h>
 
 // use to alloc memory for a new image
-Image *createImage(const int width, const int height)
+Image *create_image(const int width, const int height)
 {
     Image *img = malloc(sizeof(Image));
     img->width = width;
@@ -20,7 +17,7 @@ Image *createImage(const int width, const int height)
 }
 
 // get pixel at (x, y) return struct Pixel
-Pixel *getPixel(const Image *img, const int x, const int y)
+Pixel *get_pixel(const Image *img, const int x, const int y)
 {
     if (!(x >= 0 && x < img->width && y >= 0 && y < img->height))
     {
@@ -31,63 +28,59 @@ Pixel *getPixel(const Image *img, const int x, const int y)
 }
 
 // change tu pixel at (x, y)
-void setPixel(const Image *img, const int x, const int y, const Pixel *p)
+void set_pixel(const Image *img, const int x, const int y, const Pixel *p)
 {
     if (x >= 0 && x < img->width && y >= 0 && y < img->height)
     {
-        if(img->pixels != NULL)
+        if (img->pixels != NULL)
             img->pixels[y][x] = *p;
     }
 }
 
 // create a new image from a image struct
-Image *copyImage(const Image *img)
+Image *copy_image(const Image *img)
 {
-    Image *new = createImage(img->width, img->height);
+    Image *new = create_image(img->width, img->height);
     for (int y = 0; y < img->height; y++)
     {
         for (int x = 0; x < img->width; x++)
         {
-            Pixel *newP = getPixel(img, x, y);
-            setPixel(new, x, y, newP);
+            const Pixel *newP = get_pixel(img, x, y);
+            set_pixel(new, x, y, newP);
         }
     }
     return new;
 }
 
-// load a image (bmp, png, jpg..) and convert to custom struc Image to process
-Image *loadImage(const char *file)
+
+// convert SDL_Surface to custom struct Image
+// if img is NULL a new image is created else the surface is copied in img inplace
+Image *sdl_surface_to_image(const SDL_Surface *surf, Image *img)
 {
-    const SDL_Surface *img = IMG_Load(file);
-    if (img == NULL)
+    if (!img)
     {
-        printf("Failed to load the file\n");
-        exit(EXIT_FAILURE);
+        img = create_image(surf->w, surf->h);
     }
-
-    Image *img_load = createImage(img->w, img->h);
-
-    for (int y = 0; y < img->h; y++)
+    for (int y = 0; y < img->width; y++)
     {
-        for (int x = 0; x < img->w; x++)
+        for (int x = 0; x < img->width; x++)
         {
-            Uint8 *pixels = (Uint8 *)img->pixels;
-            int bpp = img->format->BytesPerPixel;
+            Uint8 *pixels = (Uint8 *)surf->pixels;
+            const int bpp = surf->format->BytesPerPixel;
 
-            Uint8 *pPixel = pixels + y * img->pitch + x * bpp;
+            Uint8 *pPixel = pixels + y * surf->pitch + x * bpp;
 
             Uint8 r, g, b;
-            SDL_GetRGB(*(Uint32 *)pPixel, img->format, &r, &g, &b);
+            SDL_GetRGB(*(Uint32 *)pPixel, surf->format, &r, &g, &b);
             Pixel p = {r, g, b};
-            setPixel(img_load, x, y, &p);
-            // printf("Pixel (%d,%d) = R:%d G:%d B:%d\n", x, y, r, g, b);
+            set_pixel(img, x, y, &p);
         }
     }
-    return img_load;
+    return img;
 }
 
-// export bmp file of image
-void exportImage(const Image *img, const char *file)
+// convert a custom struct Image to a SDL_Surface to export or display
+SDL_Surface *image_to_sdl_surface(const Image *img)
 {
     SDL_Surface *surf =
         SDL_CreateRGBSurfaceWithFormat(0,           // flags
@@ -107,7 +100,7 @@ void exportImage(const Image *img, const char *file)
     {
         for (int x = 0; x < img->width; x++)
         {
-            Pixel *p = getPixel(img, x, y);
+            const Pixel *p = get_pixel(img, x, y);
             Uint8 *pixel = (Uint8 *)surf->pixels + y * surf->pitch + x * 3;
             pixel[0] = p->r;
             pixel[1] = p->g;
@@ -115,5 +108,24 @@ void exportImage(const Image *img, const char *file)
         }
     }
 
+    return surf;
+}
+
+// load a image (bmp, png, jpg..) and convert to custom struc Image to process
+Image *load_image(const char *file)
+{
+    const SDL_Surface *img = IMG_Load(file);
+    if (img == NULL)
+    {
+        printf("Failed to load the file\n");
+        exit(EXIT_FAILURE);
+    }
+    Image *img_load = sdl_surface_to_image(img, NULL);
+    return img_load;
+}
+
+// export bmp file of image
+void export_image(SDL_Surface *surf, const char *file)
+{
     SDL_SaveBMP(surf, file);
 }
