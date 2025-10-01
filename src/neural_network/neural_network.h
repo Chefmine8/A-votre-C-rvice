@@ -1,0 +1,8 @@
+//
+// Created by Evan on 01/10/2025.
+//
+
+#ifndef A_VOTRE_C_RVICE_NEURAL_NETWORK_H
+#define A_VOTRE_C_RVICE_NEURAL_NETWORK_H
+
+#endif //A_VOTRE_C_RVICE_NEURAL_NETWORK_H
