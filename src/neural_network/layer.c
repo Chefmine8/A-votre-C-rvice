@@ -24,17 +24,18 @@ struct layer *create_layer(const int prev_layer_size, const int layer_size)
 
     res->inputs = malloc(prev_layer_size * sizeof(long double));
 
-    res->weights = malloc(prev_layer_size * layer_size * sizeof(long double));
+    res->weights = malloc(layer_size * sizeof(long double *));
 
     for (int i = 0; i < layer_size; i++)
     {
+        res->weights[i] = malloc(prev_layer_size * sizeof(long double));
         for (int j = 0; j < prev_layer_size; j++)
         {
             res->weights[i][j] = (long double)rand() / (long double)RAND_MAX * 10 - 5;
         }
     }
 
-    res->biases = malloc(layer_size * sizeof(int));
+    res->biases = malloc(layer_size * sizeof(long double));
 
     for (int i = 0; i < layer_size; i++)
     {
