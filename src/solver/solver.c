@@ -1,5 +1,5 @@
-#include "global.h"
-#include "parser.h"
+#include "../global.h"
+#include "solver.h"
 
 void upper(char *grid)
 {
@@ -108,7 +108,7 @@ void solver_algorithme(char **grid, char *word)
         {
             if (word[1] == '\0')
             {
-                printf("(%i,%i)(%i,%i)", x, y, x, y);
+                printf("(%i,%i)(%i,%i)\n", x, y, x, y);
                 return ;
             }
 
@@ -138,7 +138,7 @@ void solver_algorithme(char **grid, char *word)
 
                         if (result[0] != -1)
                         {
-                            printf("(%i,%i)(%i,%i)", x, y, result[0], result[1]);
+                            printf("(%i,%i)(%i,%i)\n", x, y, result[0], result[1]);
                             free(result);
                             return ;
                         }
