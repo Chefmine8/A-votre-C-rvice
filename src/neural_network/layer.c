@@ -3,7 +3,7 @@
 #include "layer.h"
 #include <stdlib.h>
 #include <err.h>
-
+#include <stdio.h>
 
 /**
  *
@@ -57,8 +57,8 @@ void link_layers(struct layer *back_layer, struct layer *front_layer)
     }
 
     front_layer->prev_layer = back_layer;
-    free(*back_layer->outputs);
-    back_layer->outputs = front_layer->inputs;
+    free(*(front_layer->inputs));
+    front_layer->inputs = back_layer->outputs;
 }
 
 /**
@@ -72,7 +72,11 @@ void link_layer_output(struct layer *layer, int output_size, long double **outpu
     if (output_size != layer->layer_size) {
         errx(EXIT_FAILURE, "layer not the same size as the outputs");
     }
-    free(*layer->outputs);
+
+    if(layer->outputs != NULL){
+        free(*(layer->outputs));
+    }
+
     layer->outputs = outputs;
 }
 
@@ -87,7 +91,8 @@ void link_layer_input(struct layer *layer, int input_size, long double **inputs)
     if (input_size != layer->layer_size) {
         errx(EXIT_FAILURE, "layer not the same size as the inputs");
     }
-    free(*layer->inputs);
+    if(layer->inputs != NULL)
+        free(*(layer->inputs));
     layer->inputs = inputs;
 }
 
@@ -112,14 +117,11 @@ void update_outputs(const struct layer *layer)
 }
 
 void free_layers(struct layer *layer) {
-
+    if((layer->inputs) != NULL)
+        free(*(layer->inputs));
+    free((layer->biases));
     if (layer->prev_layer != NULL) {
         free_layers(layer->prev_layer);
     }
-
-    free(layer->inputs);
-    free(layer->outputs);
-    free(layer->prev_layer);
-    free(layer->biases);
     free(layer);
 }
