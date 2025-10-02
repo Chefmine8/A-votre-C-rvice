@@ -4,6 +4,7 @@
 
 #ifndef A_VOTRE_C_RVICE_LAYER_H
 #define A_VOTRE_C_RVICE_LAYER_H
+#include <stdlib.h>
 
 
 /**
@@ -87,6 +88,8 @@ void link_layer_input(struct layer *layer, int input_size, long double **inputs)
  * @return The output. \n /!\ DON'T FORGET TO FREE THE OUTPUT ONCE DONE
  */
 void update_outputs(const struct layer *layer);
+
+void free_layers(struct layer *layer);
 
 
 #endif //A_VOTRE_C_RVICE_LAYER_H

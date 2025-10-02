@@ -99,6 +99,7 @@ void link_layers(struct layer *back_layer, struct layer *front_layer)
     }
 
     front_layer->prev_layer = back_layer;
+    free(*back_layer->outputs);
     back_layer->outputs = front_layer->inputs;
 }
 
@@ -113,6 +114,7 @@ void link_layer_output(struct layer *layer, int output_size, long double **outpu
     if (output_size != layer->layer_size) {
         errx(EXIT_FAILURE, "layer not the same size as the outputs");
     }
+    free(*layer->outputs);
     layer->outputs = outputs;
 }
 
@@ -127,18 +129,17 @@ void link_layer_input(struct layer *layer, int input_size, long double **inputs)
     if (input_size != layer->layer_size) {
         errx(EXIT_FAILURE, "layer not the same size as the inputs");
     }
-
+    free(*layer->inputs);
     layer->inputs = inputs;
 }
 
 /**
  *
  * @param layer The layer to calculate the output.
- * @return The output. \n /!\ DON'T FORGET TO FREE THE OUTPUT ONCE DONE
+ * @return The output.
  */
 void update_outputs(const struct layer *layer)
 {
-    int *res = malloc(sizeof(int) * layer->layer_size);
 
     for (int i = 0; i < layer->layer_size; i++)
     {
@@ -148,8 +149,21 @@ void update_outputs(const struct layer *layer)
             output += (*layer->inputs)[j] * layer->weights[i][j];
         }
 
-        res[i] = output;
+        *layer->outputs[i] = output;
     }
 
     *layer->outputs = res;
+}
+
+void free_layers(struct layer *layer) {
+
+    if (layer->prev_layer != NULL) {
+        free_layers(layer->prev_layer);
+    }
+
+    free(layer->inputs);
+    free(layer->outputs);
+    free(layer->prev_layer);
+    free(layer->biases);
+    free(layer);
 }
