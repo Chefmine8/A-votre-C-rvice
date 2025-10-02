@@ -3,11 +3,10 @@
 //
 
 #include "neural_network.h"
-
 #include <stdlib.h>
 #include <err.h>
 #include "layer.h"
-#include <stdio.h>
+
 
 
 struct neural_network *create_neural_network(int size_of_arr, int arr[size_of_arr])
