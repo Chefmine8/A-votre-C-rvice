@@ -30,24 +30,24 @@ struct layer
     /**
      * pointer of inputs[prev_layer_size]
      */
-    int **inputs;
+    long double **inputs;
 
     /**
      * weights[layer_size][prev_layer_size]
      */
-    int **weights;
+    long double **weights;
 
 
     /**
      * biases[layer_size]
      */
-    int *biases;
+    long double *biases;
 
     /**
      * /!\ USE update_outputs() BEFORE USING!
      * pointer of output[layer_size]
      */
-    int **outputs;
+    long double **outputs;
 };
 
 /**
@@ -56,7 +56,7 @@ struct layer
  * @param layer_size size of this layer
  * @return the layer struct
  */
-struct layer create_layer(const int prev_layer_size, const int layer_size);
+struct layer *create_layer(const int prev_layer_size, const int layer_size);
 
 /**
  * Link two internals layers together
@@ -71,7 +71,7 @@ void link_layers(struct layer *back_layer, struct layer *front_layer);
  * @param output_size the size of outputs (for security)
  * @param outputs the array of size output_size that will contain the output of the neural network
  */
-void link_layer_output(struct layer *layer, int output_size, int **outputs);
+void link_layer_output(struct layer *layer, int output_size, long double **outputs);
 
 /**
  * Link the last layer of the neural network to an array
@@ -79,7 +79,7 @@ void link_layer_output(struct layer *layer, int output_size, int **outputs);
  * @param input_size the size of inputs (for security)
  * @param inputs the array of size input_size that will contain the input of the neural network
  */
-void link_layer_input(struct layer *layer, int input_size, int **inputs);
+void link_layer_input(struct layer *layer, int input_size, long double **inputs);
 
 /**
  *
