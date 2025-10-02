@@ -91,5 +91,6 @@ void update_outputs(const struct layer *layer);
 
 void free_layers(struct layer *layer);
 
+void check_layer(const struct layer *layer);
 
 #endif //A_VOTRE_C_RVICE_LAYER_H

@@ -17,7 +17,7 @@ struct neural_network {
     long double *outputs;
 };
 
-struct neural_network *create_network(int size_of_arr, int arr[size_of_arr]);
+struct neural_network *create_neural_network(int size_of_arr, int arr[size_of_arr]);
 
 void free_neural_network(struct neural_network *neural_network);
 

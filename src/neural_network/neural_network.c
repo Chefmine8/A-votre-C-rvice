@@ -10,7 +10,7 @@
 #include <stdio.h>
 
 
-struct neural_network *create_network(int size_of_arr, int arr[size_of_arr])
+struct neural_network *create_neural_network(int size_of_arr, int arr[size_of_arr])
 {
      if (size_of_arr < 2) {
           errx(EXIT_FAILURE, "Too small for a brain");
@@ -43,4 +43,10 @@ void free_neural_network(struct neural_network *neural_network) {
      free_layers(neural_network->layers[neural_network->number_of_layers - 1]);
      free(neural_network->outputs);
      free(neural_network);
+}
+
+void check_neural_network(struct neural_network *neural_network) {
+     neural_network->inputs[0] = 69;
+     neural_network->outputs[0] = 69;
+     check_layer(neural_network->layers[neural_network->number_of_layers - 1]);
 }

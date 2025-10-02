@@ -125,3 +125,20 @@ void free_layers(struct layer *layer) {
     }
     free(layer);
 }
+
+
+void check_layer(const struct layer *layer) {
+
+    printf("-----------------------------\nlayer number: %d\n", layer->layer_size);
+    if (layer->prev_layer != NULL)
+        printf("input connected: %d\n",  *(layer->inputs) == *(layer->prev_layer->outputs) );
+    else {
+        printf("input is input: %d\n", *layer->inputs[0] == 69 );
+    }
+    printf("output connected (if not last layer 0 is normal tkt frère): %d\n", *(layer->outputs)[0] == 69  );
+
+    if (layer->prev_layer != NULL) {
+        check_layer(layer->prev_layer);
+    }
+
+}
