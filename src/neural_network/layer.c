@@ -4,49 +4,6 @@
 #include <stdlib.h>
 #include <err.h>
 
-/**
- * struct representing a layer of the neural network
- */
-// struct layer
-// {
-//     /**
-//      * Previous layer, NULL if input of neural network
-//      */
-//     struct layer *prev_layer;
-//
-//     /**
-//      * The layer_size of the previous layer (or input of the neural network).
-//      */
-//     int prev_layer_size;
-//
-//     /**
-//      * Number of neuron on this layer.
-//      */
-//     int layer_size;
-//
-//
-//     /**
-//      * pointer of inputs[prev_layer_size]
-//      */
-//     long double **inputs;
-//
-//     /**
-//      * weights[layer_size][prev_layer_size]
-//      */
-//     long double **weights;
-//
-//
-//     /**
-//      * biases[layer_size]
-//      */
-//     long double *biases;
-//
-//     /**
-//      * /!\ USE update_outputs() BEFORE USING!
-//      * pointer of output[layer_size]
-//      */
-//     int **outputs;
-// };
 
 /**
  *
@@ -151,8 +108,6 @@ void update_outputs(const struct layer *layer)
 
         *layer->outputs[i] = output;
     }
-
-    *layer->outputs = res;
 }
 
 void free_layers(struct layer *layer) {
