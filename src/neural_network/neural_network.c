@@ -20,13 +20,14 @@ struct neural_network *create_network(int size_of_arr, int arr[size_of_arr])
 
      neural_network->number_of_layers = size_of_arr;
 
-     neural_network->inputs = malloc(sizeof(int) * arr[0]);
+     neural_network->inputs = malloc(sizeof(long double) * arr[0]);
      neural_network->input_size = arr[0];
 
-     neural_network->outputs = malloc(sizeof(int) * arr[size_of_arr - 1]);
+     neural_network->outputs = malloc(sizeof(long double) * arr[size_of_arr - 1]);
      neural_network->output_size = arr[size_of_arr - 1];
 
-     neural_network->layers = malloc(sizeof(struct layer) * size_of_arr);
+     neural_network->layers = malloc(sizeof(struct layer *) * size_of_arr);
+
 
      neural_network->layers[0] = create_layer(arr[0], arr[0]);
      link_layer_input(neural_network->layers[0], neural_network->input_size, &neural_network->inputs);
