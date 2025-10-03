@@ -17,12 +17,14 @@ struct layer *create_layer(const int prev_layer_size, const int layer_size)
 
 
     res->prev_layer = NULL;
-    res->outputs = NULL;
+
+    res->outputs = malloc(sizeof(long double) * layer_size);
 
     res->prev_layer_size = prev_layer_size;
     res->layer_size = layer_size;
 
-    res->inputs = malloc(prev_layer_size * sizeof(long double));
+
+    res->inputs = malloc(sizeof(long double *));
 
     res->weights = malloc(layer_size * sizeof(long double *));
 
@@ -50,15 +52,21 @@ struct layer *create_layer(const int prev_layer_size, const int layer_size)
  * @param back_layer the layer closest to the input
  * @param front_layer the layer closest to the output
  */
-void link_layers(struct layer *back_layer, struct layer *front_layer)
+void link_layers(struct layer **back_layer, struct layer **front_layer)
 {
-    if (back_layer->layer_size != front_layer->prev_layer_size) {
+    printf("\nlayer nb: %d\n", (*front_layer)->layer_size);
+    if ((*back_layer)->layer_size != (*front_layer)->prev_layer_size) {
         errx(EXIT_FAILURE, "Trying to link two incompatible layers ! back_layer->layer_size != front_layer->prev_layer_size");
     }
-
-    front_layer->prev_layer = back_layer;
-    free(*(front_layer->inputs));
-    front_layer->inputs = back_layer->outputs;
+    printf("ll 1\n");
+    free((*front_layer)->prev_layer);
+    printf("ll 2\n");
+    (*front_layer)->prev_layer = *back_layer;
+    printf("ll 3\n");
+    free(*(*front_layer)->inputs);
+    printf("ll 4\n");
+    (*front_layer)->inputs = (*back_layer)->outputs;
+    printf("ll 5\n\n");
 }
 
 /**
@@ -69,15 +77,20 @@ void link_layers(struct layer *back_layer, struct layer *front_layer)
  */
 void link_layer_output(struct layer *layer, int output_size, long double **outputs)
 {
+    printf("\nlayer nb: %d\n", layer->layer_size);
     if (output_size != layer->layer_size) {
         errx(EXIT_FAILURE, "layer not the same size as the outputs");
     }
-
-    if(layer->outputs != NULL){
-        free(*(layer->outputs));
+    printf("llo 1\n");
+    if(*layer->outputs != NULL){
+        printf("llo 1.5\n");
+        printf("%p\n", *layer->outputs);
+        free((*layer->outputs));
+        printf("llo 1.9\n");
     }
-
-    layer->outputs = outputs;
+    printf("llo 2\n");
+    *layer->outputs = *outputs;
+    printf("llo 3\n\n");
 }
 
 /**
@@ -91,9 +104,9 @@ void link_layer_input(struct layer *layer, int input_size, long double **inputs)
     if (input_size != layer->layer_size) {
         errx(EXIT_FAILURE, "layer not the same size as the inputs");
     }
-    if(layer->inputs != NULL)
+    if(*layer->inputs != NULL)
         free(*(layer->inputs));
-    layer->inputs = inputs;
+    *layer->inputs = *inputs;
 }
 
 /**
@@ -128,17 +141,28 @@ void free_layers(struct layer *layer) {
 
 
 void check_layer(const struct layer *layer) {
-
     printf("-----------------------------\nlayer number: %d\n", layer->layer_size);
-    if (layer->prev_layer != NULL)
-        printf("input connected: %d\n",  *(layer->inputs) == *(layer->prev_layer->outputs) );
-    else {
-        printf("input is input: %d\n", *layer->inputs[0] == 69 );
+    if (layer->prev_layer != NULL) {
+        printf("cl 1\n");
+        printf("%p\n", layer->inputs);
+        printf("%p\n", layer->prev_layer->outputs);
+        printf("input connected: %d\n", (layer->inputs) == (layer->prev_layer->outputs));
+        printf("cl 2\n");
     }
-    printf("output connected (if not last layer 0 is normal tkt frère): %d\n", *(layer->outputs)[0] == 69  );
+    else {
+        printf("cl 1\n");
+        printf("input is input: %d\n", *layer->inputs[0] == 69 );
+        printf("cl 2\n");
+    }
+    printf("cl 3\n");
+    printf("%p\n", *layer->outputs);
+    printf("output connected (if not last layer 0 is normal tkt frère): %d\n", (*layer->outputs)[0] == 69  );
+    printf("cl 4\n");
 
     if (layer->prev_layer != NULL) {
+        printf("cl 5\n");
         check_layer(layer->prev_layer);
+        printf("cl 6\n");
     }
 
 }

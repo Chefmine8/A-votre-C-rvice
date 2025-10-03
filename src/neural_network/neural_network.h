@@ -13,6 +13,9 @@ struct neural_network {
     int number_of_layers;
     struct layer **layers;
 
+    int *size_of_layers;
+    long double **layers_middle_array;
+
     int output_size;
     long double *outputs;
 };
@@ -21,6 +24,6 @@ struct neural_network *create_neural_network(int size_of_arr, int arr[size_of_ar
 
 void free_neural_network(struct neural_network *neural_network);
 
-void check_neural_network(struct neural_network *neural_network);
+void check_neural_network(const struct neural_network *neural_network);
 
 #endif //A_VOTRE_C_RVICE_NEURAL_NETWORK_H

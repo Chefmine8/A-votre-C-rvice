@@ -4,7 +4,7 @@
 
 #ifndef A_VOTRE_C_RVICE_LAYER_H
 #define A_VOTRE_C_RVICE_LAYER_H
-#include <stdlib.h>
+
 
 
 /**
@@ -64,7 +64,7 @@ struct layer *create_layer(const int prev_layer_size, const int layer_size);
  * @param back_layer the layer closest to the input
  * @param front_layer the layer closest to the output
  */
-void link_layers(struct layer *back_layer, struct layer *front_layer);
+void link_layers(struct layer **back_layer, struct layer **front_layer);
 
 /**
  * Link the last layer of the neural network to an array
