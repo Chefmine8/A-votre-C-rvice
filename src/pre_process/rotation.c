@@ -9,7 +9,7 @@ Image *manual_rotate_image(const Image *src, const double angle)
     if (!src)
         return NULL;
 
-    // Init 
+    // SDL Init
     SDL_Init(SDL_INIT_VIDEO);
     IMG_Init(IMG_INIT_PNG);
 
@@ -55,22 +55,7 @@ Image *manual_rotate_image(const Image *src, const double angle)
     // create new Image based on surface
     Image *result = create_image(new_w, new_h);
 
-    for (int y = 0; y < new_h; y++)
-    {
-        for (int x = 0; x < new_w; x++)
-        {
-            Uint8 *pixels = (Uint8 *)resultSurf->pixels;
-            const int bpp = resultSurf->format->BytesPerPixel;
-
-            Uint8 *pPixel = pixels + y * resultSurf->pitch + x * bpp;
-
-            Uint8 r, g, b;
-            SDL_GetRGB(*(Uint32 *)pPixel, resultSurf->format, &r, &g, &b);
-            Pixel p = {r, g, b};
-            set_pixel(result, x, y, &p);
-            // printf("Pixel (%d,%d) = R:%d G:%d B:%d\n", x, y, r, g, b);
-        }
-    }
+    sdl_surface_to_image(resultSurf, result);
 
     // free
     SDL_DestroyTexture(tex);

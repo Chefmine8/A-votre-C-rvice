@@ -11,6 +11,12 @@ Image *create_image(const int width, const int height)
     for (int y = 0; y < height; y++)
     {
         img->pixels[y] = malloc(width * sizeof(Pixel));
+        // init to white
+        for (int x = 0; x < width; x++) {
+            img->pixels[y][x].r = 255;
+            img->pixels[y][x].g = 255;
+            img->pixels[y][x].b = 255;
+        }
     }
 
     return img;
