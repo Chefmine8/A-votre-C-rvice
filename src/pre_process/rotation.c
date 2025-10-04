@@ -9,10 +9,6 @@ Image *manual_rotate_image(const Image *src, const double angle)
     if (!src)
         return NULL;
 
-    // Init 
-    SDL_Init(SDL_INIT_VIDEO);
-    IMG_Init(IMG_INIT_PNG);
-
     // window and renderer (hidden)
     SDL_Window *win =
         SDL_CreateWindow("Hidden", SDL_WINDOWPOS_UNDEFINED,
@@ -20,8 +16,10 @@ Image *manual_rotate_image(const Image *src, const double angle)
     SDL_Renderer *renderer =
         SDL_CreateRenderer(win, -1, SDL_RENDERER_ACCELERATED);
 
+    SDL_Surface *temp_surf = image_to_sdl_surface(src);
     SDL_Texture *tex =
-        SDL_CreateTextureFromSurface(renderer, image_to_sdl_surface(src));
+        SDL_CreateTextureFromSurface(renderer, temp_surf);
+    SDL_FreeSurface(temp_surf);
 
     // angle in radian
     const double rad = angle * M_PI / 180;
@@ -55,22 +53,7 @@ Image *manual_rotate_image(const Image *src, const double angle)
     // create new Image based on surface
     Image *result = create_image(new_w, new_h);
 
-    for (int y = 0; y < new_h; y++)
-    {
-        for (int x = 0; x < new_w; x++)
-        {
-            Uint8 *pixels = (Uint8 *)resultSurf->pixels;
-            const int bpp = resultSurf->format->BytesPerPixel;
-
-            Uint8 *pPixel = pixels + y * resultSurf->pitch + x * bpp;
-
-            Uint8 r, g, b;
-            SDL_GetRGB(*(Uint32 *)pPixel, resultSurf->format, &r, &g, &b);
-            Pixel p = {r, g, b};
-            set_pixel(result, x, y, &p);
-            // printf("Pixel (%d,%d) = R:%d G:%d B:%d\n", x, y, r, g, b);
-        }
-    }
+    sdl_surface_to_image(resultSurf, result);
 
     // free
     SDL_DestroyTexture(tex);
@@ -78,7 +61,6 @@ Image *manual_rotate_image(const Image *src, const double angle)
     SDL_FreeSurface(resultSurf);
     SDL_DestroyRenderer(renderer);
     SDL_DestroyWindow(win);
-    SDL_Quit();
 
     return result;
 }

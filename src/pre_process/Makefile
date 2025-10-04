@@ -5,7 +5,7 @@ CC = gcc
 CFLAGS = -Wall -Wextra -g `sdl2-config --cflags`
 LDFLAGS = `sdl2-config --libs` -lSDL2_image -lm
 
-SRCS = $(shell find .. -name "*.c")
+SRCS = $(wildcard ../pre_process/*.c ../core/*.c)
 
 OBJS = $(SRCS:.c=.o)
 

@@ -11,9 +11,28 @@ Image *create_image(const int width, const int height)
     for (int y = 0; y < height; y++)
     {
         img->pixels[y] = malloc(width * sizeof(Pixel));
+        // init to white
+        for (int x = 0; x < width; x++) {
+            img->pixels[y][x].r = 255;
+            img->pixels[y][x].g = 255;
+            img->pixels[y][x].b = 255;
+        }
     }
 
     return img;
+}
+
+void free_image(Image *img)
+{
+    if (img)
+    {
+        for (int y = 0; y < img->height; y++)
+        {
+            free(img->pixels[y]);
+        }
+        free(img->pixels);
+        free(img);
+    }
 }
 
 // get pixel at (x, y) return struct Pixel
@@ -114,13 +133,14 @@ SDL_Surface *image_to_sdl_surface(const Image *img)
 // load a image (bmp, png, jpg..) and convert to custom struc Image to process
 Image *load_image(const char *file)
 {
-    const SDL_Surface *img = IMG_Load(file);
+    SDL_Surface *img = IMG_Load(file);
     if (img == NULL)
     {
         printf("Failed to load the file\n");
         exit(EXIT_FAILURE);
     }
     Image *img_load = sdl_surface_to_image(img, NULL);
+    SDL_FreeSurface(img);
     return img_load;
 }
 
@@ -129,3 +149,4 @@ void export_image(SDL_Surface *surf, const char *file)
 {
     SDL_SaveBMP(surf, file);
 }
+
