@@ -8,10 +8,6 @@ Image *manual_image_scaling(const Image *src, const float scale_x, const float s
     const int new_w = (int)(src->width * scale_x);
     const int new_h = (int)(src->height * scale_y);
 
-    // SDL Init
-    SDL_Init(SDL_INIT_VIDEO);
-    IMG_Init(IMG_INIT_PNG);
-
     // window and renderer (hidden)
     SDL_Window *win =
         SDL_CreateWindow("Hidden", SDL_WINDOWPOS_UNDEFINED,
@@ -19,8 +15,10 @@ Image *manual_image_scaling(const Image *src, const float scale_x, const float s
     SDL_Renderer *renderer =
         SDL_CreateRenderer(win, -1, SDL_RENDERER_ACCELERATED);
 
+    SDL_Surface *temp_surf = image_to_sdl_surface(src);
     SDL_Texture *tex =
-        SDL_CreateTextureFromSurface(renderer, image_to_sdl_surface(src));
+        SDL_CreateTextureFromSurface(renderer, temp_surf);
+    SDL_FreeSurface(temp_surf);
 
     // texture target
     SDL_Texture *target =
@@ -52,7 +50,6 @@ Image *manual_image_scaling(const Image *src, const float scale_x, const float s
     SDL_FreeSurface(resultSurf);
     SDL_DestroyRenderer(renderer);
     SDL_DestroyWindow(win);
-    SDL_Quit();
 
     return result;
 
@@ -77,10 +74,12 @@ Image *resize_image_square(const Image *src)
 Image *resize_image(const Image *src, const int width, const int height, const bool keep_aspect_ratio)
 {
     if (keep_aspect_ratio) {
-        const Image *square = resize_image_square(src);
+        Image *square = resize_image_square(src);
         const float scale_x = (float)width / (float)square->width;
         const float scale_y = (float)height / (float)square->height;
-        return manual_image_scaling(square, scale_x, scale_y);
+        Image *res =  manual_image_scaling(square, scale_x, scale_y);
+        free_image(square);
+        return res;
     }
 
     const float scale_x = (float)width / (float)src->width;
@@ -88,14 +87,13 @@ Image *resize_image(const Image *src, const int width, const int height, const b
     return manual_image_scaling(src, scale_x, scale_y);
 }
 
-long double *get_nn_input(const Image *img)
+void get_nn_input(const Image *img, long double *input)
 {
-    long double *input = malloc(sizeof(long double) * 28 * 28);
     if (!input) {
-        printf("Memory allocation failed for NN input\n");
+        printf("input provided to get_nn_input is NULL\n");
         exit(EXIT_FAILURE);
     }
-    const Image *resized = resize_image(img, 28, 28, true);
+    Image *resized = resize_image(img, 28, 28, true);
     int index = 0;
     for (int j = 0; j < resized->height; j++) {
         for (int i = 0; i < resized->width; i++) {
@@ -104,5 +102,5 @@ long double *get_nn_input(const Image *img)
             input[index++] = (long double)(p->r) / 255.0;
         }
     }
-    return input;
+    free_image(resized);
 }

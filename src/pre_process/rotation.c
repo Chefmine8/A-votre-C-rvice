@@ -9,10 +9,6 @@ Image *manual_rotate_image(const Image *src, const double angle)
     if (!src)
         return NULL;
 
-    // SDL Init
-    SDL_Init(SDL_INIT_VIDEO);
-    IMG_Init(IMG_INIT_PNG);
-
     // window and renderer (hidden)
     SDL_Window *win =
         SDL_CreateWindow("Hidden", SDL_WINDOWPOS_UNDEFINED,
@@ -20,8 +16,10 @@ Image *manual_rotate_image(const Image *src, const double angle)
     SDL_Renderer *renderer =
         SDL_CreateRenderer(win, -1, SDL_RENDERER_ACCELERATED);
 
+    SDL_Surface *temp_surf = image_to_sdl_surface(src);
     SDL_Texture *tex =
-        SDL_CreateTextureFromSurface(renderer, image_to_sdl_surface(src));
+        SDL_CreateTextureFromSurface(renderer, temp_surf);
+    SDL_FreeSurface(temp_surf);
 
     // angle in radian
     const double rad = angle * M_PI / 180;
@@ -63,7 +61,6 @@ Image *manual_rotate_image(const Image *src, const double angle)
     SDL_FreeSurface(resultSurf);
     SDL_DestroyRenderer(renderer);
     SDL_DestroyWindow(win);
-    SDL_Quit();
 
     return result;
 }

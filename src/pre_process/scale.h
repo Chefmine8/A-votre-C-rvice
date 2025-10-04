@@ -44,14 +44,12 @@ Image *resize_image(const Image *src, int width, int height, bool keep_aspect_ra
 
 
 /**
- * @brief Prepares the input data for a neural network by resizing the image to 28x28 pixels
- *        and normalizing the pixel values.
+ * @brief Converts an image to a format suitable for neural network input.
  *
- * The function resizes the input image to 28x28 pixels, converts each pixel's red channel value
- * to a long double in the range [0, 1], and stores these values in a dynamically allocated array.
- * The caller is responsible for freeing the allocated memory.
+ * The image is resized to 28x28 pixels, and the pixel values are normalized to the range [0, 1].
+ * The resulting pixel values are stored in a provided array.
  *
- * @param img Pointer to the input Image
- * @return long double* Pointer to an array of normalized pixel values (size 784)
+ * @param img   Pointer to the source Image
+ * @param input Pointer to a pre-allocated array of long doubles with at least 784 elements (28*28)
  */
-long double *get_nn_input(const Image *img);
+void get_nn_input(const Image *img, long double *input);
