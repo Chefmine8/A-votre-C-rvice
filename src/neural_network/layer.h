@@ -48,7 +48,7 @@ struct layer
      * /!\ USE update_outputs() BEFORE USING!
      * pointer of output[layer_size]
      */
-    long double **outputs;
+    long double *outputs;
 };
 
 /**

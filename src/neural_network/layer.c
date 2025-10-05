@@ -57,8 +57,8 @@ void link_layers(struct layer *back_layer, struct layer *front_layer)
     }
 
     front_layer->prev_layer = back_layer;
-    free(*(front_layer->inputs));
-    front_layer->inputs = back_layer->outputs;
+    free(front_layer->outputs);
+    back_layer->outputs = *front_layer->inputs;
 }
 
 /**
@@ -74,10 +74,10 @@ void link_layer_output(struct layer *layer, int output_size, long double **outpu
     }
 
     if(layer->outputs != NULL){
-        free(*(layer->outputs));
+        free(layer->outputs);
     }
 
-    layer->outputs = outputs;
+    layer->outputs = *outputs;
 }
 
 /**
@@ -91,8 +91,8 @@ void link_layer_input(struct layer *layer, int input_size, long double **inputs)
     if (input_size != layer->layer_size) {
         errx(EXIT_FAILURE, "layer not the same size as the inputs");
     }
-    if(layer->inputs != NULL)
-        free(*(layer->inputs));
+
+    free(*(layer->inputs));
     layer->inputs = inputs;
 }
 
@@ -101,6 +101,10 @@ void link_layer_input(struct layer *layer, int input_size, long double **inputs)
  * @param layer The layer to calculate the output.
  * @return The output.
  */
+long double activation_function(long double x) {
+    return x > 0 ? x : 0;
+}
+
 void update_outputs(const struct layer *layer)
 {
 
@@ -112,7 +116,7 @@ void update_outputs(const struct layer *layer)
             output += (*layer->inputs)[j] * layer->weights[i][j];
         }
 
-        *layer->outputs[i] = output;
+        layer->outputs[i] = activation_function( output );
     }
 }
 
@@ -131,11 +135,11 @@ void check_layer(const struct layer *layer) {
 
     printf("-----------------------------\nlayer number: %d\n", layer->layer_size);
     if (layer->prev_layer != NULL)
-        printf("input connected: %d\n",  *(layer->inputs) == *(layer->prev_layer->outputs) );
+        printf("input connected: %d\n",  *(layer->inputs) == (layer->prev_layer->outputs) );
     else {
         printf("input is input: %d\n", *layer->inputs[0] == 69 );
     }
-    printf("output connected (if not last layer 0 is normal tkt frère): %d\n", *(layer->outputs)[0] == 69  );
+    printf("output connected (if not last layer 0 is normal tkt frère): %d\n", (layer->outputs)[0] == 69  );
 
     if (layer->prev_layer != NULL) {
         check_layer(layer->prev_layer);

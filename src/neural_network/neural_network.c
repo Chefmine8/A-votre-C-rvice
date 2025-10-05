@@ -21,7 +21,7 @@ struct neural_network *create_neural_network(int size_of_arr, int arr[size_of_ar
      neural_network->inputs = malloc(sizeof(long double) * arr[0]);
      neural_network->input_size = arr[0];
 
-     neural_network->outputs = malloc(sizeof(long double) * arr[size_of_arr - 1]);
+     neural_network->outputs = malloc(sizeof(long double *));
      neural_network->output_size = arr[size_of_arr - 1];
 
      neural_network->layers = malloc(sizeof(struct layer *) * size_of_arr);
@@ -34,7 +34,7 @@ struct neural_network *create_neural_network(int size_of_arr, int arr[size_of_ar
           link_layers(neural_network->layers[i - 1], neural_network->layers[i]);
      }
 
-     link_layer_output(neural_network->layers[size_of_arr - 1], neural_network->output_size, &neural_network->outputs);
+     link_layer_output(neural_network->layers[size_of_arr - 1], neural_network->output_size, neural_network->outputs);
      return neural_network;
 }
 
@@ -44,8 +44,8 @@ void free_neural_network(struct neural_network *neural_network) {
      free(neural_network);
 }
 
-void check_neural_network(struct neural_network *neural_network) {
+void check_neural_network(const struct neural_network *neural_network) {
      neural_network->inputs[0] = 69;
-     neural_network->outputs[0] = 69;
+     (*neural_network->outputs)[0] = 69;
      check_layer(neural_network->layers[neural_network->number_of_layers - 1]);
 }
