@@ -37,10 +37,11 @@ struct neural_network *create_neural_network(int size_of_arr, int arr[size_of_ar
           neural_network->layers[i] = create_layer(arr[i - 1], arr[i]);
           printf("create nn 10\n");
           link_layers(&neural_network->layers[i - 1], &neural_network->layers[i]);
-          printf("create nn 11\n");
+          printf("create nn 11, %d\n", i);
      }
-
+     printf("create nn 12\n");
      link_layer_output(neural_network->layers[size_of_arr - 1], neural_network->output_size, neural_network->outputs);
+     printf("create nn 13\n");
      return neural_network;
 }
 

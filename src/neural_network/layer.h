@@ -72,7 +72,7 @@ void link_layers(struct layer **back_layer, struct layer **front_layer);
  * @param output_size the size of outputs (for security)
  * @param outputs the array of size output_size that will contain the output of the neural network
  */
-void link_layer_output(struct layer *layer, int output_size, long double **outputs);
+void link_layer_output(struct layer *layer,const int output_size, long double **outputs);
 
 /**
  * Link the last layer of the neural network to an array

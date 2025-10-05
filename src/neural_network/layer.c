@@ -51,15 +51,15 @@ struct layer *create_layer(const int prev_layer_size, const int layer_size)
  * @param back_layer the layer closest to the input
  * @param front_layer the layer closest to the output
  */
-void link_layers(struct layer *back_layer, struct layer *front_layer)
+void link_layers(struct layer **back_layer, struct layer **front_layer)
 {
-    if (back_layer->layer_size != front_layer->prev_layer_size) {
+    if ((*back_layer)->layer_size != (*front_layer)->prev_layer_size) {
         errx(EXIT_FAILURE, "Trying to link two incompatible layers ! back_layer->layer_size != front_layer->prev_layer_size");
     }
 
-    front_layer->prev_layer = back_layer;
-    free(front_layer->outputs);
-    back_layer->outputs = *front_layer->inputs;
+    (*front_layer)->prev_layer = *back_layer;
+    free((*front_layer)->outputs);
+    (*back_layer)->outputs = *(*front_layer)->inputs;
 }
 
 /**
@@ -68,18 +68,24 @@ void link_layers(struct layer *back_layer, struct layer *front_layer)
  * @param output_size the size of outputs (for security)
  * @param outputs the array of size output_size that will contain the output of the neural network
  */
-void link_layer_output(struct layer *layer, int output_size, long double **outputs)
+void link_layer_output(struct layer *layer, const int output_size, long double **outputs)
 {
-    printf("\nlayer nb: %d\n", layer->layer_size);
+    printf("\nllo layer nb: %d\n", layer->layer_size);
+    printf("llo 1");
     if (output_size != layer->layer_size) {
         errx(EXIT_FAILURE, "layer not the same size as the outputs");
     }
 
+    printf("llo 2");
     if(layer->outputs != NULL){
+        printf("llo 2.2");
         free(layer->outputs);
+        printf("llo 2.9");
     }
 
+    printf("llo 3");
     layer->outputs = *outputs;
+    printf("llo 4");
 }
 
 /**
