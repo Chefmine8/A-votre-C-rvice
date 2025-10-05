@@ -17,7 +17,8 @@ struct layer *create_layer(const int prev_layer_size, const int layer_size)
 
 
     res->prev_layer = NULL;
-    res->outputs = NULL;
+
+    res->outputs = malloc(sizeof(long double * ));
 
     res->prev_layer_size = prev_layer_size;
     res->layer_size = layer_size;
@@ -69,6 +70,7 @@ void link_layers(struct layer *back_layer, struct layer *front_layer)
  */
 void link_layer_output(struct layer *layer, int output_size, long double **outputs)
 {
+    printf("\nlayer nb: %d\n", layer->layer_size);
     if (output_size != layer->layer_size) {
         errx(EXIT_FAILURE, "layer not the same size as the outputs");
     }
@@ -137,12 +139,16 @@ void check_layer(const struct layer *layer) {
     if (layer->prev_layer != NULL)
         printf("input connected: %d\n",  *(layer->inputs) == (layer->prev_layer->outputs) );
     else {
+        printf("cl 1\n");
         printf("input is input: %d\n", *layer->inputs[0] == 69 );
+        printf("cl 2\n");
     }
     printf("output connected (if not last layer 0 is normal tkt frère): %d\n", (layer->outputs)[0] == 69  );
 
     if (layer->prev_layer != NULL) {
+        printf("cl 5\n");
         check_layer(layer->prev_layer);
+        printf("cl 6\n");
     }
 
 }

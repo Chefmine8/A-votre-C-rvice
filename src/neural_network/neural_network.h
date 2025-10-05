@@ -13,6 +13,9 @@ struct neural_network {
     int number_of_layers;
     struct layer **layers;
 
+    int *size_of_layers;
+    long double **layers_middle_array;
+
     int output_size;
     long double **outputs;
 };
