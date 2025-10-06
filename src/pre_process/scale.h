@@ -5,7 +5,7 @@
 #include "../core/image.h"
 
 /**
- * @brief Scales an image to the specified width scake and height using SDL for pixel manipulation.
+ * @brief Scales an image to the specified width scale and height using SDL for pixel manipulation.
  *
  * This function creates a new Image with the desired scale factor and uses SDL to handle the pixel data.
  * @param src     Pointer to the source Image

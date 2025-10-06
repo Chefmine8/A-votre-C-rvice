@@ -90,7 +90,7 @@ Image *resize_image(const Image *src, const int width, const int height, const b
 void get_nn_input(const Image *img, long double *input)
 {
     if (!input) {
-        printf("input provided to get_nn_input is NULL\n");
+        printf("Error: input array pointer is NULL in get_nn_input()\n");
         exit(EXIT_FAILURE);
     }
     Image *resized = resize_image(img, 28, 28, true);
@@ -98,8 +98,9 @@ void get_nn_input(const Image *img, long double *input)
     for (int j = 0; j < resized->height; j++) {
         for (int i = 0; i < resized->width; i++) {
             const Pixel *p = get_pixel(resized, i, j);
-            // normalize to [0, 1]
-            input[index++] = (long double)(p->r) / 255.0;
+            // Convert to grayscale using standard luminance formula and normalize to [0, 1]
+            long double gray = (0.299 * p->r + 0.587 * p->g + 0.114 * p->b) / 255.0;
+            input[index++] = gray;
         }
     }
     free_image(resized);
