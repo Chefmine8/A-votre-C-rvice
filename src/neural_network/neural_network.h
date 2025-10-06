@@ -26,4 +26,6 @@ void free_neural_network(struct neural_network *neural_network);
 
 void check_neural_network(const struct neural_network *neural_network);
 
+void calculate_output(const struct neural_network *neural_network);
+
 #endif //A_VOTRE_C_RVICE_NEURAL_NETWORK_H

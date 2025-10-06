@@ -12,7 +12,7 @@
 struct neural_network *create_neural_network(int size_of_arr, int arr[size_of_arr])
 {
 
-     if (size_of_arr < 2) {
+     if (size_of_arr <= 2) {
           errx(EXIT_FAILURE, "Do you have a brain of that size ?");
      }
      struct neural_network *neural_network = malloc(sizeof(struct neural_network));
@@ -59,4 +59,10 @@ void check_neural_network(const struct neural_network *neural_network) {
 
      check_layer(neural_network->layers[neural_network->number_of_layers - 1]);
 
+}
+
+void calculate_output(const struct neural_network *neural_network) {
+     printf("co !\n");
+     update_outputs( neural_network->layers[neural_network->number_of_layers -1] );
+     printf("co !\n");
 }

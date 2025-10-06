@@ -112,17 +112,29 @@ long double activation_function(long double x) {
 
 void update_outputs(const struct layer *layer)
 {
-
+    if (layer->prev_layer != NULL) {
+        update_outputs(layer->prev_layer);
+    }
+    printf("\n ---------- layer nb : %d ---------- \n", layer->layer_size);
     for (int i = 0; i < layer->layer_size; i++)
     {
+        printf("    i = %d\n", i);
         int output = 0;
+        // printf("    uo 1\n");
         for (int j = 0; j < layer->prev_layer_size; j++)
         {
-            output += (*layer->inputs)[j] * layer->weights[i][j];
-        }
+            printf("        j = %d\n", j);
+            // printf("        %ld\n", layer->weights[i][j] );
+            // printf("        %ld\n", (*layer->inputs)[j] );
 
+            output += (*layer->inputs)[j] * layer->weights[i][j];
+            // printf("        uo 2\n");
+        }
+        // printf("    uo 3\n");
         layer->outputs[i] = activation_function( output );
+        // printf("    uo 4\n");
     }
+    // printf("uo 5\n");
 }
 
 void free_layers(struct layer *layer) {
