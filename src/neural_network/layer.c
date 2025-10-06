@@ -4,6 +4,7 @@
 #include <stdlib.h>
 #include <err.h>
 #include <stdio.h>
+#include "neural_network.h"
 
 /**
  *
@@ -56,10 +57,9 @@ void link_layers(struct layer **back_layer, struct layer **front_layer)
     if ((*back_layer)->layer_size != (*front_layer)->prev_layer_size) {
         errx(EXIT_FAILURE, "Trying to link two incompatible layers ! back_layer->layer_size != front_layer->prev_layer_size");
     }
-
+    free((*front_layer)->prev_layer);
     (*front_layer)->prev_layer = *back_layer;
-    free((*front_layer)->outputs);
-    (*back_layer)->outputs = *(*front_layer)->inputs;
+    *(*front_layer)->inputs = (*back_layer)->outputs;
 }
 
 /**
@@ -68,24 +68,21 @@ void link_layers(struct layer **back_layer, struct layer **front_layer)
  * @param output_size the size of outputs (for security)
  * @param outputs the array of size output_size that will contain the output of the neural network
  */
-void link_layer_output(struct layer *layer, const int output_size, long double **outputs)
+void link_layer_output(struct layer *layer, struct neural_network *neural_network)
 {
-    printf("\nllo layer nb: %d\n", layer->layer_size);
-    printf("llo 1");
-    if (output_size != layer->layer_size) {
+    if (neural_network->output_size != layer->layer_size) {
         errx(EXIT_FAILURE, "layer not the same size as the outputs");
     }
 
-    printf("llo 2");
+
     if(layer->outputs != NULL){
-        printf("llo 2.2");
+
         free(layer->outputs);
-        printf("llo 2.9");
+
     }
 
-    printf("llo 3");
-    layer->outputs = *outputs;
-    printf("llo 4");
+    *neural_network->outputs = layer->outputs;
+
 }
 
 /**
@@ -140,21 +137,19 @@ void free_layers(struct layer *layer) {
 
 
 void check_layer(const struct layer *layer) {
-
-    printf("-----------------------------\nlayer number: %d\n", layer->layer_size);
-    if (layer->prev_layer != NULL)
-        printf("input connected: %d\n",  *(layer->inputs) == (layer->prev_layer->outputs) );
-    else {
-        printf("cl 1\n");
-        printf("input is input: %d\n", *layer->inputs[0] == 69 );
-        printf("cl 2\n");
-    }
-    printf("output connected (if not last layer 0 is normal tkt frère): %d\n", (layer->outputs)[0] == 69  );
+    printf("\n ---------- layer nb: %d ----------\n", layer->layer_size);
 
     if (layer->prev_layer != NULL) {
-        printf("cl 5\n");
+        printf("input connected: %d\n",  *(layer->inputs) == (layer->prev_layer->outputs) );
+    }
+    else {
+        printf("input is input: %d\n", *layer->inputs[0] == 69 );
+    }
+    printf("last layer output connected: %d\n", (layer->outputs)[0] == 69  );
+
+    if (layer->prev_layer != NULL) {
         check_layer(layer->prev_layer);
-        printf("cl 6\n");
+
     }
 
 }
