@@ -16,6 +16,9 @@ struct layer *create_layer(const int prev_layer_size, const int layer_size)
 {
     struct layer *res = malloc(sizeof(struct layer));
 
+    if (res == NULL) {
+        errx(EXIT_FAILURE, "malloc failed");
+    }
 
     res->prev_layer = NULL;
 
@@ -131,7 +134,7 @@ void free_layers(struct layer *layer) {
 
     free(layer->outputs);
 
-    if((layer->inputs) != NULL) {
+    if(layer->inputs != NULL) {
         printf("fl 1.5\n");
         printf("%Lg\n", layer->inputs[0]);
         free(layer->inputs); // ERROR
@@ -141,7 +144,7 @@ void free_layers(struct layer *layer) {
     printf("fl 3\n");
     if (layer->prev_layer != NULL) {
         printf("fl 3.5\n");
-        free_layers(layer->prev_layer);
+        //free_layers(layer->prev_layer);
     }
     printf("fl 4\n");
     free(layer);
@@ -158,7 +161,7 @@ void check_layer(const struct layer *layer) {
 
     printf("input is input of nn: %d\n", layer->inputs[0] == 69 );
 
-    printf("output is output of nn: %d\n\n", (layer->outputs)[0] == 69  );
+    printf("output is output of nn: %d\n\n", layer->outputs[0] == 69  );
 
     if (layer->prev_layer != NULL) {
         check_layer(layer->prev_layer);
