@@ -115,13 +115,17 @@ long double linear_activation_function(long double x) {
     return x > 0 ? x : 0;
 }
 void soft_max_activation_function(const struct  layer *layer) {
-    long double sum = 0;
-    for (int i = 0; i < layer->layer_size; i++) {
-        layer->outputs[i] = exp(layer->outputs[i]);
+    long double sum = layer->outputs[0];
+    long double max = layer->outputs[0];
+    for (int i = 1; i < layer->layer_size; i++) {
+        if (max < layer->outputs[i]) {
+            max = layer->outputs[i];
+        }
+
         sum += layer->outputs[i];
     }
     for (int i = 0; i < layer->layer_size; i++) {
-        layer->outputs[i] = layer->outputs[i] / sum;
+        layer->outputs[i] = exp(layer->outputs[i] - max) / sum;
     }
 }
 
