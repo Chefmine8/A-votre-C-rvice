@@ -5,6 +5,8 @@
 #ifndef A_VOTRE_C_RVICE_LAYER_H
 #define A_VOTRE_C_RVICE_LAYER_H
 
+#include <stdbool.h>
+
 #include "neural_network.h"
 
 /**
@@ -49,6 +51,8 @@ struct layer
      * pointer of output[layer_size]
      */
     long double *outputs;
+
+    bool is_output_layer;
 };
 
 /**

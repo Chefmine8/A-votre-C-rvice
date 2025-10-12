@@ -4,6 +4,7 @@
 #include <stdlib.h>
 #include <err.h>
 #include <stdio.h>
+#include <math.h>
 #include "neural_network.h"
 
 /**
@@ -23,6 +24,7 @@ struct layer *create_layer(const int prev_layer_size, const int layer_size)
     res->prev_layer = NULL;
 
     res->outputs = malloc(sizeof(long double * ));
+    res->is_output_layer = false;
 
     res->prev_layer_size = prev_layer_size;
     res->layer_size = layer_size;
@@ -85,7 +87,7 @@ void link_layer_output(struct layer *layer, struct neural_network *neural_networ
     }
 
     *neural_network->outputs = layer->outputs;
-
+    layer->is_output_layer = true;
 }
 
 /**
@@ -109,8 +111,18 @@ void link_layer_input(struct layer *layer, int input_size, long double **inputs)
  * @param layer The layer to calculate the output.
  * @return The output.
  */
-long double activation_function(long double x) {
+long double linear_activation_function(long double x) {
     return x > 0 ? x : 0;
+}
+void soft_max_activation_function(const struct  layer *layer) {
+    long double sum = 0;
+    for (int i = 0; i < layer->layer_size; i++) {
+        layer->outputs[i] = exp(layer->outputs[i]);
+        sum += layer->outputs[i];
+    }
+    for (int i = 0; i < layer->layer_size; i++) {
+        layer->outputs[i] = layer->outputs[i] / sum;
+    }
 }
 
 void update_outputs(const struct layer *layer)
@@ -125,7 +137,11 @@ void update_outputs(const struct layer *layer)
         {
             output += layer->inputs[j] * layer->weights[i][j];
         }
-        layer->outputs[i] = activation_function( output );
+        layer->outputs[i] = layer->is_output_layer ? output : linear_activation_function( output );
+
+    }
+    if (layer->is_output_layer) {
+        soft_max_activation_function(layer);
     }
 }
 
