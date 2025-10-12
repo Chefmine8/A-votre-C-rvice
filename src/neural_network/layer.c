@@ -59,7 +59,7 @@ void link_layers(struct layer **back_layer, struct layer **front_layer)
     }
     free((*front_layer)->prev_layer);
     (*front_layer)->prev_layer = *back_layer;
-    *(*front_layer)->inputs = (*back_layer)->outputs;
+    (*back_layer)->outputs = (*front_layer)->inputs;
 }
 
 /**
@@ -97,8 +97,8 @@ void link_layer_input(struct layer *layer, int input_size, long double **inputs)
         errx(EXIT_FAILURE, "layer not the same size as the inputs");
     }
 
-    free(*(layer->inputs));
-    layer->inputs = inputs;
+    free(layer->inputs);
+    layer->inputs = *inputs;
 }
 
 /**
@@ -115,49 +115,50 @@ void update_outputs(const struct layer *layer)
     if (layer->prev_layer != NULL) {
         update_outputs(layer->prev_layer);
     }
-    printf("\n ---------- layer nb : %d ---------- \n", layer->layer_size);
     for (int i = 0; i < layer->layer_size; i++)
     {
-        printf("    i = %d\n", i);
         int output = 0;
-        // printf("    uo 1\n");
         for (int j = 0; j < layer->prev_layer_size; j++)
         {
-            printf("        j = %d\n", j);
-            // printf("        %ld\n", layer->weights[i][j] );
-            // printf("        %ld\n", (*layer->inputs)[j] );
-
-            output += (*layer->inputs)[j] * layer->weights[i][j];
-            // printf("        uo 2\n");
+            output += layer->inputs[j] * layer->weights[i][j];
         }
-        // printf("    uo 3\n");
         layer->outputs[i] = activation_function( output );
-        // printf("    uo 4\n");
     }
-    // printf("uo 5\n");
 }
 
 void free_layers(struct layer *layer) {
-    if((layer->inputs) != NULL)
-        free(*(layer->inputs));
+    printf("fl 1 layer nb: %d\n", layer->layer_size);
+
+    free(layer->outputs);
+
+    if((layer->inputs) != NULL) {
+        printf("fl 1.5\n");
+        printf("%Lg\n", layer->inputs[0]);
+        free(layer->inputs); // ERROR
+    }
+    printf("fl 2\n");
     free((layer->biases));
+    printf("fl 3\n");
     if (layer->prev_layer != NULL) {
+        printf("fl 3.5\n");
         free_layers(layer->prev_layer);
     }
+    printf("fl 4\n");
     free(layer);
+    printf("fl 5\n");
 }
 
 
 void check_layer(const struct layer *layer) {
-    printf("\n ---------- layer nb: %d ----------\n", layer->layer_size);
+    printf("---------- layer nb: %d ----------\n", layer->layer_size);
 
     if (layer->prev_layer != NULL) {
-        printf("input connected: %d\n",  *(layer->inputs) == (layer->prev_layer->outputs) );
+        printf("input connected: %d\n",  layer->inputs == (layer->prev_layer->outputs) );
     }
-    else {
-        printf("input is input: %d\n", *layer->inputs[0] == 69 );
-    }
-    printf("last layer output connected: %d\n", (layer->outputs)[0] == 69  );
+
+    printf("input is input of nn: %d\n", layer->inputs[0] == 69 );
+
+    printf("output is output of nn: %d\n\n", (layer->outputs)[0] == 69  );
 
     if (layer->prev_layer != NULL) {
         check_layer(layer->prev_layer);
