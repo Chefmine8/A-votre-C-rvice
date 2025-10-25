@@ -119,10 +119,10 @@ void soft_max_activation_function(const struct  layer *layer) {
 }
 
 
-void update_outputs(const struct layer *layer)
+void layer_calculate_output(const struct layer *layer)
 {
     if (layer->prev_layer != NULL) {
-        update_outputs(layer->prev_layer);
+        layer_calculate_output(layer->prev_layer);
     }
     for (int i = 0; i < layer->layer_size; i++)
     {

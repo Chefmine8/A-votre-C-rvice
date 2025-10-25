@@ -46,7 +46,7 @@ struct layer
     long double *biases;
 
     /**
-     * /!\ USE update_outputs() BEFORE USING!
+     * /!\ USE layer_calculate_output() BEFORE USING!
      * pointer of output[layer_size]
      */
     long double *outputs;
@@ -88,7 +88,7 @@ void link_layer_input(struct layer *layer, int input_size, long double **inputs)
  * Update the layer->outputs array, use before reading the values
  * @param layer The layer
  */
-void update_outputs(const struct layer *layer);
+void layer_calculate_output(const struct layer *layer);
 
 /**
  * Free the struct layer and all of its arrays

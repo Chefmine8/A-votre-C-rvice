@@ -7,7 +7,7 @@
 #include <err.h>
 #include "layer.h"
 #include <stdio.h>
-
+#include <math.h>
 
 struct neural_network *create_neural_network(int size_of_arr, int arr[size_of_arr])
 {
@@ -70,6 +70,16 @@ void check_neural_network(const struct neural_network *neural_network) {
 }
 
 
-void calculate_output(const struct neural_network *neural_network) {
-     update_outputs( neural_network->layers[neural_network->number_of_layers -1] );
+void neural_network_calculate_output(const struct neural_network *neural_network) {
+     layer_calculate_output( neural_network->layers[neural_network->number_of_layers -1] );
+}
+
+/**
+ * Calculate the loss of the neural network using the categorical cross-entropy function
+ * @param neural_network The neural Network
+ * @param expected_output The expected output
+ * @return The calculated loss
+ */
+int categorical_cross_entropy(const struct neural_network *neural_network, char expected_output) {
+     return - log((*(neural_network->outputs))[expected_output - 'A']);
 }

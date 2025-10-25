@@ -11,7 +11,7 @@ int main()
     check_neural_network(test);
 
     time_t t = time(NULL);
-    calculate_output(test);
+    neural_network_calculate_output(test);
     printf("Time Calculating output : %ldsec\n", t - time(NULL));
     for (int i = 0; i < test->output_size; ++i) {
         printf("%Lg ", (*test->outputs)[i]);

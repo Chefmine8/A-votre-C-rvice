@@ -9,16 +9,31 @@
  */
 struct neural_network {
 
+    /**
+     * Size of inputs
+     */
     int input_size;
+    /**
+     * An array of size input_size
+     */
     long double *inputs;
 
+    /**
+     * Number of layers inside the neural network
+     */
     int number_of_layers;
+    /**
+     * Array of size number_of_layers
+     */
     struct layer **layers;
 
-    int *size_of_layers;
-    long double **layers_middle_array;
-
+    /**
+     * Size of outputs
+     */
     int output_size;
+    /**
+     * A pointer to an array of size output_size
+     */
     long double **outputs;
 };
 
@@ -46,6 +61,6 @@ void check_neural_network(const struct neural_network *neural_network);
  * Calculates the output of the neural network
  * @param neural_network The neural network
  */
-void calculate_output(const struct neural_network *neural_network);
+void neural_network_calculate_output(const struct neural_network *neural_network);
 
 #endif //A_VOTRE_C_RVICE_NEURAL_NETWORK_H
