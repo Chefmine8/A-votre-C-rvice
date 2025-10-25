@@ -1,6 +1,6 @@
 #pragma once
 
-#include "image.h"
+#include "../core/image.h"
 
 /**
  * @brief Converts an image to grayscale.

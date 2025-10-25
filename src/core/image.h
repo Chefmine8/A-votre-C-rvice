@@ -37,6 +37,15 @@ Image *create_image(int width, int height);
 /*<----------------------------->*/
 
 /**
+ * @brief Frees the memory allocated for an image.
+ *
+ * @param img Pointer to the image to free
+ */
+void free_image(Image *img);
+
+/*<----------------------------->*/
+
+/**
  * @brief Retrieves the pixel at position (x, y) in the image.
  *
  * @param img Pointer to the image

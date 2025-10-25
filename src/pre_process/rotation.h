@@ -1,6 +1,6 @@
 #pragma once
 
-#include "image.h"
+#include "../core/image.h"
 
 /**
  * @brief Rotates an image by a given angle (degrees) using SDL texture rendering.
