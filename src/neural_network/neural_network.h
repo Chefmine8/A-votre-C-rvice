@@ -63,4 +63,8 @@ void check_neural_network(const struct neural_network *neural_network);
  */
 void neural_network_calculate_output(const struct neural_network *neural_network);
 
+long double categorical_cross_entropy(const struct neural_network *neural_network, char expected_output);
+
+void minimise_loss(const struct neural_network *neural_network, char expected_output, long double shift);
+
 #endif //A_VOTRE_C_RVICE_NEURAL_NETWORK_H
