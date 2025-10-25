@@ -80,6 +80,58 @@ void neural_network_calculate_output(const struct neural_network *neural_network
  * @param expected_output The expected output
  * @return The calculated loss
  */
-int categorical_cross_entropy(const struct neural_network *neural_network, char expected_output) {
+long double categorical_cross_entropy(const struct neural_network *neural_network, char expected_output) {
      return - log((*(neural_network->outputs))[expected_output - 'A']);
+}
+
+void minimise_loss(const struct neural_network *neural_network, char expected_output, long double shift) {
+     for (int i = 0; i < neural_network->number_of_layers; ++i) {
+          struct layer *layer = neural_network->layers[i];
+
+          for (int j = 0; j < layer->layer_size; ++j) {
+
+               for (int k = 0; k < layer->prev_layer_size; ++k) {
+
+                    long double original_weight = layer->weights[j][k];
+                    neural_network_calculate_output(neural_network);
+                    long double current_loss = categorical_cross_entropy(neural_network, expected_output);
+
+                    layer->weights[j][k] += shift;
+                    neural_network_calculate_output(neural_network);
+                    long double plus_shift_loss = categorical_cross_entropy(neural_network, expected_output);
+
+                    layer->weights[j][k] -= shift*2;
+                    neural_network_calculate_output(neural_network);
+                    long double minus_shift_loss = categorical_cross_entropy(neural_network, expected_output);
+
+                    if (current_loss < minus_shift_loss && current_loss < plus_shift_loss) {
+                         layer->weights[j][k] = original_weight;
+                    }
+                    else if (plus_shift_loss < current_loss && plus_shift_loss < minus_shift_loss) {
+                         layer->weights[j][k] += shift*2;
+                    }
+               }
+
+               long double original_bias = layer->biases[j];
+               neural_network_calculate_output(neural_network);
+               long double current_loss = categorical_cross_entropy(neural_network, expected_output);
+
+               layer->biases[j] += shift;
+               neural_network_calculate_output(neural_network);
+               long double plus_shift_loss = categorical_cross_entropy(neural_network, expected_output);
+
+               layer->biases[j] -= shift*2;
+               neural_network_calculate_output(neural_network);
+               long double minus_shift_loss = categorical_cross_entropy(neural_network, expected_output);
+
+               if (current_loss < minus_shift_loss && current_loss < plus_shift_loss) {
+                    layer->biases[j] = original_bias;
+               }
+               else if (plus_shift_loss < current_loss && plus_shift_loss < minus_shift_loss) {
+                    layer->biases[j] += shift*2;
+
+
+               }
+          }
+     }
 }

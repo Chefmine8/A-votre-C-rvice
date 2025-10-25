@@ -10,12 +10,8 @@ int main()
     printf("Time Creating the Neural Network: %ldsec\n", (time(NULL) - t_create));
     check_neural_network(test);
 
-    time_t t = time(NULL);
-    neural_network_calculate_output(test);
-    printf("Time Calculating output : %ldsec\n", t - time(NULL));
-    for (int i = 0; i < test->output_size; ++i) {
-        printf("%Lg ", (*test->outputs)[i]);
-    }
+    print_values(test->layers[test->number_of_layers-1]);
+
     printf("\n");
     time_t t_free = time(NULL);
     free_neural_network(test);
