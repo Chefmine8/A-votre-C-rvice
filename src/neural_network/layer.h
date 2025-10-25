@@ -6,7 +6,6 @@
 #define A_VOTRE_C_RVICE_LAYER_H
 
 #include <stdbool.h>
-
 #include "neural_network.h"
 
 /**
@@ -56,7 +55,7 @@ struct layer
 };
 
 /**
- *
+ * create a struct layer
  * @param prev_layer_size size of the previous layer
  * @param layer_size size of this layer
  * @return the layer struct
@@ -73,10 +72,9 @@ void link_layers(struct layer **back_layer, struct layer **front_layer);
 /**
  * Link the last layer of the neural network to an array
  * @param layer the layer to link
- * @param output_size the size of outputs (for security)
- * @param outputs the array of size output_size that will contain the output of the neural network
+ * @param neural_network the neural network the layer will belong to
  */
-void link_layer_output(struct layer *layer, struct neural_network *neural_network);
+void link_layer_output(struct layer *layer, const struct neural_network *neural_network);
 
 /**
  * Link the last layer of the neural network to an array
@@ -87,14 +85,21 @@ void link_layer_output(struct layer *layer, struct neural_network *neural_networ
 void link_layer_input(struct layer *layer, int input_size, long double **inputs);
 
 /**
- *
- * @param layer The layer to calculate the output.
- * @return The output. \n /!\ DON'T FORGET TO FREE THE OUTPUT ONCE DONE
+ * Update the layer->outputs array, use before reading the values
+ * @param layer The layer
  */
 void update_outputs(const struct layer *layer);
 
+/**
+ * Free the struct layer and all of its arrays
+ * @param layer The layer to free
+ */
 void free_layers(struct layer *layer);
 
+/**
+ * Debug function helping to see if the layer has been build properly
+ * @param layer The layer
+ */
 void check_layer(const struct layer *layer);
 
 #endif //A_VOTRE_C_RVICE_LAYER_H

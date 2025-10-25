@@ -45,6 +45,7 @@ struct neural_network *create_neural_network(int size_of_arr, int arr[size_of_ar
      return neural_network;
 }
 
+
 void free_neural_network(struct neural_network *neural_network) {
      printf("fnn 1\n");
      free_layers(neural_network->layers[neural_network->number_of_layers - 1]);
@@ -57,6 +58,7 @@ void free_neural_network(struct neural_network *neural_network) {
      printf("fnn 5\n");
 }
 
+
 void check_neural_network(const struct neural_network *neural_network) {
 
      neural_network->inputs[0] = 69;
@@ -66,6 +68,7 @@ void check_neural_network(const struct neural_network *neural_network) {
      check_layer(neural_network->layers[neural_network->number_of_layers - 1]);
 
 }
+
 
 void calculate_output(const struct neural_network *neural_network) {
      update_outputs( neural_network->layers[neural_network->number_of_layers -1] );

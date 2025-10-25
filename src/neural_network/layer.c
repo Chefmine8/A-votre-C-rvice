@@ -5,14 +5,8 @@
 #include <err.h>
 #include <stdio.h>
 #include <math.h>
-#include "neural_network.h"
 
-/**
- *
- * @param prev_layer_size size of the previous layer
- * @param layer_size size of this layer
- * @return the layer struct
- */
+
 struct layer *create_layer(const int prev_layer_size, const int layer_size)
 {
     struct layer *res = malloc(sizeof(struct layer));
@@ -52,11 +46,7 @@ struct layer *create_layer(const int prev_layer_size, const int layer_size)
     return res;
 }
 
-/**
- * Link two internals layers together
- * @param back_layer the layer closest to the input
- * @param front_layer the layer closest to the output
- */
+
 void link_layers(struct layer **back_layer, struct layer **front_layer)
 {
     if ((*back_layer)->layer_size != (*front_layer)->prev_layer_size) {
@@ -67,13 +57,8 @@ void link_layers(struct layer **back_layer, struct layer **front_layer)
     (*back_layer)->outputs = (*front_layer)->inputs;
 }
 
-/**
- * Link the last layer of the neural network to an array
- * @param layer the layer to link
- * @param output_size the size of outputs (for security)
- * @param outputs the array of size output_size that will contain the output of the neural network
- */
-void link_layer_output(struct layer *layer, struct neural_network *neural_network)
+
+void link_layer_output(struct layer *layer, const struct neural_network *neural_network)
 {
     if (neural_network->output_size != layer->layer_size) {
         errx(EXIT_FAILURE, "layer not the same size as the outputs");
@@ -90,12 +75,7 @@ void link_layer_output(struct layer *layer, struct neural_network *neural_networ
     layer->is_output_layer = true;
 }
 
-/**
- * Link the last layer of the neural network to an array
- * @param layer the layer to link
- * @param input_size the size of inputs (for security)
- * @param inputs the array of size input_size that will contain the input of the neural network
- */
+
 void link_layer_input(struct layer *layer, int input_size, long double **inputs)
 {
     if (input_size != layer->layer_size) {
@@ -107,17 +87,26 @@ void link_layer_input(struct layer *layer, int input_size, long double **inputs)
 }
 
 /**
- *
- * @param layer The layer to calculate the output.
- * @return The output.
+ * Activation function used inside the neural network
+ * @param layer The layer.
  */
-long double linear_activation_function(long double x) {
-    return x > 0 ? x : 0;
+void ReLU_activation_function(const struct  layer *layer) {
+    for (int i = 0; i < layer->layer_size; i++) {
+        layer->outputs[i] = layer->outputs[i] > 0 ? layer->outputs[i] : 0;
+    }
+
 }
+
+
+/**
+ * Activation function used for the last layer (output) of the neural network
+ * @param layer The layer
+ */
 void soft_max_activation_function(const struct  layer *layer) {
     long double sum = layer->outputs[0];
     long double max = layer->outputs[0];
     for (int i = 1; i < layer->layer_size; i++) {
+
         if (max < layer->outputs[i]) {
             max = layer->outputs[i];
         }
@@ -128,6 +117,7 @@ void soft_max_activation_function(const struct  layer *layer) {
         layer->outputs[i] = exp(layer->outputs[i] - max) / sum;
     }
 }
+
 
 void update_outputs(const struct layer *layer)
 {
@@ -141,13 +131,17 @@ void update_outputs(const struct layer *layer)
         {
             output += layer->inputs[j] * layer->weights[i][j];
         }
-        layer->outputs[i] = layer->is_output_layer ? output : linear_activation_function( output );
+
 
     }
     if (layer->is_output_layer) {
         soft_max_activation_function(layer);
     }
+    else {
+        ReLU_activation_function(layer);
+    }
 }
+
 
 void free_layers(struct layer *layer) {
     printf("fl 1 layer nb: %d\n", layer->layer_size);
@@ -164,7 +158,7 @@ void free_layers(struct layer *layer) {
     printf("fl 3\n");
     if (layer->prev_layer != NULL) {
         printf("fl 3.5\n");
-        //free_layers(layer->prev_layer);
+        free_layers(layer->prev_layer);
     }
     printf("fl 4\n");
     free(layer);
