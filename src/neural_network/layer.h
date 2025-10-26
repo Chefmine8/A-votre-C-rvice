@@ -32,7 +32,7 @@ struct layer
     /**
      * pointer of inputs[prev_layer_size]
      */
-    long double *inputs;
+    long double **inputs;
 
     /**
      * weights[layer_size][prev_layer_size]
@@ -47,7 +47,7 @@ struct layer
 
     /**
      * /!\ USE layer_calculate_output() BEFORE USING!
-     * pointer of output[layer_size]
+     *  output[layer_size]
      */
     long double *outputs;
 
