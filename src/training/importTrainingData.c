@@ -1,13 +1,12 @@
 #include "importTrainingData.h"
-#include "../core/image.c"
 #include "../core/image.h"
 #include <dirent.h>
 #include <stdio.h>
 #include <string.h>
-#include "../neural_network/neural_network.c"
-#include "../pre_process/scale.c"
+#include "../neural_network/neural_network.h"
+#include "../pre_process/scale.h"
 #include <time.h>
-#include "../neural_network/layer.c"
+#include "../neural_network/layer.h"
 void single_train_cession(struct neural_network *neural_network, long double shift)
 {
     char* path = "../../resources/dataset/data/training_data/";
