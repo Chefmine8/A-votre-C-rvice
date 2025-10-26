@@ -4,13 +4,28 @@
 Image *create_image(const int width, const int height)
 {
     Image *img = malloc(sizeof(Image));
+    if (!img)
+    {
+        printf("Cannot allocate memory for image\n");
+        exit(EXIT_FAILURE);
+    }
     img->width = width;
     img->height = height;
 
     img->pixels = malloc(height * sizeof(Pixel *));
+    if (!img->pixels)
+    {
+        printf("Cannot allocate memory for image pixels\n");
+        exit(EXIT_FAILURE);
+    }
     for (int y = 0; y < height; y++)
     {
         img->pixels[y] = malloc(width * sizeof(Pixel));
+        if (!img->pixels[y])
+        {
+            printf("Cannot allocate memory for image pixels row\n");
+            exit(EXIT_FAILURE);
+        }
         // init to white
         for (int x = 0; x < width; x++) {
             img->pixels[y][x].r = 255;
