@@ -17,7 +17,7 @@ struct layer *create_layer(const int prev_layer_size, const int layer_size)
 
     res->prev_layer = NULL;
 
-    res->outputs = malloc(sizeof(long double * ) * layer_size);
+    res->outputs = malloc(sizeof(long double ) * layer_size);
     res->is_output_layer = false;
 
     res->prev_layer_size = prev_layer_size;
@@ -105,55 +105,40 @@ void ReLU_activation_function(const struct  layer *layer) {
 void soft_max_activation_function(const struct  layer *layer) {
     long double sum = 0;
     for (int i = 0; i < layer->layer_size; i++) {
-        printf("output before softmax : %Lg\n", layer->outputs[i]);
         layer->outputs[i] = exp(layer->outputs[i]);
         sum += layer->outputs[i];
 
     }
     for (int i = 0; i < layer->layer_size; i++) {
-        printf("smaf output %Lg\n", layer->outputs[i]);
-        printf("smaf sum %Lg\n", sum);
-        printf("smaf new output %Lg\n", layer->outputs[i] / sum);
         layer->outputs[i] = layer->outputs[i] / sum;
         if (isnanf(layer->outputs[i])) {
             errx(EXIT_FAILURE, "output is nan");
         }
-        printf("output after softmax : %Lg\n", layer->outputs[i]);
     }
 }
 
 
 void layer_calculate_output(const struct layer *layer)
 {
-    printf("lco layer nb : %d\n", layer->layer_size);
     if (layer->prev_layer != NULL) {
         layer_calculate_output(layer->prev_layer);
     }
-    printf("lco 0\n");
     for (int i = 0; i < layer->layer_size; i++)
     {
         long double output = 0;
-        printf("lco 0.5\n");
         if (layer->prev_layer == NULL) {
             for (int j = 0; j < layer->prev_layer_size; j++)
             {
-                printf("lco 0.6\n");
                 output += (*layer->inputs)[j] * layer->weights[i][j];
-                printf("lco 0.7\n");
             }
         }
         else {
             for (int j = 0; j < layer->prev_layer_size; j++)
             {
-                printf("lco 0.6\n");
                 output += layer->prev_layer->outputs[j] * layer->weights[i][j];
-                printf("lco 0.7\n");
             }
         }
-
-        printf("lco 1\n");
         layer->outputs[i] = output;
-        printf("lco 2\n");
     }
     if (layer->is_output_layer) {
         soft_max_activation_function(layer);
@@ -161,7 +146,6 @@ void layer_calculate_output(const struct layer *layer)
     else {
         ReLU_activation_function(layer);
     }
-    printf("lco 3 %d\n", layer->layer_size);
 }
 
 
