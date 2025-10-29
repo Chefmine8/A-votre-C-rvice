@@ -4,13 +4,28 @@
 Image *create_image(const int width, const int height)
 {
     Image *img = malloc(sizeof(Image));
+    if (!img)
+    {
+        printf("Cannot allocate memory for image\n");
+        exit(EXIT_FAILURE);
+    }
     img->width = width;
     img->height = height;
 
     img->pixels = malloc(height * sizeof(Pixel *));
+    if (!img->pixels)
+    {
+        printf("Cannot allocate memory for image pixels\n");
+        exit(EXIT_FAILURE);
+    }
     for (int y = 0; y < height; y++)
     {
         img->pixels[y] = malloc(width * sizeof(Pixel));
+        if (!img->pixels[y])
+        {
+            printf("Cannot allocate memory for image pixels row\n");
+            exit(EXIT_FAILURE);
+        }
         // init to white
         for (int x = 0; x < width; x++) {
             img->pixels[y][x].r = 255;
@@ -56,6 +71,20 @@ void set_pixel(const Image *img, const int x, const int y, const Pixel *p)
     }
 }
 
+// change the pixel color at (x,y)
+void set_pixel_color(const Image *img, int x, int y, uint8_t r, uint8_t g, uint8_t b)
+{
+    if (x >= 0 && x < img->width && y >= 0 && y < img->height)
+    {
+        if (img->pixels != NULL)
+        {
+            img->pixels[y][x].r = r;
+            img->pixels[y][x].g = g;
+            img->pixels[y][x].b = b;
+        }
+    }
+}
+
 // create a new image from a image struct
 Image *copy_image(const Image *img)
 {
@@ -91,7 +120,7 @@ Image *sdl_surface_to_image(const SDL_Surface *surf, Image *img)
 
             Uint8 r, g, b;
             SDL_GetRGB(*(Uint32 *)pPixel, surf->format, &r, &g, &b);
-            Pixel p = {r, g, b};
+            Pixel p = {r, g, b, x, y, 0, NULL};
             set_pixel(img, x, y, &p);
         }
     }

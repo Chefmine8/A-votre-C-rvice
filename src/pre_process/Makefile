@@ -2,10 +2,11 @@
 TARGET = test
 
 CC = gcc
+SANFLAGS = -fsanitize=address
 CFLAGS = -Wall -Wextra -g `sdl2-config --cflags`
 LDFLAGS = `sdl2-config --libs` -lSDL2_image -lm
 
-SRCS = $(wildcard ../pre_process/*.c ../core/*.c)
+SRCS = $(wildcard ../pre_process/*.c ../core/*.c ../pre_process/utils/*.c)
 
 OBJS = $(SRCS:.c=.o)
 
@@ -13,7 +14,7 @@ all: $(TARGET)
 
 # Lien des fichiers objets
 $(TARGET): $(OBJS)
-	$(CC) -o $@ $^ $(LDFLAGS)
+	$(CC)  $(SANFLAGS) -o $@ $^ $(LDFLAGS)
 
 %.o: %.c %.h
 	$(CC) $(CFLAGS) -c $< -o $@

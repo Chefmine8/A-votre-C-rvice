@@ -2,23 +2,27 @@
 
 #include <SDL2/SDL_image.h>
 #include <stdint.h>
+#include "../pre_process/utils/shapes.h"
 
 /**
  * @brief Pixel struct to store RGB values
  *
  */
-typedef struct
+typedef struct Pixel
 {
     uint8_t r; /**< Red component */
     uint8_t g; /**< Green component */
     uint8_t b; /**< Blue component */
+    int x, y;  /**< coord */
+    int isInShape;     /**< if is actually in shape */
+    Shape *shape_ptr;  /**< pointer to the shape or NULL if not */
 } Pixel;
 
 /**
  * @brief Image struct to store image data.
  * Use pointer to pointer to create a 2D array of pixels struct
  */
-typedef struct
+typedef struct Image
 {
     int width, height; /**< Width and height of the image */
     Pixel **pixels; /**< 2D array of pixels [height][width] */
@@ -67,6 +71,17 @@ Pixel *get_pixel(const Image *img, int x, int y);
  */
 void set_pixel(const Image *img, int x, int y, const Pixel *p);
 
+/*<----------------------------->*/
+
+/**
+ * @brief change the pixel color at position (x, y) in the image.
+ *
+ * @param img Pointer to the image
+ * @param x   X coordinate
+ * @param y   Y coordinate
+ * @param r,g,b color (0-255)
+ */
+void set_pixel_color(const Image *img, int x, int y, uint8_t r, uint8_t g, uint8_t b);
 
 /*<----------------------------->*/
 
