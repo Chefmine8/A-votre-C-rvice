@@ -22,44 +22,59 @@ int main()
     Image *imgs[] = { NULL, NULL, NULL, NULL, NULL, NULL, NULL };
     for (int i = 0; files[i] != NULL; i++) {
         imgs[i] = load_image(files[i]);
+
+        if (i == 2)
+        {
+            Image *tmp = manual_rotate_image(imgs[2], -24.5);
+            free_image(imgs[2]);
+            imgs[2] = tmp;
+        }
+        if (i == 3)
+        {
+            Image *tmp = manual_rotate_image(imgs[3], 4.5);
+            free_image(imgs[3]);
+            imgs[3] = tmp;
         }
 
-    /*
-    Image *rot = manual_rotate_image(imgs[2], -25);
-    free_image(imgs[2]);
-    imgs[2] = rot;
+        grayscale_image(imgs[i]);
 
-    Image *rot2 = manual_rotate_image(imgs[3], 4.5);
-    free_image(imgs[3]);
-    imgs[3] = rot2;
+        Image *tmp = sauvola(imgs[i], 12, 128, 0.07);
+        free_image(imgs[i]);
+        imgs[i] = tmp;
+
+
+        Shape **shapes = get_all_shape(imgs[i]);
+
+        remove_small_shape(imgs[i], shapes, 8);
+        remove_outliers_shape(imgs[i], shapes, 25,75,2.5,3);
+        remove_aspect_ration(imgs[i], shapes, 0.1, 5);
+
+
+        for (int j = 0; shapes[j] != NULL; j++)
+        {
+            free_shape(shapes[j]);
+        }
+        free(shapes);
+
+
+        // Export
+        char out_filename[256];
+        snprintf(out_filename, sizeof(out_filename), "processed_image_%d.bmp", i + 1);
+        SDL_Surface *surf = image_to_sdl_surface(imgs[i]);
+        if (surf) {
+            export_image(surf, out_filename);
+            SDL_FreeSurface(surf);
+        } else {
+            printf("Failed to convert image to SDL_Surface: %s\n", files[i]);
+        }
+    }
+
 
     // for (int i = 0; files[i] != NULL; i++) {
     //     Image *scale = resize_image(imgs[i], 600, 600, true);
     //     free_image(imgs[i]);
     //     imgs[i] = scale;
     // }
-
-
-    for (int i = 0; files[i] != NULL; i++) {
-        grayscale_image(imgs[i]);
-    }
-    for (int i = 0; files[i] != NULL; i++) {
-        Image *bin = sauvola(imgs[i], 12, 128, 0.07);
-        free_image(imgs[i]);
-        imgs[i] = bin;
-    }
-
-
-    // export
-    for (int i = 0; files[i] != NULL; i++) {
-        char output_file[256];
-        snprintf(output_file, sizeof(output_file), "../../resources/pre_process/output/output_image_%d.bmp", i + 1);
-        SDL_Surface *surf = image_to_sdl_surface(imgs[i]);
-        export_image(surf, output_file);
-        SDL_FreeSurface(surf);  // ✅
-        free_image(imgs[i]);
-    }
-
     // Image *img =
     //     load_image("../../resources/pre_process/input/level_1_image_2.png");
     //
@@ -91,61 +106,11 @@ int main()
     // // printf("\n");
     // free_image(bin);
     //free(nn_input);  // ✅
-    */
 
-    Image * test = manual_rotate_image(imgs[3], 4.5);
-    grayscale_image(test);
-
-
-    Image *tmp = sauvola(test, 12, 128, 0.07);
-    free_image(test);
-    test = tmp;
-
-
-    for (int x = 0; x < test->width; x++)
-    {
-
-        for (int y = 0; y < test->height; y++)
-        {
-            Pixel *p = get_pixel(test, x, y);
-            //printf("%i\n", p->r);
-        }
-    }
-
-    Shape **shapes = get_all_shape(test);
-
-    // Seed random generator
-    srand((unsigned int)time(NULL));
-
-    // Assign a random color to each shape
-    for (int i = 0; shapes[i] != NULL; i++)
-    {
-        uint8_t r = rand() % 256;
-        uint8_t g = rand() % 256;
-        uint8_t b = rand() % 256;
-
-        //printf("test %i", shapes[i]->count);
-        image_change_shape_color(test, shapes[i], r, g, b);
-        //image_remove_shape(test, shapes[i]);
-    }
-
-    remove_small_shape(test, shapes, 8);
-    remove_outliers_shape(test, shapes, 25,75,2.5,3);
-
-    SDL_Surface *surf = image_to_sdl_surface(test);
-    export_image(surf, "test_shapes_colored.bmp");
-    SDL_FreeSurface(surf);
-
-    for (int i = 0; shapes[i] != NULL; i++)
-    {
-        free_shape(shapes[i]);
-    }
-    free(shapes);
 
     for (int i = 0; imgs[i] != NULL; i++)
         free_image(imgs[i]);
 
-    free_image(test);
     cleanup_hidden_renderer();
     IMG_Quit();
     SDL_Quit();

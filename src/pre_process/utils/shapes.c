@@ -243,7 +243,7 @@ void remove_small_shape(Image *img, Shape **shapes, int threshold)
 {
     for (int i = 0; shapes[i] != NULL; ++i)
     {
-        if (shapes[i]->count < threshold)
+        if (shapes[i]->has_been_removed == 0 && shapes[i]->count < threshold)
         {
             shapes[i]->has_been_removed = 1;
             image_remove_shape(img, shapes[i]);
@@ -268,6 +268,11 @@ void remove_outliers_shape(Image *img, Shape **shapes, int low_percentile, int h
         global_size++;
     }
     double *area = malloc(sizeof(double ) * real_size);
+    if (!area)
+    {
+        printf("Cannot malloc memory for the area filter\n");
+        exit(EXIT_FAILURE);
+    }
     double sum = 0;
     for (int j = 0; j< global_size; j++)
     {
@@ -340,4 +345,17 @@ void remove_outliers_shape(Image *img, Shape **shapes, int low_percentile, int h
     }
 
     free(area);
+}
+
+
+void remove_aspect_ration(Image *img, Shape **shapes, double min_ration, double max_ratio)
+{
+    for (int i = 0; shapes[i] != NULL; ++i)
+    {
+        if (shapes[i]->has_been_removed == 0 && (shape_aspect_ratio(shapes[i]) < min_ration || shape_aspect_ratio(shapes[i]) > max_ratio))
+        {
+            shapes[i]->has_been_removed = 1;
+            image_remove_shape(img, shapes[i]);
+        }
+    }
 }
