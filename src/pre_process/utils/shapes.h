@@ -10,7 +10,7 @@ typedef struct Pixel Pixel;
  *
  */
 struct Shape{
-    Pixel *pixels; /**< dynamic list of pixels */
+    Pixel **pixels; /**< dynamic list of pixels */
     int count; /**< number of pixel of a shape */
     int max_x, max_y, min_x, min_y; /**< bound of shape */
     int capacity; /**< capacity to dynamic malloc pixels */
@@ -69,4 +69,46 @@ void image_add_shape(Image *img, Shape *s, uint8_t r, uint8_t g, uint8_t b);
  *
  * @param s     the shape we want free
  */
+
+
+
+/**
+ * @param s     the shape
+ * @return return the shape width it is the max distance betwin min_x and max_x
+ */
+int shape_width(Shape *s);
+
+
+/**
+ * @param s     the shape
+ * @return return the shape height it is the max distance betwin min_y and max_y
+ */
+int shape_height(Shape *s);
+
+
+/**
+ * @param s     the shape
+ * @return return area of the shape, width * height
+ */
+int shape_area(Shape *s);
+
+
+/**
+ * @param s     the shape
+ * @return return aspect ratio of the shape consider at a rectangle
+ */
+double shape_aspect_ratio(Shape *s);
+
+/**
+ * @param s     the shape
+ * @return return density of the shape consider at a rectangle (proportion of black pixel)
+ */
+double shape_density(Shape *s);
+
+
 void free_shape(Shape *s);
+
+
+// --- shape detection --- //
+
+Shape **get_all_shape(Image* img);

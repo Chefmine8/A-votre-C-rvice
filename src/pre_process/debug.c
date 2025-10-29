@@ -2,6 +2,7 @@
 #include "../core/image.h"
 #include "rotation.h"
 #include "scale.h"
+#include <time.h>
 
 int main()
 {
@@ -93,37 +94,53 @@ int main()
     */
 
     Image * test = imgs[0];
-    Shape *s = create_shape();
-    int count_y = 0;
-    int count_x = 0;
+    grayscale_image(test);
+
+
+    Image *bin = sauvola(test, 12, 128, 0.07);
+    test = bin;
+
+
     for (int x = 0; x < test->width; x++)
     {
-        count_x ++;
+
         for (int y = 0; y < test->height; y++)
         {
-            count_y ++;
             Pixel *p = get_pixel(test, x, y);
-            printf("%i:%i\n", p->x, p->y);
-            if(count_x >= 5)
-            {
-                count_x = 0;
-            }
-            if(count_y >= 5)
-            {
-                count_y = 0;
-            }
-            if(count_y == 0 ||count_x == 0)
-            {
-                shape_add_pixel(s, p);
-            }
+            printf("%i\n", p->r);
         }
     }
 
-    image_change_shape_color(test, s, 0, 255, 0);
+    Shape **shapes = get_all_shape(test);
 
-    export_image(image_to_sdl_surface(test), "test.bmp");
-    free_shape(s);
+    // Seed random generator
+    srand((unsigned int)time(NULL));
 
+    // Assign a random color to each shape
+    for (int i = 0; shapes[i] != NULL; i++)
+    {
+        uint8_t r = rand() % 256;
+        uint8_t g = rand() % 256;
+        uint8_t b = rand() % 256;
+
+        //printf("test %i", shapes[i]->count);
+        image_change_shape_color(test, shapes[i], r, g, b);
+        //image_remove_shape(test, shapes[i]);
+    }
+
+    SDL_Surface *surf = image_to_sdl_surface(test);
+    export_image(surf, "test_shapes_colored.bmp");
+    SDL_FreeSurface(surf);
+
+    for (int i = 0; shapes[i] != NULL; i++)
+    {
+        free_shape(shapes[i]);
+    }
+    free(shapes);
+
+    for (int i = 0; imgs[i] != NULL; i++)
+        free_image(imgs[i]);
+    free_image(test);
 
 
     IMG_Quit();
