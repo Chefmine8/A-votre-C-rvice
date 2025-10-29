@@ -19,7 +19,7 @@ int main()
         NULL
     };
 
-    Image *imgs[] = { NULL, NULL, NULL, NULL, NULL, NULL };
+    Image *imgs[] = { NULL, NULL, NULL, NULL, NULL, NULL, NULL };
     for (int i = 0; files[i] != NULL; i++) {
         imgs[i] = load_image(files[i]);
         }
@@ -29,7 +29,7 @@ int main()
     free_image(imgs[2]);
     imgs[2] = rot;
 
-    Image *rot2 = manual_rotate_image(imgs[3], 5);
+    Image *rot2 = manual_rotate_image(imgs[3], 4.5);
     free_image(imgs[3]);
     imgs[3] = rot2;
 
@@ -93,12 +93,13 @@ int main()
     //free(nn_input);  // ✅
     */
 
-    Image * test = imgs[0];
+    Image * test = manual_rotate_image(imgs[3], 4.5);
     grayscale_image(test);
 
 
-    Image *bin = sauvola(test, 12, 128, 0.07);
-    test = bin;
+    Image *tmp = sauvola(test, 12, 128, 0.07);
+    free_image(test);
+    test = tmp;
 
 
     for (int x = 0; x < test->width; x++)
@@ -107,7 +108,7 @@ int main()
         for (int y = 0; y < test->height; y++)
         {
             Pixel *p = get_pixel(test, x, y);
-            printf("%i\n", p->r);
+            //printf("%i\n", p->r);
         }
     }
 
@@ -128,6 +129,8 @@ int main()
         //image_remove_shape(test, shapes[i]);
     }
 
+    remove_small_shape(test, shapes, 8);
+
     SDL_Surface *surf = image_to_sdl_surface(test);
     export_image(surf, "test_shapes_colored.bmp");
     SDL_FreeSurface(surf);
@@ -140,9 +143,9 @@ int main()
 
     for (int i = 0; imgs[i] != NULL; i++)
         free_image(imgs[i]);
+
     free_image(test);
-
-
+    cleanup_hidden_renderer();
     IMG_Quit();
     SDL_Quit();
     return 0;

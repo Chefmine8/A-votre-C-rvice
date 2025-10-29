@@ -112,3 +112,5 @@ void free_shape(Shape *s);
 // --- shape detection --- //
 
 Shape **get_all_shape(Image* img);
+
+void remove_small_shape(Image *img, Shape **shapes, int threshold);

@@ -1,5 +1,7 @@
 #include "../../core/image.h"
 #include "shapes.h"
+#include <limits.h>
+
 
 Shape* create_shape()
 {
@@ -10,10 +12,10 @@ Shape* create_shape()
         exit(EXIT_FAILURE);
     }
     shape->count = 0;
-    shape->max_x = 0;
-    shape->max_y = 0;
-    shape->min_x = 0;
-    shape->min_y = 0;
+    shape->max_x = INT_MIN;
+    shape->max_y = INT_MIN;
+    shape->min_x = INT_MAX;
+    shape->min_y = INT_MAX;
     shape->capacity = 4;
 
     shape->pixels = malloc(shape->capacity * sizeof(Pixel*));
@@ -59,10 +61,15 @@ void shape_add_pixel(Shape *s, Pixel *p)
     p->isInShape = 1;
     p->shape_ptr = s;
 
-    if (p->x > s->max_x) s->max_x = p->x;
-    if (p->y > s->max_y) s->max_y = p->y;
-    if (p->x < s->min_x) s->min_x = p->x;
-    if (p->y < s->min_y) s->min_y = p->y;
+    if (s->count == 0) {
+        s->max_x = s->min_x = p->x;
+        s->max_y = s->min_y = p->y;
+    } else {
+        if (p->x > s->max_x) s->max_x = p->x;
+        if (p->y > s->max_y) s->max_y = p->y;
+        if (p->x < s->min_x) s->min_x = p->x;
+        if (p->y < s->min_y) s->min_y = p->y;
+    }
 }
 
 void image_change_shape_color(Image *img, Shape *s, uint8_t r, uint8_t g, uint8_t b)
@@ -229,4 +236,15 @@ Shape **get_all_shape(Image* img)
     }
     res[count] = NULL;
     return res;
+}
+
+void remove_small_shape(Image *img, Shape **shapes, int threshold)
+{
+    for (int i = 0; shapes[i] != NULL; ++i)
+    {
+        if (shapes[i]->count < threshold)
+        {
+            image_remove_shape(img, shapes[i]);
+        }
+    }
 }
