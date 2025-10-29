@@ -49,6 +49,7 @@ int main()
         remove_outliers_shape(imgs[i], shapes, 25,75,2.5,3);
         remove_aspect_ration(imgs[i], shapes, 0.1, 5);
 
+        clean_shapes(shapes);
 
         for (int j = 0; shapes[j] != NULL; j++)
         {

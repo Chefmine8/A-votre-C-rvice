@@ -114,6 +114,9 @@ void free_shape(Shape *s);
 
 Shape **get_all_shape(Image* img);
 
+void clean_shapes(Shape **shapes);
+
+
 void remove_small_shape(Image *img, Shape **shapes, int threshold);
 
 void remove_outliers_shape(Image *img, Shape **shapes, int low_percentile, int high_percentile, double iqr_factor, double mean_factor);

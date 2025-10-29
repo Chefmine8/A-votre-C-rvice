@@ -239,6 +239,23 @@ Shape **get_all_shape(Image* img)
     return res;
 }
 
+void clean_shapes(Shape **shapes)
+{
+    if (!shapes) return;
+
+    int write_i = 0;
+    for (int read_i = 0; shapes[read_i] != NULL; read_i++)
+    {
+        if (shapes[read_i]->has_been_removed == 0)
+            shapes[write_i++] = shapes[read_i];
+        else
+            free_shape(shapes[read_i]);
+    }
+
+    shapes[write_i] = NULL;
+}
+
+
 void remove_small_shape(Image *img, Shape **shapes, int threshold)
 {
     for (int i = 0; shapes[i] != NULL; ++i)
@@ -250,6 +267,8 @@ void remove_small_shape(Image *img, Shape **shapes, int threshold)
         }
     }
 }
+
+// to compare double
 int comp(const void *a, const void *b) {
     if (*(double*)a > *(double*)b) return 1;
     else if (*(double*)a < *(double*)b) return -1;
