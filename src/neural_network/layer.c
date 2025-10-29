@@ -138,6 +138,7 @@ void layer_calculate_output(const struct layer *layer)
                 output += layer->prev_layer->outputs[j] * layer->weights[i][j];
             }
         }
+        printf("og output: %Lg, new output: %Lg\n", layer->outputs[i], output);
         layer->outputs[i] = output;
     }
     if (layer->is_output_layer) {

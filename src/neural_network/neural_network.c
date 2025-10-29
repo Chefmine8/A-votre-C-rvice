@@ -76,8 +76,6 @@ void neural_network_calculate_output(const struct neural_network *neural_network
  * @return The calculated loss
  */
 long double categorical_cross_entropy(const struct neural_network *neural_network, char expected_output) {
-     printf("1.1 %c\n", expected_output);
-     printf("%p\n", *neural_network->outputs);
      return - log((*neural_network->outputs)[expected_output - 'A']);
 }
 char get_neural_network_output(const struct neural_network *neural_network) {
@@ -105,16 +103,17 @@ void minimise_loss(const struct neural_network *neural_network, char expected_ou
                     long double original_weight = layer->weights[j][k];
                     neural_network_calculate_output(neural_network);
                     long double current_loss = categorical_cross_entropy(neural_network, expected_output);
-                    if (current_loss <= 1.0e-10) {
-                         break;
-                    }
+                    printf("Current loss:     %Lg, %Lg\n", current_loss, neural_network->outputs[expected_output - 'A']);
+
                     layer->weights[j][k] += shift;
                     neural_network_calculate_output(neural_network);
                     long double plus_shift_loss = categorical_cross_entropy(neural_network, expected_output);
+                    printf("Plus shift loss:  %Lg, %Lg\n", plus_shift_loss, neural_network->outputs[expected_output - 'A']);
 
                     layer->weights[j][k] -= shift*2;
                     neural_network_calculate_output(neural_network);
                     long double minus_shift_loss = categorical_cross_entropy(neural_network, expected_output);
+                    printf("Minus shift loss: %Lg, %Lg\n", minus_shift_loss, neural_network->outputs[expected_output - 'A']);
 
                     if (current_loss < minus_shift_loss && current_loss < plus_shift_loss) {
                          layer->weights[j][k] = original_weight;
@@ -126,18 +125,18 @@ void minimise_loss(const struct neural_network *neural_network, char expected_ou
                     if (isnanf(categorical_cross_entropy(neural_network, expected_output))) {
                          errx(EXIT_FAILURE, "Loss is nan");
                     }
+
                     if (current_loss != categorical_cross_entropy(neural_network, expected_output)) {
                          printf("Loss: %Lg -> %Lg\n", current_loss, categorical_cross_entropy(neural_network, expected_output));
                          printf("Excepted: %c, Got: %c\n", expected_output, get_neural_network_output(neural_network));
                     }
                }
-
                long double original_bias = layer->biases[j];
                neural_network_calculate_output(neural_network);
                long double current_loss = categorical_cross_entropy(neural_network, expected_output);
-               if (current_loss <= 1.0e-10) {
-                    break;
-               }
+
+
+
                layer->biases[j] += shift;
                neural_network_calculate_output(neural_network);
                long double plus_shift_loss = categorical_cross_entropy(neural_network, expected_output);
@@ -151,6 +150,12 @@ void minimise_loss(const struct neural_network *neural_network, char expected_ou
                }
                else if (plus_shift_loss < current_loss && plus_shift_loss < minus_shift_loss) {
                     layer->biases[j] += shift*2;
+               }
+
+
+               if (current_loss != categorical_cross_entropy(neural_network, expected_output)) {
+                    printf("Loss: %Lg -> %Lg\n", current_loss, categorical_cross_entropy(neural_network, expected_output));
+                    printf("Excepted: %c, Got: %c\n", expected_output, get_neural_network_output(neural_network));
                }
           }
      }
