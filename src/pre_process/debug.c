@@ -130,6 +130,7 @@ int main()
     }
 
     remove_small_shape(test, shapes, 8);
+    remove_outliers_shape(test, shapes, 25,75,2.5,3);
 
     SDL_Surface *surf = image_to_sdl_surface(test);
     export_image(surf, "test_shapes_colored.bmp");

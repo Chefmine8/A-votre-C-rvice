@@ -17,6 +17,7 @@ Shape* create_shape()
     shape->min_x = INT_MAX;
     shape->min_y = INT_MAX;
     shape->capacity = 4;
+    shape->has_been_removed = 0;
 
     shape->pixels = malloc(shape->capacity * sizeof(Pixel*));
     if (!shape->pixels)
@@ -244,7 +245,99 @@ void remove_small_shape(Image *img, Shape **shapes, int threshold)
     {
         if (shapes[i]->count < threshold)
         {
+            shapes[i]->has_been_removed = 1;
             image_remove_shape(img, shapes[i]);
         }
     }
+}
+int comp(const void *a, const void *b) {
+    if (*(double*)a > *(double*)b) return 1;
+    else if (*(double*)a < *(double*)b) return -1;
+    else return 0;
+}
+
+void remove_outliers_shape(Image *img, Shape **shapes, int low_percentile, int high_percentile, double iqr_factor, double mean_factor)
+{
+    int index = 0;
+    int global_size = 0;
+    int real_size = 0;
+    while (shapes[global_size] != NULL)
+    {
+        if(shapes[global_size]->has_been_removed == 0)
+            real_size++;
+        global_size++;
+    }
+    double *area = malloc(sizeof(double ) * real_size);
+    double sum = 0;
+    for (int j = 0; j< global_size; j++)
+    {
+        if (shapes[j]->has_been_removed == 0)
+        {
+            area[index] = shape_area(shapes[j]);
+            sum += shape_area(shapes[j]);
+            index++;
+        }
+    }
+
+    qsort(area, real_size, sizeof(double), comp);
+
+    double first_percentile = (double)low_percentile / 100 * (real_size);
+    if (floor(first_percentile) == first_percentile)
+    {
+        int idx = (int)first_percentile;
+        if (idx < 0) idx = 0;
+        first_percentile = area[idx];
+    }
+
+    else
+    {
+        double frac = first_percentile - floor(first_percentile);
+        int x1 = (int)floor(first_percentile);
+        if (x1 < 0) x1 = 0;
+        int x2 = x1 + 1;
+        if (x2 >= real_size) x2 = real_size;
+        first_percentile = area[x1] + frac * (area[x2] - area[x1]);
+    }
+
+
+
+    double second_percentile = (double)high_percentile / 100 * (real_size);
+    if (floor(second_percentile) == second_percentile)
+    {
+        int idx = (int)second_percentile;
+        if (idx < 0) idx = 0;
+        second_percentile = area[idx];
+    }
+
+    else
+    {
+        double frac = second_percentile - floor(second_percentile);
+        int x1 = (int)floor(second_percentile);
+        if (x1 < 0) x1 = 0;
+        int x2 = x1 + 1;
+        if (x2 >= real_size) x2 = real_size;
+        second_percentile = area[x1] + frac * (area[x2] - area[x1]);
+    }
+
+    double IQR = second_percentile - first_percentile;
+
+    double mean_area = sum / real_size;
+
+    double val1 = mean_area * mean_factor;
+    double val2 = second_percentile + iqr_factor * IQR;
+    double threshold = val1 > val2 ? val1 : val2;
+
+    for (int i = 0; i< global_size; i++)
+    {
+        if (shapes[i]->has_been_removed == 0)
+        {
+            if (shape_area(shapes[i]) > threshold)
+            {
+                shapes[i]->has_been_removed = 1;
+                image_remove_shape(img, shapes[i]);
+            }
+        }
+    }
+
+    free(area);
 }
