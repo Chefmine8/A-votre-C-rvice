@@ -40,7 +40,7 @@ struct layer *create_layer(const int prev_layer_size, const int layer_size)
 
     for (int i = 0; i < layer_size; i++)
     {
-        res->biases[i] =  (long double)rand() / (long double)RAND_MAX * 10 - 5;
+        res->biases[i] =  (long double)rand() / (long double)RAND_MAX * 2 - 1;
     }
 
     return res;
@@ -112,7 +112,7 @@ void soft_max_activation_function(const struct  layer *layer) {
     for (int i = 0; i < layer->layer_size; i++) {
         layer->outputs[i] = layer->outputs[i] / sum;
         if (isnanf(layer->outputs[i])) {
-            errx(EXIT_FAILURE, "output is nan");
+            errx(EXIT_FAILURE, "output is nan | layer->outputs[i] / sum : %Lg / %Lg", layer->outputs[i], sum);
         }
     }
 }
@@ -138,7 +138,7 @@ void layer_calculate_output(const struct layer *layer)
                 output += layer->prev_layer->outputs[j] * layer->weights[i][j];
             }
         }
-        printf("og output: %Lg, new output: %Lg\n", layer->outputs[i], output);
+        // printf("og output: %Lg, new output: %Lg\n", layer->outputs[i], output);
         layer->outputs[i] = output;
     }
     if (layer->is_output_layer) {
@@ -153,11 +153,11 @@ void layer_calculate_output(const struct layer *layer)
 void free_layers(struct layer *layer) {
     printf("fl 1 layer nb: %d\n", layer->layer_size);
 
-    free(layer->outputs);
+
 
     if(layer->inputs != NULL) {
         printf("fl 1.5\n");
-        printf("%Lg\n", (*layer->inputs)[0]);
+        printf("fl 1.5 : %Lg\n", (*layer->inputs)[0]);
         free(layer->inputs); // ERROR
     }
     printf("fl 2\n");
@@ -168,6 +168,7 @@ void free_layers(struct layer *layer) {
         free_layers(layer->prev_layer);
     }
     printf("fl 4\n");
+    free(layer->outputs);
     free(layer);
     printf("fl 5\n");
 }
