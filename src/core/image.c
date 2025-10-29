@@ -84,13 +84,34 @@ Image *sdl_surface_to_image(const SDL_Surface *surf, Image *img)
     {
         for (int x = 0; x < img->width; x++)
         {
-            Uint8 *pixels = (Uint8 *)surf->pixels;
             const int bpp = surf->format->BytesPerPixel;
 
-            Uint8 *pPixel = pixels + y * surf->pitch + x * bpp;
+            Uint8 *pPixel = (Uint8 *)surf->pixels + y * surf->pitch + x * bpp;
+            Uint32 pixel_value = 0;
+
+            switch (bpp) {
+                case 1:
+                    pixel_value = *pPixel;
+                    break;
+                case 2:
+                    pixel_value = *(Uint16 *)pPixel;
+                    break;
+                case 3:
+                    if (SDL_BYTEORDER == SDL_BIG_ENDIAN)
+                        pixel_value = pPixel[0] << 16 | pPixel[1] << 8 | pPixel[2];
+                    else
+                        pixel_value = pPixel[0] | pPixel[1] << 8 | pPixel[2] << 16;
+                    break;
+                case 4:
+                    pixel_value = *(Uint32 *)pPixel;
+                    break;
+                default:
+                    printf("Unknown BytesPerPixel: %d\n", bpp);
+                    exit(EXIT_FAILURE);
+            }
 
             Uint8 r, g, b;
-            SDL_GetRGB(*(Uint32 *)pPixel, surf->format, &r, &g, &b);
+            SDL_GetRGB(pixel_value, surf->format, &r, &g, &b);
             Pixel p = {r, g, b};
             set_pixel(img, x, y, &p);
         }

@@ -198,6 +198,7 @@ void print_values(const struct layer *layer) {
 
     printf("########################################\n");
     for (int i = 0; i < layer->layer_size; ++i) {
+        printf("output: %Lg\n", layer->outputs[i]);
         printf("bias: %Lg\nweights{\n", layer->biases[i]);
         for (int j = 0; j < layer->prev_layer_size; ++j) {
             printf("%Lg,\n", layer->weights[i][j]);
