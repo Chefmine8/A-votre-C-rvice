@@ -1,27 +1,20 @@
 #pragma once
 
-#include "../../core/image.h"
-
-/**
-* @brief Pixel struct for shape
-*/
-typedef struct {
-    int x, y; /**< x and y coord of the pixel */
-    int isInShape; /**< boolean to check if a pixel is already in a sahpe */
-    void *shape_ptr; /**< pointer to shape_struct */
-} S_pixel;
+typedef struct Shape Shape;
+typedef struct Image Image;
+typedef struct Pixel Pixel;
 
 
 /**
  * @brief Shape struct for filtering operations and detection
  *
  */
-typedef struct {
-    S_pixel *pixels; /**< dynamic list of pixels */
+struct Shape{
+    Pixel *pixels; /**< dynamic list of pixels */
     int count; /**< number of pixel of a shape */
     int max_x, max_y, min_x, min_y; /**< bound of shape */
     int capacity; /**< capacity to dynamic malloc pixels */
-} Shape;
+};
 
 
 
@@ -38,18 +31,20 @@ typedef struct {
  * @brief add a new pixel to the shape
  *
  * @param s     the shape we want add the pixel
- * @param x     x coord of the pixel
- * @param y     y coord of the pixel
+ * @param p     the pointer of the Shpixel to add
  */
-void shape_add_pixel(Shape *s, int x, int y);
-
+void shape_add_pixel(Shape *s, Pixel *p);
 
 /**
- * @brief free all pixel and shape
+ * @brief set all pixel of a shape in a different color in the original image
  *
- * @param s     the shape we want free
+ * @param img   the pointer to the Image struct we want recolor shape
+ * @param s     the shape to recolor
+ * @param r     red (0-255)
+ * @param g     green (0-255)
+ * @param b     blue (0-255)
  */
-void free_shape(Shape *s);
+void image_change_shape_color(Image *img, Shape *s, uint8_t r, uint8_t g, uint8_t b);
 
 
 /**
@@ -59,3 +54,19 @@ void free_shape(Shape *s);
  * @param s     the shape to remove
  */
 void image_remove_shape(Image *img, Shape *s);
+
+/**
+ * @brief add existing shape to an Image
+ *
+ * @param img   the pointer to the Image struct we want add the shape
+ * @param s     the shape to add
+ * @param r,g,b color (0-255)
+ */
+void image_add_shape(Image *img, Shape *s, uint8_t r, uint8_t g, uint8_t b);
+
+/**
+ * @brief free all pixel and shape
+ *
+ * @param s     the shape we want free
+ */
+void free_shape(Shape *s);

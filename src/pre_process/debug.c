@@ -23,7 +23,7 @@ int main()
         imgs[i] = load_image(files[i]);
         }
 
-
+    /*
     Image *rot = manual_rotate_image(imgs[2], -25);
     free_image(imgs[2]);
     imgs[2] = rot;
@@ -90,6 +90,41 @@ int main()
     // // printf("\n");
     // free_image(bin);
     //free(nn_input);  // ✅
+    */
+
+    Image * test = imgs[0];
+    Shape *s = create_shape();
+    int count_y = 0;
+    int count_x = 0;
+    for (int x = 0; x < test->width; x++)
+    {
+        count_x ++;
+        for (int y = 0; y < test->height; y++)
+        {
+            count_y ++;
+            Pixel *p = get_pixel(test, x, y);
+            printf("%i:%i\n", p->x, p->y);
+            if(count_x >= 5)
+            {
+                count_x = 0;
+            }
+            if(count_y >= 5)
+            {
+                count_y = 0;
+            }
+            if(count_y == 0 ||count_x == 0)
+            {
+                shape_add_pixel(s, p);
+            }
+        }
+    }
+
+    image_change_shape_color(test, s, 0, 255, 0);
+
+    export_image(image_to_sdl_surface(test), "test.bmp");
+    free_shape(s);
+
+
 
     IMG_Quit();
     SDL_Quit();

@@ -71,6 +71,20 @@ void set_pixel(const Image *img, const int x, const int y, const Pixel *p)
     }
 }
 
+// change the pixel color at (x,y)
+void set_pixel_color(const Image *img, int x, int y, uint8_t r, uint8_t g, uint8_t b)
+{
+    if (x >= 0 && x < img->width && y >= 0 && y < img->height)
+    {
+        if (img->pixels != NULL)
+        {
+            img->pixels[y][x].r = r;
+            img->pixels[y][x].g = g;
+            img->pixels[y][x].b = b;
+        }
+    }
+}
+
 // create a new image from a image struct
 Image *copy_image(const Image *img)
 {
@@ -106,7 +120,7 @@ Image *sdl_surface_to_image(const SDL_Surface *surf, Image *img)
 
             Uint8 r, g, b;
             SDL_GetRGB(*(Uint32 *)pPixel, surf->format, &r, &g, &b);
-            Pixel p = {r, g, b};
+            Pixel p = {r, g, b, x, y, 0, NULL};
             set_pixel(img, x, y, &p);
         }
     }
