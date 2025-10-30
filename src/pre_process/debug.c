@@ -3,6 +3,7 @@
 #include "rotation.h"
 #include "scale.h"
 #include <time.h>
+#include "grid/grid_detection.h"
 
 int main()
 {
@@ -48,6 +49,19 @@ int main()
         remove_small_shape(imgs[i], shapes, 8);
         remove_outliers_shape(imgs[i], shapes, 25,75,2.5,3);
         remove_aspect_ration(imgs[i], shapes, 0.1, 5);
+
+        Image *circle = circle_image(imgs[i], shapes, 0.25);
+        free_image(imgs[i]);
+        imgs[i] = circle;
+
+        int theta_range, rho_max;
+        int **hs = hough_space(imgs[i], &theta_range, &rho_max);
+        hough_space_filter(hs, theta_range, rho_max, 0.495);
+        filter_line(hs, theta_range, rho_max);
+
+        draw_lines(imgs[i], hs, theta_range, rho_max);
+
+        free_hough(hs, theta_range, rho_max);
 
         clean_shapes(shapes);
 

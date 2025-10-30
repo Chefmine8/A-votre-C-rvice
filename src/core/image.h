@@ -137,3 +137,5 @@ Image *load_image(const char *file);
  */
 void export_image(SDL_Surface *surf, const char *file);
 
+
+void draw_line(Image *img, int x0, int y0, int x1, int y1, uint8_t r, uint8_t g, uint8_t b);
