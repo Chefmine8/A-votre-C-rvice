@@ -44,11 +44,14 @@ int main()
         imgs[i] = tmp;
 
 
+
         Shape **shapes = get_all_shape(imgs[i]);
 
         remove_small_shape(imgs[i], shapes, 8);
         remove_outliers_shape(imgs[i], shapes, 25,75,2.5,3);
         remove_aspect_ration(imgs[i], shapes, 0.1, 5);
+
+        Image *orig = copy_image(imgs[i]);
 
         Image *circle = circle_image(imgs[i], shapes, 0.25);
         free_image(imgs[i]);
@@ -66,13 +69,61 @@ int main()
         draw_lines(imgs[i], h_lines, theta_range, rho_max, 255, 0, 0);
         draw_lines(imgs[i], v_lines, theta_range, rho_max, 0, 0, 255);
 
+        int x_start, y_start, x_end, y_end;
 
+        get_bounding_box(v_lines, h_lines, theta_range, rho_max, &x_start, &x_end, &y_start, &y_end);
+//        set_pixel_color(imgs[i], x_start, y_start, 0, 255, 0);
+//        set_pixel_color(imgs[i], x_end, y_end, 0, 255, 0);
+//        set_pixel_color(imgs[i], x_start, y_end, 0, 255, 0);
+//        set_pixel_color(imgs[i], x_end, y_start, 0, 255, 0);
 
         free_hough(h_lines, theta_range, rho_max);
         free_hough(v_lines, theta_range, rho_max);
         free_hough(hs, theta_range, rho_max);
 
+
         clean_shapes(shapes);
+
+        //restore original image
+        free_image(imgs[i]);
+        imgs[i] = orig;
+
+        double mean_shape_width = 0.0, mean_shape_height = 0.0;
+        int shape_count = 0;
+        for (int j = 0; shapes[j] != NULL; j++)
+        {
+            shape_count++;
+            mean_shape_width += shape_width(shapes[j]);
+            mean_shape_height += shape_height(shapes[j]);
+        }
+        mean_shape_width /= shape_count;
+        mean_shape_height /= shape_count;
+
+
+        int offset_x = ceil(mean_shape_width *1.6);
+        int offset_y = ceil(mean_shape_height *1.2);
+        x_start = x_start - offset_x < 0 ? 0 : x_start - offset_x;
+        y_start = y_start - offset_y < 0 ? 0 : y_start - offset_y;
+        x_end = x_end + offset_x >= imgs[i]->width ? imgs[i]->width - 1 : x_end + offset_x;
+        y_end = y_end + offset_y >= imgs[i]->height ? imgs[i]->height - 1 : y_end + offset_y;
+
+        // if x_start is in first 5% of image width, set to 0 ans same for x_end
+        if (x_start < imgs[i]->width * 0.1 && x_end > imgs[i]->width * 0.90)
+        {
+            x_start = offset_x;
+            x_end = imgs[i]->width - offset_x;
+        }
+
+
+        draw_line(imgs[i], x_start, y_start, x_end, y_start, 0, 255, 0);
+        draw_line(imgs[i], x_start, y_start, x_start, y_end, 0, 255, 0);
+        draw_line(imgs[i], x_end, y_start, x_end, y_end, 0, 255, 0);
+        draw_line(imgs[i], x_start, y_end, x_end, y_end, 0, 255, 0);
+
+
+
+
+
 
         for (int j = 0; shapes[j] != NULL; j++)
         {

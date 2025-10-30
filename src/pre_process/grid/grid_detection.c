@@ -301,7 +301,7 @@ int comp(const void *a, const void *b) {
 
 void filter_gaps(int **hough_space, int theta_range, int rho_max)
 {
-    printf("\n\n<----------------------->\n\n");
+    //printf("\n\n<----------------------->\n\n");
     int count = 0;
     for (int theta = 0; theta < theta_range; theta++) {
         for (int rho = 0; rho < 2 * rho_max; rho++) {
@@ -401,7 +401,7 @@ void filter_gaps(int **hough_space, int theta_range, int rho_max)
     int *gaps_2 = malloc((count_2 - 1) * sizeof(int));
     for (int j = 1; j < count_2; j++) {
         gaps_2[j - 1] = list_rho_2[j] - list_rho_2[j - 1];
-        printf("Gap %d: %d | Rho1: %d | Rho2: %d\n", j - 1, gaps_2[j - 1], list_rho_2[j - 1], list_rho_2[j]);
+        //printf("Gap %d: %d | Rho1: %d | Rho2: %d\n", j - 1, gaps_2[j - 1], list_rho_2[j - 1], list_rho_2[j]);
     }
 
     int* indexes_to_remove = malloc((count_2 -1) * sizeof(int));
@@ -421,10 +421,10 @@ void filter_gaps(int **hough_space, int theta_range, int rho_max)
 
     double threshold_2 = mean_2 + 2 * stddev_2 + 10;
 
-    printf("<-> threshold_2: %f | mean_2: %f\n", threshold_2, mean_2);
+    //printf("<-> threshold_2: %f | mean_2: %f\n", threshold_2, mean_2);
 
     for (int j = 0; j < count_2 - 1; j++) {
-        printf("Gap %d: %d | Mean_2: %f | Threshold_2: %f\n", j, gaps_2[j], mean_2, threshold_2);
+        //printf("Gap %d: %d | Mean_2: %f | Threshold_2: %f\n", j, gaps_2[j], mean_2, threshold_2);
         if (gaps_2[j] > threshold_2) {
             int rho_to_remove;
             if(j == 0)
@@ -453,4 +453,54 @@ void filter_gaps(int **hough_space, int theta_range, int rho_max)
 
     free(gaps);
     free(list_rho);
+}
+
+void get_bounding_box(int **vertical_lines, int** horizontal_lines,  int theta_range, int rho_max, int *x_start, int *x_end, int *y_start, int *y_end)
+{
+    int h_count =0, v_count =0;
+    for (int theta = 0; theta < theta_range; theta++) {
+        for (int rho = 0; rho < 2 * rho_max; rho++) {
+            if(vertical_lines[theta][rho] > 0)
+                v_count++;
+
+            if (horizontal_lines[theta][rho] > 0)
+                h_count++;
+
+        }
+    }
+
+    int *list_rho_h = malloc(h_count * sizeof(int));
+    int *list_rho_v = malloc(v_count * sizeof(int));
+    int i_h = 0, i_v = 0;
+    for (int theta = 0; theta < theta_range; theta++) {
+        for (int rho = 0; rho < 2 * rho_max; rho++) {
+            if(horizontal_lines[theta][rho] > 0)
+                list_rho_h[i_h++] = rho;
+            if(vertical_lines[theta][rho] > 0)
+                list_rho_v[i_v++] = rho;
+        }
+    }
+
+    *x_start = list_rho_v[0] - rho_max;
+    *x_end = list_rho_v[v_count -1] - rho_max;
+    *y_start = list_rho_h[0] - rho_max;
+    *y_end = list_rho_h[h_count -1] - rho_max;
+
+//    for (int i = 0; i < v_count; i++) {
+//        int rho_v = list_rho_v[i] - rho_max;
+//        int x = rho_v;
+//        for (int j = 0; j < h_count; j++) {
+//            int rho_h = list_rho_h[j] - rho_max;
+//            int y = rho_h;
+//
+//            // x,y point of intersection
+//            printf("Intersection: (%d, %d)\n", x, y);
+//            //set_pixel_color(img, x, y, 0, 255, 0);
+//        }
+//    }
+
+    //set_pixel_color(img, 10, 10, 0,255,0);
+    free(list_rho_h);
+    free(list_rho_v);
+
 }

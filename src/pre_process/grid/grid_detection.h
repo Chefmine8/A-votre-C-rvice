@@ -126,3 +126,19 @@ int **vertical_lines(int **hough_space,int theta_range, int rho_max, int delta);
  * @param rho_max Maximum rho distance.
  */
 void filter_gaps(int **hough_space, int theta_range, int rho_max);
+
+
+/**
+ * @brief Computes the bounding box of the detected grid lines.
+ *
+ *
+ * @param vertical_lines 2D array of vertical lines from Hough space.
+ * @param horizontal_lines 2D array of horizontal lines from Hough space.
+ * @param theta_range Number of theta bins (typically 180).
+ * @param rho_max Maximum rho distance.
+ * @param x_start Output parameter for the starting x-coordinate of the bounding box.
+ * @param x_end Output parameter for the ending x-coordinate of the bounding box.
+ * @param y_start Output parameter for the starting y-coordinate of the bounding box.
+ * @param y_end Output parameter for the ending y-coordinate of the bounding box.
+ */
+void get_bounding_box(int **vertical_lines, int** horizontal_lines,  int theta_range, int rho_max, int *x_start, int *x_end, int *y_start, int *y_end);
