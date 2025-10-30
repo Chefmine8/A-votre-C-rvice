@@ -109,6 +109,7 @@ int main()
     time_t t = time(NULL);
      for (int i = 0; i < 5000; ++i) {
 
+
          single_train_cession(neural_network, shift);
          shift /= 1.001;
 
