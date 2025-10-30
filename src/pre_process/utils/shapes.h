@@ -1,67 +1,82 @@
 #pragma once
 
+#include <limits.h>
+#include <stdint.h>
+
+
+/* Forward declarations */
 typedef struct Shape Shape;
 typedef struct Image Image;
 typedef struct Pixel Pixel;
+typedef struct { int x, y; } Coord;
 
 
 /**
- * @brief Shape struct for filtering operations and detection
+ * @brief Represents a connected region (shape) in an image.
  *
+ * Each Shape contains a dynamically allocated list of pixel pointers
+ * that belong to the shape, as well as its geometric boundaries and state.
  */
 struct Shape{
-    Pixel **pixels; /**< dynamic list of pixels */
-    int count; /**< number of pixel of a shape */
-    int max_x, max_y, min_x, min_y; /**< bound of shape */
-    int capacity; /**< capacity to dynamic malloc pixels */
-    int has_been_removed;
+    Pixel **pixels; /**< Dynamic list of pointers to pixels belonging to the shape. */
+    int count; /**< Number of pixels in the shape. */
+    int max_x, max_y, min_x, min_y; /**< Bounding box coordinates of the shape. */
+    int capacity; /**< Current allocated capacity for pixels. */
+    int has_been_removed; /**< Flag indicating whether the shape has been removed from the image. */
 };
 
 
 
 /**
- * @brief Creates and allocate a new shape.
+ * @brief Creates and allocates a new empty shape.
  *
- * @return shape* Pointer to the newly created shape
+ * Initializes internal structures and boundary values.
+ *
+ * @return Pointer to the newly allocated Shape.
  */
- Shape* create_shape();
+ Shape* create_shape(void);
 
 
 
 /**
- * @brief add a new pixel to the shape
+ * @brief Adds a pixel to the specified shape.
  *
- * @param s     the shape we want add the pixel
- * @param p     the pointer of the Shpixel to add
+ * Expands the shape's pixel list dynamically if needed and updates its boundaries.
+ *
+ * @param s Pointer to the shape to modify.
+ * @param p Pointer to the pixel to add.
  */
 void shape_add_pixel(Shape *s, Pixel *p);
 
+
 /**
- * @brief set all pixel of a shape in a different color in the original image
+ * @brief Recolors all pixels belonging to a shape in the given image.
  *
- * @param img   the pointer to the Image struct we want recolor shape
- * @param s     the shape to recolor
- * @param r     red (0-255)
- * @param g     green (0-255)
- * @param b     blue (0-255)
+ * @param img Pointer to the Image structure.
+ * @param s Pointer to the shape to recolor.
+ * @param r Red component (0–255).
+ * @param g Green component (0–255).
+ * @param b Blue component (0–255).
  */
 void image_change_shape_color(Image *img, Shape *s, uint8_t r, uint8_t g, uint8_t b);
 
 
 /**
- * @brief remove a specific shape from an image
+ * @brief Removes a specific shape from an image by setting its pixels to white.
  *
- * @param img   the pointer to the Image struct we want remove shape
- * @param s     the shape to remove
+ * @param img Pointer to the Image structure.
+ * @param s Pointer to the shape to remove.
  */
 void image_remove_shape(Image *img, Shape *s);
 
 /**
- * @brief add existing shape to an Image
+ * @brief Adds an existing shape to an image with a specific color.
  *
- * @param img   the pointer to the Image struct we want add the shape
- * @param s     the shape to add
- * @param r,g,b color (0-255)
+ * @param img Pointer to the Image structure.
+ * @param s Pointer to the shape to draw.
+ * @param r Red component (0–255).
+ * @param g Green component (0–255).
+ * @param b Blue component (0–255).
  */
 void image_add_shape(Image *img, Shape *s, uint8_t r, uint8_t g, uint8_t b);
 
@@ -74,48 +89,116 @@ void image_add_shape(Image *img, Shape *s, uint8_t r, uint8_t g, uint8_t b);
 
 
 /**
- * @param s     the shape
- * @return return the shape width it is the max distance betwin min_x and max_x
- */
+* @brief Computes the width of a shape.
+*
+* @param s Pointer to the shape.
+* @return The width (max_x - min_x + 1).
+*/
 int shape_width(Shape *s);
 
-
 /**
- * @param s     the shape
- * @return return the shape height it is the max distance betwin min_y and max_y
+ * @brief Computes the height of a shape.
+ *
+ * @param s Pointer to the shape.
+ * @return The height (max_y - min_y + 1).
  */
 int shape_height(Shape *s);
 
-
 /**
- * @param s     the shape
- * @return return area of the shape, width * height
+ * @brief Computes the bounding box area of a shape.
+ *
+ * @param s Pointer to the shape.
+ * @return The area in pixels (width × height).
  */
 int shape_area(Shape *s);
 
-
 /**
- * @param s     the shape
- * @return return aspect ratio of the shape consider at a rectangle
+ * @brief Computes the aspect ratio (width/height) of a shape.
+ *
+ * @param s Pointer to the shape.
+ * @return The aspect ratio as a double. Returns 0 if height is zero.
  */
 double shape_aspect_ratio(Shape *s);
 
 /**
- * @param s     the shape
- * @return return density of the shape consider at a rectangle (proportion of black pixel)
+ * @brief Computes the density of a shape within its bounding box.
+ *
+ * Density = (number of pixels in shape) / (area of bounding box)
+ *
+ * @param s Pointer to the shape.
+ * @return The density value between 0 and 1.
  */
 double shape_density(Shape *s);
 
+/**
+ * @brief Detects and extracts all shapes from an image.
+ *
+ * A shape is defined as a connected group of dark pixels (r < 128).
+ *
+ * @param img Pointer to the Image structure to analyze.
+ * @return A NULL-terminated array of pointers to Shape structures.
+ */
 
+
+/**
+ * @brief Frees the memory allocated for a shape and its pixel list.
+ *
+ * @param s Pointer to the shape to free.
+ */
 void free_shape(Shape *s);
 
 
 // --- shape detection --- //
 
+
+/**
+ * @brief Detects and extracts all shapes from an image.
+ *
+ * A shape is defined as a connected group of dark pixels (r < 128).
+ *
+ * @param img Pointer to the Image structure to analyze.
+ * @return A NULL-terminated array of pointers to Shape structures.
+ */
 Shape **get_all_shape(Image* img);
 
+/**
+ * @brief Removes shapes marked as removed from the shape list.
+ *
+ * @param shapes NULL-terminated array of shape pointers.
+ */
+void clean_shapes(Shape **shapes);
+
+/**
+ * @brief Removes small shapes from the image based on pixel count.
+ *
+ * Shapes with fewer pixels than the threshold are removed.
+ *
+ * @param img Pointer to the Image structure.
+ * @param shapes NULL-terminated array of shape pointers.
+ * @param threshold Minimum pixel count to keep a shape.
+ */
 void remove_small_shape(Image *img, Shape **shapes, int threshold);
 
+/**
+ * @brief Removes outlier shapes based on area.
+ *
+ * Outliers are identified using percentiles, IQR, and mean-based thresholds.
+ *
+ * @param img Pointer to the Image structure.
+ * @param shapes NULL-terminated array of shape pointers.
+ * @param low_percentile Lower percentile for area filtering (e.g., 25).
+ * @param high_percentile Upper percentile for area filtering (e.g., 75).
+ * @param iqr_factor Multiplier for the interquartile range threshold.
+ * @param mean_factor Multiplier for the mean area threshold.
+ */
 void remove_outliers_shape(Image *img, Shape **shapes, int low_percentile, int high_percentile, double iqr_factor, double mean_factor);
 
+/**
+ * @brief Removes shapes whose aspect ratios fall outside the given range.
+ *
+ * @param img Pointer to the Image structure.
+ * @param shapes NULL-terminated array of shape pointers.
+ * @param min_ration Minimum aspect ratio allowed.
+ * @param max_ratio Maximum aspect ratio allowed.
+ */
 void remove_aspect_ration(Image *img, Shape **shapes, double min_ration, double max_ratio);

@@ -3,6 +3,7 @@
 #include "rotation.h"
 #include "scale.h"
 #include <time.h>
+#include "grid/grid_detection.h"
 
 int main()
 {
@@ -43,11 +44,112 @@ int main()
         imgs[i] = tmp;
 
 
+
         Shape **shapes = get_all_shape(imgs[i]);
 
         remove_small_shape(imgs[i], shapes, 8);
         remove_outliers_shape(imgs[i], shapes, 25,75,2.5,3);
         remove_aspect_ration(imgs[i], shapes, 0.1, 5);
+
+        Image *orig = copy_image(imgs[i]);
+
+        Image *circle = circle_image(imgs[i], shapes, 0.25);
+        free_image(imgs[i]);
+        imgs[i] = circle;
+
+        int theta_range, rho_max;
+        int **hs = hough_space(imgs[i], &theta_range, &rho_max);
+        hough_space_filter(hs, theta_range, rho_max, 0.495);
+        filter_line(hs, theta_range, rho_max, 15 ,20);
+        int **h_lines = horizontal_lines(hs, theta_range, rho_max, 5);
+        int **v_lines = vertical_lines(hs, theta_range, rho_max, 5);
+
+        filter_gaps(h_lines, theta_range, rho_max);
+        filter_gaps(v_lines, theta_range, rho_max);
+        draw_lines(imgs[i], h_lines, theta_range, rho_max, 255, 0, 0);
+        draw_lines(imgs[i], v_lines, theta_range, rho_max, 0, 0, 255);
+
+        int x_start, y_start, x_end, y_end;
+
+        get_bounding_box(v_lines, h_lines, theta_range, rho_max, &x_start, &x_end, &y_start, &y_end);
+//        set_pixel_color(imgs[i], x_start, y_start, 0, 255, 0);
+//        set_pixel_color(imgs[i], x_end, y_end, 0, 255, 0);
+//        set_pixel_color(imgs[i], x_start, y_end, 0, 255, 0);
+//        set_pixel_color(imgs[i], x_end, y_start, 0, 255, 0);
+
+        free_hough(h_lines, theta_range, rho_max);
+        free_hough(v_lines, theta_range, rho_max);
+        free_hough(hs, theta_range, rho_max);
+
+
+        clean_shapes(shapes);
+
+        //restore original image
+        free_image(imgs[i]);
+        imgs[i] = orig;
+
+        double mean_shape_width = 0.0, mean_shape_height = 0.0;
+        int shape_count = 0;
+        for (int j = 0; shapes[j] != NULL; j++)
+        {
+            shape_count++;
+            mean_shape_width += shape_width(shapes[j]);
+            mean_shape_height += shape_height(shapes[j]);
+        }
+        mean_shape_width /= shape_count;
+        mean_shape_height /= shape_count;
+
+
+        int offset_x = ceil(mean_shape_width *1.6);
+        int offset_y = ceil(mean_shape_height *1.2);
+        x_start = x_start - offset_x < 0 ? 0 : x_start - offset_x;
+        y_start = y_start - offset_y < 0 ? 0 : y_start - offset_y;
+        x_end = x_end + offset_x >= imgs[i]->width ? imgs[i]->width - 1 : x_end + offset_x;
+        y_end = y_end + offset_y >= imgs[i]->height ? imgs[i]->height - 1 : y_end + offset_y;
+
+        // if x_start is in first 5% of image width, set to 0 ans same for x_end
+        if (x_start < imgs[i]->width * 0.1 && x_end > imgs[i]->width * 0.90)
+        {
+            x_start = offset_x;
+            x_end = imgs[i]->width - offset_x;
+        }
+
+
+        draw_line(imgs[i], x_start, y_start, x_end, y_start, 0, 255, 0);
+        draw_line(imgs[i], x_start, y_start, x_start, y_end, 0, 255, 0);
+        draw_line(imgs[i], x_end, y_start, x_end, y_end, 0, 255, 0);
+        draw_line(imgs[i], x_start, y_end, x_end, y_end, 0, 255, 0);
+
+        Image *sub_img = extract_sub_image(imgs[i], x_start, y_start, x_end, y_end);
+
+        int height_objective = 500;
+        float scale_x = (float)height_objective / (float)(sub_img->height);
+        Image *scale = manual_image_scaling(sub_img, scale_x, scale_x);
+        free_image(sub_img);
+        sub_img = scale;
+
+
+        Shape **sub_shapes = get_all_shape(sub_img);
+
+//        remove_small_shape(sub_img,sub_shapes , 25);
+//        remove_outliers_shape(sub_img,sub_shapes , 25,75,2.5,3);
+//        remove_aspect_ration(sub_img,sub_shapes , 0.1, 5);
+
+        for (int j = 0; sub_shapes[j] != NULL; j++)
+        {
+            free_shape(sub_shapes[j]);
+        }
+        free(sub_shapes);
+
+        SDL_Surface *sub_surf = image_to_sdl_surface(sub_img);
+        char sub_filename[256];
+        snprintf(sub_filename, sizeof(sub_filename), "sub_image_%d.bmp", i + 1);
+        export_image(sub_surf, sub_filename);
+        SDL_FreeSurface(sub_surf);
+
+
+
+        free_image(sub_img);
 
 
         for (int j = 0; shapes[j] != NULL; j++)
@@ -111,6 +213,7 @@ int main()
     for (int i = 0; imgs[i] != NULL; i++)
         free_image(imgs[i]);
 
+    cleanup_hidden_renderer_scale();
     cleanup_hidden_renderer();
     IMG_Quit();
     SDL_Quit();

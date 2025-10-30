@@ -137,3 +137,29 @@ Image *load_image(const char *file);
  */
 void export_image(SDL_Surface *surf, const char *file);
 
+
+/**
+ * @brief Draws a line on the image using Bresenham's line algorithm.
+ *
+ * @param img Pointer to the image
+ * @param x0  Starting x coordinate
+ * @param y0  Starting y coordinate
+ * @param x1  Ending x coordinate
+ * @param y1  Ending y coordinate
+ * @param r   Red component of the line color
+ * @param g   Green component of the line color
+ * @param b   Blue component of the line color
+ */
+void draw_line(Image *img, int x0, int y0, int x1, int y1, uint8_t r, uint8_t g, uint8_t b);
+
+/**
+ * @brief Extracts a sub-image from the given image.
+ *
+ * @param img      Pointer to the source image
+ * @param x_start  Starting x coordinate
+ * @param y_start  Starting y coordinate
+ * @param x_end    Ending x coordinate
+ * @param y_end    Ending y coordinate
+ * @return Image*  Pointer to the extracted sub-image
+ */
+Image* extract_sub_image(const Image* img, int x_start, int y_start, int x_end, int y_end);
