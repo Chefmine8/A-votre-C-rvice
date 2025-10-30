@@ -58,9 +58,18 @@ int main()
         int **hs = hough_space(imgs[i], &theta_range, &rho_max);
         hough_space_filter(hs, theta_range, rho_max, 0.495);
         filter_line(hs, theta_range, rho_max, 15 ,20);
+        int **h_lines = horizontal_lines(hs, theta_range, rho_max, 5);
+        int **v_lines = vertical_lines(hs, theta_range, rho_max, 5);
 
-        draw_lines(imgs[i], hs, theta_range, rho_max);
+        filter_gaps(h_lines, theta_range, rho_max);
+        filter_gaps(v_lines, theta_range, rho_max);
+        draw_lines(imgs[i], h_lines, theta_range, rho_max, 255, 0, 0);
+        draw_lines(imgs[i], v_lines, theta_range, rho_max, 0, 0, 255);
 
+
+
+        free_hough(h_lines, theta_range, rho_max);
+        free_hough(v_lines, theta_range, rho_max);
         free_hough(hs, theta_range, rho_max);
 
         clean_shapes(shapes);

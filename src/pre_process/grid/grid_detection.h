@@ -90,5 +90,39 @@ void filter_line(int **hough_space,int theta_range, int rho_max, int theta_prox,
  * @param hough_space 2D array of accumulator values.
  * @param theta_range Number of theta bins (typically 180).
  * @param rho_max Maximum rho distance.
+ * @param r,g,b Color components for the drawn lines (0-255).
  */
-void draw_lines(Image *image, int** hough_space,int theta_range, int rho_max);
+void draw_lines(Image *image, int** hough_space,int theta_range, int rho_max, int r, int g, int b);
+
+/**
+ * @brief Extracts horizontal lines from the Hough space.
+ *
+ * @param hough_space 2D array of accumulator values.
+ * @param theta_range Number of theta bins (typically 180).
+ * @param rho_max Maximum rho distance.
+ * @param delta error margin for line detection.
+ * @return 2D array newly allocated containing the horizontal lines.
+ */
+int **horizontal_lines(int **hough_space,int theta_range, int rho_max, int delta);
+
+/**
+ * @brief Extracts vertical lines from the Hough space.
+ *
+ * @param hough_space 2D array of accumulator values.
+ * @param theta_range Number of theta bins (typically 180).
+ * @param rho_max Maximum rho distance.
+ * @param delta error margin for line detection.
+ * @return 2D array newly allocated containing the vertical lines.
+ */
+int **vertical_lines(int **hough_space,int theta_range, int rho_max, int delta);
+
+/**
+ * @brief Filters lines in the Hough space using gaps.
+ *
+ * This function calculates best subsets of lines with regular spacing and using magic
+ *
+ * @param hough_space 2D array of accumulator values.
+ * @param theta_range Number of theta bins (typically 180).
+ * @param rho_max Maximum rho distance.
+ */
+void filter_gaps(int **hough_space, int theta_range, int rho_max);

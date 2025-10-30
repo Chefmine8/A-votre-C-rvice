@@ -164,8 +164,65 @@ void filter_line(int **hough_space,int theta_range, int rho_max, int theta_prox,
     }
 }
 
+int **horizontal_lines(int **hough_space,int theta_range, int rho_max, int delta)
+{
+    int **res = malloc(theta_range * sizeof(int*));
+    if (!res)
+    {
+        printf("Cannot allocate memory for the horizontal lines\n");
+        exit(EXIT_FAILURE);
+    }
+    for (int i = 0; i < theta_range; i++)
+    {
+        res[i] = calloc(2 * rho_max, sizeof(int));
+        if (!res[i])
+        {
+            printf("Cannot allocate memory for the horizontal lines\n");
+            exit(EXIT_FAILURE);
+        }
+    }
+    for (int i = 0; i < theta_range; i++) {
+        for (int j = 0; j < 2 * rho_max; j++) {
+            if (hough_space[i][j] > 0) {
+                if ((i >= 90 -delta && i <= 90 + delta)) {
+                    res[i][j] = hough_space[i][j];
+                }
+            }
+        }
+    }
+    return res;
+}
 
-void draw_lines(Image *image, int** hough_space,int theta_range, int rho_max)
+int **vertical_lines(int **hough_space,int theta_range, int rho_max, int delta)
+{
+    int **res = malloc(theta_range * sizeof(int*));
+    if (!res)
+    {
+        printf("Cannot allocate memory for the horizontal lines\n");
+        exit(EXIT_FAILURE);
+    }
+    for (int i = 0; i < theta_range; i++)
+    {
+        res[i] = calloc(2 * rho_max, sizeof(int));
+        if (!res[i])
+        {
+            printf("Cannot allocate memory for the horizontal lines\n");
+            exit(EXIT_FAILURE);
+        }
+    }
+    for (int i = 0; i < theta_range; i++) {
+        for (int j = 0; j < 2 * rho_max; j++) {
+            if (hough_space[i][j] > 0) {
+                if ((i >= 0 -delta && i <= 0 + delta) || (i >= 180 -delta && i <= 180 + delta)) {
+                    res[i][j] = hough_space[i][j];
+                }
+            }
+        }
+    }
+    return res;
+}
+
+void draw_lines(Image *image, int** hough_space,int theta_range, int rho_max, int r, int g, int b)
 {
     for (int i = 0; i < theta_range; i++) {
         for (int j = 0; j < 2 * rho_max; j++) {
@@ -222,7 +279,7 @@ void draw_lines(Image *image, int** hough_space,int theta_range, int rho_max)
                     int x1 = points[0][0], y1 = points[0][1];
                     int x2 = points[1][0], y2 = points[1][1];
 
-                    draw_line(image, x1, y1, x2, y2, 255, 0, 0); // ligne rouge
+                    draw_line(image, x1, y1, x2, y2, r, g, b);
                 }
             }
         }
@@ -236,4 +293,164 @@ void free_hough(int **hough_space,int theta_range, int rho_max )
         free(hough_space[i]);
     }
     free(hough_space);
+}
+
+int comp(const void *a, const void *b) {
+    return (*(int *)a - *(int *)b);
+}
+
+void filter_gaps(int **hough_space, int theta_range, int rho_max)
+{
+    printf("\n\n<----------------------->\n\n");
+    int count = 0;
+    for (int theta = 0; theta < theta_range; theta++) {
+        for (int rho = 0; rho < 2 * rho_max; rho++) {
+            if(hough_space[theta][rho] > 0)
+            {
+                count++;
+            }
+        }
+    }
+
+    if (count < 3) return;
+
+    int *list_rho = malloc(count * sizeof(int));
+    int i = 0;
+    for (int theta = 0; theta < theta_range; theta++) {
+        for (int rho = 0; rho < 2 * rho_max; rho++) {
+            if(hough_space[theta][rho] > 0)
+            {
+                list_rho[i] = rho;
+                i++;
+            }
+        }
+    }
+    qsort(list_rho, count, sizeof(int), comp);
+
+    int *gaps = malloc((count - 1) * sizeof(int));
+    for (int j = 1; j < count; j++) {
+        gaps[j - 1] = list_rho[j] - list_rho[j - 1];
+    }
+
+    double mean =0.0;
+    for (int j = 0; j < count - 1; j++) {
+        mean += gaps[j];
+    }
+    mean /= (count - 1);
+
+    double stddev =0.0;
+    for (int j = 0; j < count - 1; j++) {
+        stddev += pow(gaps[j] - mean, 2);
+    }
+    stddev = sqrt(stddev / (count - 1));
+
+    double threshold = stddev * 1.5;
+
+    // find best subset
+    int start_index = 0, best_start = 0, best_len = 0;
+    for (int j = 1; j < count -1; j++) {
+        if (fabs(gaps[j] - mean) > threshold * 2) {
+            int len = j - start_index;
+            if (len > best_len) {
+                best_len = len;
+                best_start = start_index;
+            }
+            start_index = j;
+        }
+    }
+    if ((count -1 - start_index) > best_len) {
+        best_len = count -1 - start_index;
+        best_start = start_index;
+    }
+
+    // Zero out rhos not in the best subset
+    for (int j = 0; j < count; j++) {
+        if (j < best_start || j > best_start + best_len) {
+            int rho_to_remove = list_rho[j];
+            for (int theta = 0; theta < theta_range; theta++) {
+                hough_space[theta][rho_to_remove] = 0;
+            }
+        }
+    }
+
+
+    int count_2 = 0;
+    for (int theta = 0; theta < theta_range; theta++) {
+        for (int rho = 0; rho < 2 * rho_max; rho++) {
+            if(hough_space[theta][rho] > 0)
+            {
+                count_2++;
+            }
+        }
+    }
+
+
+    int *list_rho_2 = malloc(count_2 * sizeof(int));
+    int i_2 = 0;
+    for (int theta = 0; theta < theta_range; theta++) {
+        for (int rho = 0; rho < 2 * rho_max; rho++) {
+            if(hough_space[theta][rho] > 0)
+            {
+                list_rho_2[i_2] = rho;
+                i_2++;
+            }
+        }
+    }
+    qsort(list_rho_2, count_2, sizeof(int), comp);
+
+    int *gaps_2 = malloc((count_2 - 1) * sizeof(int));
+    for (int j = 1; j < count_2; j++) {
+        gaps_2[j - 1] = list_rho_2[j] - list_rho_2[j - 1];
+        printf("Gap %d: %d | Rho1: %d | Rho2: %d\n", j - 1, gaps_2[j - 1], list_rho_2[j - 1], list_rho_2[j]);
+    }
+
+    int* indexes_to_remove = malloc((count_2 -1) * sizeof(int));
+    int remove_count =0;
+
+    double mean_2 =0.0;
+    for (int j = 0; j < count_2 - 1; j++) {
+        mean_2 += gaps_2[j];
+    }
+    mean_2 /= (count_2 - 1);
+
+    double stddev_2 = 0.0;
+    for (int j = 0; j < count_2 - 1; j++) {
+        stddev_2 += pow(gaps_2[j] - mean_2, 2);
+    }
+    stddev_2 = sqrt(stddev_2 / (count_2 - 1));
+
+    double threshold_2 = mean_2 + 2 * stddev_2 + 10;
+
+    printf("<-> threshold_2: %f | mean_2: %f\n", threshold_2, mean_2);
+
+    for (int j = 0; j < count_2 - 1; j++) {
+        printf("Gap %d: %d | Mean_2: %f | Threshold_2: %f\n", j, gaps_2[j], mean_2, threshold_2);
+        if (gaps_2[j] > threshold_2) {
+            int rho_to_remove;
+            if(j == 0)
+                rho_to_remove = list_rho_2[j];
+            else if (j == count_2 -2)
+                rho_to_remove = list_rho_2[j +1];
+            else
+            {
+                int gap_before = gaps_2[j -1];
+                int gap_after = gaps_2[j +1];
+                if (gap_before < gap_after)
+                    rho_to_remove = list_rho_2[j];
+                else
+                    rho_to_remove = list_rho_2[j +1];
+            }
+
+            for (int theta = 0; theta < theta_range; theta++) {
+                hough_space[theta][rho_to_remove] = 0;
+            }
+        }
+    }
+
+    free(indexes_to_remove);
+    free(list_rho_2);
+    free(gaps_2);
+
+    free(gaps);
+    free(list_rho);
 }
