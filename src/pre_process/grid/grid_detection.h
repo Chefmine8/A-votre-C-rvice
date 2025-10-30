@@ -61,7 +61,7 @@ void hough_space_filter(int **hough_space,int theta_range, int rho_max, double t
  * @param theta_range Number of theta bins used.
  * @param rho_max Maximum rho distance.
  */
-void free_hough(int **hough_space,int theta_range, int rho_max );
+void free_hough(int **hough_space,int theta_range);
 
 /**
  * @brief Filters the Hough space to retain only vertical and horizontal lines.
@@ -71,7 +71,6 @@ void free_hough(int **hough_space,int theta_range, int rho_max );
  *
  * @param hough_space 2D array of accumulator values.
  * @param theta_range Number of theta bins (typically 180).
- * @param rho_max Maximum rho distance.
  *
  * @details
  * - Lines close to 0° and 90° are preserved.

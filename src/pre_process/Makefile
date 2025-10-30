@@ -14,7 +14,7 @@ all: $(TARGET)
 
 # Lien des fichiers objets
 $(TARGET): $(OBJS)
-	$(CC)  $(SANFLAGS) -o $@ $^ $(LDFLAGS)
+	$(CC) -o $@ $^ $(LDFLAGS)
 
 %.o: %.c %.h
 	$(CC) $(CFLAGS) -c $< -o $@

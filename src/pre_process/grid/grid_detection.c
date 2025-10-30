@@ -286,7 +286,7 @@ void draw_lines(Image *image, int** hough_space,int theta_range, int rho_max, in
     }
 }
 
-void free_hough(int **hough_space,int theta_range, int rho_max )
+void free_hough(int **hough_space,int theta_range)
 {
     for (int i = 0; i < theta_range; ++i)
     {
@@ -405,7 +405,6 @@ void filter_gaps(int **hough_space, int theta_range, int rho_max)
     }
 
     int* indexes_to_remove = malloc((count_2 -1) * sizeof(int));
-    int remove_count =0;
 
     double mean_2 =0.0;
     for (int j = 0; j < count_2 - 1; j++) {

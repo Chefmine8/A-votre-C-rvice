@@ -20,10 +20,12 @@ int main()
         NULL
     };
 
+    // Load all images
     Image *imgs[] = { NULL, NULL, NULL, NULL, NULL, NULL, NULL };
     for (int i = 0; files[i] != NULL; i++) {
         imgs[i] = load_image(files[i]);
 
+        /* Manual Rotation for specific images */
         if (i == 2)
         {
             Image *tmp = manual_rotate_image(imgs[2], -24.5);
@@ -36,51 +38,68 @@ int main()
             free_image(imgs[3]);
             imgs[3] = tmp;
         }
+        /* */
 
+        /* grayscal and Binarization */
         grayscale_image(imgs[i]);
 
         Image *tmp = sauvola(imgs[i], 12, 128, 0.07);
         free_image(imgs[i]);
         imgs[i] = tmp;
+        /* */
 
-
-
+        /* get components connected */
         Shape **shapes = get_all_shape(imgs[i]);
 
+        /* Filter shapes */
         remove_small_shape(imgs[i], shapes, 8);
         remove_outliers_shape(imgs[i], shapes, 25,75,2.5,3);
         remove_aspect_ration(imgs[i], shapes, 0.1, 5);
 
+        // copy of original image
         Image *orig = copy_image(imgs[i]);
 
+        /* Transform to circle image for better hough transform */
         Image *circle = circle_image(imgs[i], shapes, 0.25);
         free_image(imgs[i]);
         imgs[i] = circle;
+        /* */
 
+        /* Perform Hough Transform and detect lines in circle image */
         int theta_range, rho_max;
         int **hs = hough_space(imgs[i], &theta_range, &rho_max);
+        // filter the hough space the only peak important lines
         hough_space_filter(hs, theta_range, rho_max, 0.495);
+
+        // remove lines that are not 90 or 180 or 0 degrees
+        // also remove lines that are too close to each other
         filter_line(hs, theta_range, rho_max, 15 ,20);
+
+        // sort all lines to have horizontal and vertical lines
         int **h_lines = horizontal_lines(hs, theta_range, rho_max, 5);
         int **v_lines = vertical_lines(hs, theta_range, rho_max, 5);
 
+        // filter horizontal and vertical lines independently
+        // this will only keep the lines that form the biggest set with regular gaps
         filter_gaps(h_lines, theta_range, rho_max);
         filter_gaps(v_lines, theta_range, rho_max);
+
+        // draw lines on image for debug
         draw_lines(imgs[i], h_lines, theta_range, rho_max, 255, 0, 0);
         draw_lines(imgs[i], v_lines, theta_range, rho_max, 0, 0, 255);
 
+        // get bounding box of the grid
         int x_start, y_start, x_end, y_end;
-
         get_bounding_box(v_lines, h_lines, theta_range, rho_max, &x_start, &x_end, &y_start, &y_end);
 //        set_pixel_color(imgs[i], x_start, y_start, 0, 255, 0);
 //        set_pixel_color(imgs[i], x_end, y_end, 0, 255, 0);
 //        set_pixel_color(imgs[i], x_start, y_end, 0, 255, 0);
 //        set_pixel_color(imgs[i], x_end, y_start, 0, 255, 0);
 
-        free_hough(h_lines, theta_range, rho_max);
-        free_hough(v_lines, theta_range, rho_max);
-        free_hough(hs, theta_range, rho_max);
-
+        // free memory
+        free_hough(h_lines, theta_range);
+        free_hough(v_lines, theta_range);
+        free_hough(hs, theta_range);
 
         clean_shapes(shapes);
 
@@ -88,6 +107,7 @@ int main()
         free_image(imgs[i]);
         imgs[i] = orig;
 
+        /* Adjust bounding box with mean shape size to compensate the circle image transformation */
         double mean_shape_width = 0.0, mean_shape_height = 0.0;
         int shape_count = 0;
         for (int j = 0; shapes[j] != NULL; j++)
@@ -113,13 +133,18 @@ int main()
             x_start = offset_x;
             x_end = imgs[i]->width - offset_x;
         }
+        /* */
 
 
-        draw_line(imgs[i], x_start, y_start, x_end, y_start, 0, 255, 0);
-        draw_line(imgs[i], x_start, y_start, x_start, y_end, 0, 255, 0);
-        draw_line(imgs[i], x_end, y_start, x_end, y_end, 0, 255, 0);
-        draw_line(imgs[i], x_start, y_end, x_end, y_end, 0, 255, 0);
+        /* Draw bounding box of grid*/
+        // draw line with a offset of 1 pixel to be more visible
+        draw_line(imgs[i], x_start - 1 < 0 ? 0 : x_start - 1, y_start - 1 < 0 ? 0 : y_start - 1, x_end + 1 >= imgs[i]->width ? imgs[i]->width - 1 : x_end + 1, y_start - 1 < 0 ? 0 : y_start - 1, 0, 255, 0);
+        draw_line(imgs[i], x_start - 1 < 0 ? 0 : x_start - 1, y_end + 1 >= imgs[i]->height ? imgs[i]->height - 1 : y_end + 1, x_end + 1 >= imgs[i]->width ? imgs[i]->width - 1 : x_end + 1, y_end + 1 >= imgs[i]->height ? imgs[i]->height - 1 : y_end + 1, 0, 255, 0);
+        draw_line(imgs[i], x_start - 1 < 0 ? 0 : x_start - 1, y_start - 1 < 0 ? 0 : y_start - 1, x_start - 1 < 0 ? 0 : x_start - 1, y_end + 1 >= imgs[i]->height ? imgs[i]->height - 1 : y_end + 1, 0, 255, 0);
+        draw_line(imgs[i], x_end + 1 >= imgs[i]->width ? imgs[i]->width - 1 : x_end + 1, y_start - 1 < 0 ? 0 : y_start - 1, x_end + 1 >= imgs[i]->width ? imgs[i]->width - 1 : x_end + 1, y_end + 1 >= imgs[i]->height ? imgs[i]->height - 1 : y_end + 1, 0, 255, 0);
+        /* */
 
+        /* Extract sub-image of the grid */
         Image *sub_img = extract_sub_image(imgs[i], x_start, y_start, x_end, y_end);
 
         int height_objective = 500;
@@ -128,6 +153,7 @@ int main()
         free_image(sub_img);
         sub_img = scale;
 
+        /* */
 
         Shape **sub_shapes = get_all_shape(sub_img);
 
