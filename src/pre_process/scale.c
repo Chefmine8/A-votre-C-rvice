@@ -1,5 +1,16 @@
 #include "scale.h"
 
+static SDL_Window *hidden_window = NULL;
+static SDL_Renderer *hidden_renderer = NULL;
+
+static void ensure_hidden_renderer(void) {
+    if (!hidden_window) {
+        hidden_window = SDL_CreateWindow("Hidden", SDL_WINDOWPOS_UNDEFINED,
+                                         SDL_WINDOWPOS_UNDEFINED, 1, 1, SDL_WINDOW_HIDDEN);
+        hidden_renderer = SDL_CreateRenderer(hidden_window, -1, SDL_RENDERER_ACCELERATED);
+    }
+}
+
 Image *manual_image_scaling(const Image *src, const float scale_x, const float scale_y)
 {
     if (!src)
@@ -8,35 +19,30 @@ Image *manual_image_scaling(const Image *src, const float scale_x, const float s
     const int new_w = (int)(src->width * scale_x);
     const int new_h = (int)(src->height * scale_y);
 
-    // window and renderer (hidden)
-    SDL_Window *win =
-        SDL_CreateWindow("Hidden", SDL_WINDOWPOS_UNDEFINED,
-                         SDL_WINDOWPOS_UNDEFINED, 1, 1, SDL_WINDOW_HIDDEN);
-    SDL_Renderer *renderer =
-        SDL_CreateRenderer(win, -1, SDL_RENDERER_ACCELERATED);
+    ensure_hidden_renderer();
 
     SDL_Surface *temp_surf = image_to_sdl_surface(src);
     SDL_Texture *tex =
-        SDL_CreateTextureFromSurface(renderer, temp_surf);
+        SDL_CreateTextureFromSurface(hidden_renderer, temp_surf);
     SDL_FreeSurface(temp_surf);
 
     // texture target
     SDL_Texture *target =
-        SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGBA8888,
+        SDL_CreateTexture(hidden_renderer, SDL_PIXELFORMAT_RGBA8888,
                           SDL_TEXTUREACCESS_TARGET, new_w, new_h);
-    SDL_SetRenderTarget(renderer, target);
-    SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
-    SDL_RenderClear(renderer);
+    SDL_SetRenderTarget(hidden_renderer, target);
+    SDL_SetRenderDrawColor(hidden_renderer, 255, 255, 255, 255);
+    SDL_RenderClear(hidden_renderer);
 
 
     const SDL_Rect dstRect = {0, 0, new_w, new_h };
     // rotate texture using SDL_RenderCopyEx
-    SDL_RenderCopy(renderer, tex, NULL, &dstRect);
+    SDL_RenderCopy(hidden_renderer, tex, NULL, &dstRect);
 
     // read pixels from renderer to create new surface
     SDL_Surface *resultSurf = SDL_CreateRGBSurfaceWithFormat(
         0, new_w, new_h, 32, SDL_PIXELFORMAT_RGBA8888);
-    SDL_RenderReadPixels(renderer, NULL, SDL_PIXELFORMAT_RGBA8888,
+    SDL_RenderReadPixels(hidden_renderer, NULL, SDL_PIXELFORMAT_RGBA8888,
                          resultSurf->pixels, resultSurf->pitch);
 
     // create new Image based on surface
@@ -48,8 +54,6 @@ Image *manual_image_scaling(const Image *src, const float scale_x, const float s
     SDL_DestroyTexture(tex);
     SDL_DestroyTexture(target);
     SDL_FreeSurface(resultSurf);
-    SDL_DestroyRenderer(renderer);
-    SDL_DestroyWindow(win);
 
     return result;
 
@@ -104,4 +108,16 @@ void get_nn_input(const Image *img, long double *input)
         }
     }
     free_image(resized);
+}
+
+
+void cleanup_hidden_renderer_scale() {
+    if (hidden_renderer) {
+        SDL_DestroyRenderer(hidden_renderer);
+        hidden_renderer = NULL;
+    }
+    if (hidden_window) {
+        SDL_DestroyWindow(hidden_window);
+        hidden_window = NULL;
+    }
 }

@@ -120,9 +120,36 @@ int main()
         draw_line(imgs[i], x_end, y_start, x_end, y_end, 0, 255, 0);
         draw_line(imgs[i], x_start, y_end, x_end, y_end, 0, 255, 0);
 
+        Image *sub_img = extract_sub_image(imgs[i], x_start, y_start, x_end, y_end);
+
+        int height_objective = 500;
+        float scale_x = (float)height_objective / (float)(sub_img->height);
+        Image *scale = manual_image_scaling(sub_img, scale_x, scale_x);
+        free_image(sub_img);
+        sub_img = scale;
+
+
+        Shape **sub_shapes = get_all_shape(sub_img);
+
+//        remove_small_shape(sub_img,sub_shapes , 25);
+//        remove_outliers_shape(sub_img,sub_shapes , 25,75,2.5,3);
+//        remove_aspect_ration(sub_img,sub_shapes , 0.1, 5);
+
+        for (int j = 0; sub_shapes[j] != NULL; j++)
+        {
+            free_shape(sub_shapes[j]);
+        }
+        free(sub_shapes);
+
+        SDL_Surface *sub_surf = image_to_sdl_surface(sub_img);
+        char sub_filename[256];
+        snprintf(sub_filename, sizeof(sub_filename), "sub_image_%d.bmp", i + 1);
+        export_image(sub_surf, sub_filename);
+        SDL_FreeSurface(sub_surf);
 
 
 
+        free_image(sub_img);
 
 
         for (int j = 0; shapes[j] != NULL; j++)
@@ -186,6 +213,7 @@ int main()
     for (int i = 0; imgs[i] != NULL; i++)
         free_image(imgs[i]);
 
+    cleanup_hidden_renderer_scale();
     cleanup_hidden_renderer();
     IMG_Quit();
     SDL_Quit();

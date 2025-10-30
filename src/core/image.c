@@ -203,3 +203,17 @@ void draw_line(Image *img, int x0, int y0, int x1, int y1, uint8_t r, uint8_t g,
         }
     }
 }
+
+Image* extract_sub_image(const Image* img, int x_start, int y_start, int x_end, int y_end)
+{
+    Image* sub_img = create_image(x_end - x_start, y_end - y_start);
+    for (int y = y_start; y < y_end; y++)
+    {
+        for (int x = x_start; x < x_end; x++)
+        {
+            Pixel* p = get_pixel(img, x, y);
+            set_pixel(sub_img, x - x_start, y - y_start, p);
+        }
+    }
+    return sub_img;
+}
