@@ -32,7 +32,7 @@ Image *circle_image(Image *img, Shape** shapes, double scale_factor)
     return res;
 }
 
-
+// Convert degrees to radians
 double deg2rad(double degrees) {
     return degrees * M_PI / 180.0;
 }
@@ -57,6 +57,7 @@ int **hough_space(Image *img, int* theta_range, int* rho_max)
         }
     }
 
+    // Fill the Hough space
     for (int y = 0; y < img->height; y++)
     {
         for (int x = 0; x < img->width; ++x)
@@ -95,9 +96,7 @@ void hough_space_filter(int **hough_space,int theta_range, int rho_max, double t
 }
 
 
-void filter_line(int **hough_space,int theta_range, int rho_max) {
-    int theta_prox = 15;
-    int rho_prox = 20;
+void filter_line(int **hough_space,int theta_range, int rho_max, int theta_prox, int rho_prox) {
     for (int theta = 0; theta < theta_range; theta++) {
         for (int rho = 0; rho < 2 * rho_max; rho++) {
             if ((theta > 10 && theta < 80) || (theta > 100 && theta < 170))
@@ -171,13 +170,11 @@ void draw_lines(Image *image, int** hough_space,int theta_range, int rho_max)
     for (int i = 0; i < theta_range; i++) {
         for (int j = 0; j < 2 * rho_max; j++) {
             if (hough_space[i][j] > 0) {
-                int theta = i;           // theta en degrés
-                int rho = j - rho_max;   // rho réel (car décalé de rho_max)
-
-
+                int theta = i;
+                int rho = j - rho_max;
 
                 double t = deg2rad(theta);
-                int points[4][2]; // stocke les points valides
+                int points[4][2];
                 int count = 0;
 
                 // left

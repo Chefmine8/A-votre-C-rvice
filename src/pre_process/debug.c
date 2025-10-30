@@ -57,7 +57,7 @@ int main()
         int theta_range, rho_max;
         int **hs = hough_space(imgs[i], &theta_range, &rho_max);
         hough_space_filter(hs, theta_range, rho_max, 0.495);
-        filter_line(hs, theta_range, rho_max);
+        filter_line(hs, theta_range, rho_max, 15 ,20);
 
         draw_lines(imgs[i], hs, theta_range, rho_max);
 

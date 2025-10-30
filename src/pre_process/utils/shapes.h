@@ -11,33 +11,6 @@ typedef struct Pixel Pixel;
 typedef struct { int x, y; } Coord;
 
 
-// Comparison function for qsort to sort doubles in ascending order
-int comp(const void *a, const void *b) {
-    if (*(double*)a > *(double*)b) return 1;
-    else if (*(double*)a < *(double*)b) return -1;
-    else return 0;
-}
-
-/**
- * @brief Computes the specified percentile of a sorted array.
- *
- * @param sorted_array Pointer to the sorted array of doubles.
- * @param size Number of elements in the array.
- * @param percentile Desired percentile (0-100).
- * @return The computed percentile value.
- */
-static double percentile(double  *sorted_array, int size, double percentile) {
-    if (size <= 0) return 0.0;
-
-    double index = (percentile / 100.0) * (size - 1);
-    int idx = (int)index;
-    double frac = index - idx;
-    if(idx < 0) idx =0;
-    if(idx >= size - 1) return sorted_array[size - 1];
-
-    return sorted_array[idx] + frac * (sorted_array[idx + 1] - sorted_array[idx]);
-}
-
 /**
  * @brief Represents a connected region (shape) in an image.
  *
