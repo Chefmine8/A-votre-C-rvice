@@ -1,5 +1,18 @@
 #include "grid_detection.h"
 
+static int compare_shape_y(const void *a, const void *b)
+{
+    const Shape *s1 = *(const Shape **)a;
+    const Shape *s2 = *(const Shape **)b;
+    return s1->min_y - s2->min_y;
+}
+
+static int compare_shape_x(const void *a, const void *b)
+{
+    const Shape *s1 = *(const Shape **)a;
+    const Shape *s2 = *(const Shape **)b;
+    return s1->min_x - s2->min_x;
+}
 
 Image *circle_image(Image *img, Shape** shapes, double scale_factor)
 {
@@ -31,6 +44,7 @@ Image *circle_image(Image *img, Shape** shapes, double scale_factor)
     }
     return res;
 }
+
 
 // Convert degrees to radians
 double deg2rad(double degrees) {
@@ -501,5 +515,148 @@ void get_bounding_box(int **vertical_lines, int** horizontal_lines,  int theta_r
     //set_pixel_color(img, 10, 10, 0,255,0);
     free(list_rho_h);
     free(list_rho_v);
+
+}
+
+void filter_by_density(Image *img,Shape **shapes, int min_neighbors)
+{
+    if (shapes == NULL)
+        return;
+
+    int count = 0;
+    while (shapes[count] != NULL)
+        count++;
+
+    for (int i = 0; i < count; i++)
+    {
+        Shape *s = shapes[i];
+        if (s->has_been_removed != 0)
+            continue;
+
+        int h_count = 0, v_count = 0;
+
+        int x_min = s->min_x;
+        int x_max = s->max_x;
+        int y_min = s->min_y;
+        int y_max = s->max_y;
+
+        for (int j = 0; j < count; j++)
+        {
+            if (i == j)
+                continue;
+            Shape *other = shapes[j];
+            if (other->has_been_removed != 0)
+                continue;
+
+            int other_x_min = other->min_x;
+            int other_x_max = other->max_x;
+            int other_y_min = other->min_y;
+            int other_y_max = other->max_y;
+
+            if (!(other_x_max < x_min || other_x_min > x_max))
+                h_count++;
+            if (!(other_y_max < y_min || other_y_min > y_max))
+                v_count++;
+        }
+
+        if(h_count < min_neighbors || v_count < min_neighbors)
+        {
+            s->has_been_removed = 1;
+            image_remove_shape(img, s);
+        }
+    }
+
+    // cleanup
+    clean_shapes(shapes);
+}
+
+void detect_grid_size(Shape **shapes, int *rows, int *cols)
+{
+    *rows = 0;
+    *cols = 0;
+
+    if (shapes == NULL)
+        return;
+
+    int count = 0;
+    while (shapes[count] != NULL)
+        count++;
+    if (count == 0)
+        return;
+
+    // create arrays for sorting
+    Shape **shapes_by_y = malloc(count * sizeof(Shape *));
+    if (!shapes_by_y) {
+        printf("Cannot allocate memory for shape sorting\n");
+        exit(EXIT_FAILURE);
+    }
+
+    // copy shapes to new arrays
+    for (int i = 0; i < count; i++) {
+        shapes_by_y[i] = shapes[i];
+    }
+
+    // sort by y
+    qsort(shapes_by_y, count, sizeof(Shape *), compare_shape_y);
+
+    double avg_height = 0.0;
+    for (int i = 0; i < count; i++) {
+        avg_height += shape_height(shapes_by_y[i]);
+    }
+    avg_height /= count;
+
+    double row_threshold = avg_height * 0.8;
+
+
+
+    int *col_per_row = malloc(count * sizeof(int));
+    if (!col_per_row) {
+        printf("Cannot allocate memory for column counting\n");
+        exit(EXIT_FAILURE);
+    }
+
+    int rows_count = 0;
+    int curr_col_count = 0;
+    double last_y = shapes[0]->min_y;
+    int idx = 0;
+
+    for (int i = 0; i < count; i++) {
+
+        if(fabs(shapes[i]->min_y - last_y) > row_threshold) {
+            // new row
+            if (curr_col_count > 0)
+            {
+                qsort(&shapes_by_y[idx], curr_col_count, sizeof(Shape *), compare_shape_x);
+                col_per_row[rows_count++] = curr_col_count;
+            }
+            idx = i;
+            curr_col_count = 0;
+        }
+        curr_col_count++;
+        last_y = shapes[i]->min_y;
+    }
+
+    // last row
+    if (curr_col_count > 0)
+    {
+        qsort(&shapes_by_y[idx], curr_col_count, sizeof(Shape *), compare_shape_x);
+        col_per_row[rows_count++] = curr_col_count;
+    }
+
+    if (rows_count == 0)
+    {
+        free(col_per_row);
+        free(shapes_by_y);
+        return;
+    }
+
+    qsort(col_per_row, rows_count, sizeof(int), comp);
+    int median_cols = col_per_row[rows_count / 2];
+
+    *rows = rows_count;
+    *cols = median_cols;
+
+    free(col_per_row);
+    free(shapes_by_y);
 
 }

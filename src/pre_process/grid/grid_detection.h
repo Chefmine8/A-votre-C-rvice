@@ -25,7 +25,6 @@
  */
 Image *circle_image(Image *img, Shape** shapes, double scale_factor);
 
-
 /**
  * @brief Computes the Hough transform accumulator space for line detection.
  *
@@ -141,3 +140,23 @@ void filter_gaps(int **hough_space, int theta_range, int rho_max);
  * @param y_end Output parameter for the ending y-coordinate of the bounding box.
  */
 void get_bounding_box(int **vertical_lines, int** horizontal_lines,  int theta_range, int rho_max, int *x_start, int *x_end, int *y_start, int *y_end);
+
+/**
+ * @brief Filters shapes based on the number of neighboring shapes.
+ *
+ * Shapes with fewer than `min_neighbors` aligned neighbors
+ * (horizontally or vertically) are removed from the image and marked as removed.
+ *
+ * @param img Pointer to the Image structure containing the shapes.
+ * @param shapes NULL-terminated array of detected Shape pointers.
+ * @param min_neighbors Minimum number of aligned neighboring shapes required to retain a shape.
+ */
+void filter_by_density(Image *img,Shape **shapes, int min_neighbors);
+
+/** * @brief Detects the grid size (number of rows and columns) from the shapes.
+ *
+ * @param shapes NULL-terminated array of detected Shape pointers.
+ * @param rows Output parameter for the number of rows detected.
+ * @param cols Output parameter for the number of columns detected.
+ */
+void detect_grid_size(Shape **shapes, int *rows, int *cols);

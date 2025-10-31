@@ -157,9 +157,34 @@ int main()
 
         Shape **sub_shapes = get_all_shape(sub_img);
 
-//        remove_small_shape(sub_img,sub_shapes , 25);
-//        remove_outliers_shape(sub_img,sub_shapes , 25,75,2.5,3);
-//        remove_aspect_ration(sub_img,sub_shapes , 0.1, 5);
+        remove_small_shape(sub_img,sub_shapes , 15);
+        remove_outliers_shape(sub_img,sub_shapes , 25,75,2.5,3);
+        remove_aspect_ration(sub_img,sub_shapes , 0.1, 2);
+
+        clean_shapes(sub_shapes);
+
+        merge_shapes(sub_shapes, 2);
+
+        filter_by_density(sub_img,sub_shapes, 5);
+
+        clean_shapes(sub_shapes);
+
+        int rows, cols;
+        detect_grid_size(sub_shapes, &rows, &cols);
+        printf("Detected grid size: %d rows x %d cols\n", rows, cols);
+
+        for (int k = 0; sub_shapes[k] != NULL; ++k)
+        {
+            // draw bounding box of each shape
+            int x_min = sub_shapes[k]->min_x;
+            int y_min = sub_shapes[k]->min_y;
+            int x_max = sub_shapes[k]->max_x;
+            int y_max = sub_shapes[k]->max_y;
+            draw_line(sub_img, x_min, y_min, x_max, y_min, 0, 255, 0);
+            draw_line(sub_img, x_min, y_max, x_max, y_max, 0, 255, 0);
+            draw_line(sub_img, x_min, y_min, x_min, y_max, 0, 255, 0);
+            draw_line(sub_img, x_max, y_min, x_max, y_max, 0, 255, 0);
+        }
 
         for (int j = 0; sub_shapes[j] != NULL; j++)
         {
