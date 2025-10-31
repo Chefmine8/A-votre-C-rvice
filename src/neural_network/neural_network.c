@@ -12,7 +12,7 @@
 struct neural_network *create_neural_network(int size_of_arr, int arr[size_of_arr])
 {
 
-     if (size_of_arr <= 2) {
+     if (size_of_arr < 2) {
           errx(EXIT_FAILURE, "Do you have a brain of that size ?");
      }
      struct neural_network *neural_network = malloc(sizeof(struct neural_network));
