@@ -58,6 +58,16 @@ int main()
 
         // copy of original image
         Image *orig = copy_image(imgs[i]);
+        Image *before = copy_image(imgs[i]);
+        // for each pixel in before
+        for (int y = 0; y < before->height; y++)
+        {
+            for (int x = 0; x < before->width; x++)
+            {
+                get_pixel(before, x, y)->isInShape = 0;
+                get_pixel(before, x, y)->shape_ptr = NULL;
+            }
+        }
 
         /* Transform to circle image for better hough transform */
         Image *circle = circle_image(imgs[i], shapes, 0.25);
@@ -147,6 +157,68 @@ int main()
         /* Extract sub-image of the grid */
         Image *sub_img = extract_sub_image(imgs[i], x_start, y_start, x_end, y_end);
 
+        // shape of grid area
+        Shape *sub_shape = create_shape();
+        for (int y = y_start; y <= y_end; y++)
+        {
+            for (int x = x_start; x <= x_end; x++)
+            {
+                shape_add_pixel(sub_shape, get_pixel(before, x, y));
+            }
+        }
+        // remove grid shape from before image
+        image_remove_shape(before, sub_shape);
+        free_shape(sub_shape);
+
+        Shape ** before_shapes = get_all_shape(before);
+        remove_small_shape(before, before_shapes, 8);
+        remove_aspect_ration(before, before_shapes, 0.1, 5);
+
+        Image* before_circle = circle_image(before, before_shapes, 0.25);
+        free_image(before);
+        before = before_circle;
+
+        int theta_range__, rho_max__;
+        int **hs__ = hough_space(before, &theta_range__, &rho_max__);
+        // filter the hough space the only peak important lines
+        hough_space_filter(hs__, theta_range__, rho_max__, 0.3);
+
+        // remove lines that are not 90 or 180 or 0 degrees
+        // also remove lines that are too close to each other
+        filter_line(hs__, theta_range__, rho_max__, 15 ,20);
+
+        // sort all lines to have horizontal and vertical lines
+        int **h_lines__ = horizontal_lines(hs__, theta_range__, rho_max__, 5);
+        int **v_lines__ = vertical_lines(hs__, theta_range__, rho_max__, 5);
+
+        // filter horizontal and vertical lines independently
+        // this will only keep the lines that form the biggest set with regular gaps
+        filter_gaps(h_lines__, theta_range__, rho_max__);
+        //filter_gaps(v_lines__, theta_range__, rho_max__);
+
+        // draw lines on image for debug
+        draw_lines(before, h_lines__, theta_range__, rho_max__, 255, 0, 0);
+        draw_lines(before, v_lines__, theta_range__, rho_max__, 0, 0, 255);
+
+        // free memory
+        free_hough(h_lines__, theta_range__);
+        free_hough(v_lines__, theta_range__);
+        free_hough(hs__, theta_range__);
+
+
+        // export before image for debug
+        SDL_Surface *before_surf = image_to_sdl_surface(before);
+        char before_filename[256];
+        snprintf(before_filename, sizeof(before_filename), "../../resources/pre_process/output/grid/word_list_image_%d.bmp", i + 1);
+        export_image(before_surf, before_filename);
+        SDL_FreeSurface(before_surf);
+        free_image(before);
+
+        for (int j = 0; before_shapes[j] != NULL; j++)
+        {
+            free_shape(before_shapes[j]);
+        }
+        free(before_shapes);
 
         /* Manual scaling of sub-image to have better processing later */
         if (sub_img->height > 500)
