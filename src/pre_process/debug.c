@@ -147,11 +147,25 @@ int main()
         /* Extract sub-image of the grid */
         Image *sub_img = extract_sub_image(imgs[i], x_start, y_start, x_end, y_end);
 
-        int height_objective = 500;
-        float scale_x = (float)height_objective / (float)(sub_img->height);
-        Image *scale = manual_image_scaling(sub_img, scale_x, scale_x);
-        free_image(sub_img);
-        sub_img = scale;
+
+        /* Manual scaling of sub-image to have better processing later */
+        if (sub_img->height > 500)
+        {
+            int height_objective = (int)(sub_img->height * 0.8);
+            float scale_x = (float)height_objective / (float)(sub_img->height);
+            Image *scale = manual_image_scaling(sub_img, scale_x, scale_x);
+            free_image(sub_img);
+            sub_img = scale;
+        }
+        else
+        {
+            int height_objective = (int)(sub_img->height * 1.3);
+            float scale_x = (float)height_objective / (float)(sub_img->height);
+            Image *scale = manual_image_scaling(sub_img, scale_x, scale_x);
+            free_image(sub_img);
+            sub_img = scale;
+        }
+
 
         /* */
 
@@ -163,15 +177,41 @@ int main()
 
         clean_shapes(sub_shapes);
 
-        merge_shapes(sub_shapes, 2);
+        merge_shapes(sub_shapes, 3);
 
         filter_by_density(sub_img,sub_shapes, 5);
-
         clean_shapes(sub_shapes);
 
         int rows, cols;
         detect_grid_size(sub_shapes, &rows, &cols);
-        printf("Detected grid size: %d rows x %d cols\n", rows, cols);
+        //printf("Detected grid size: %d rows x %d cols\n", rows, cols);
+
+        int min = rows < cols ? rows : cols;
+        filter_by_density(sub_img, sub_shapes, (int)(min * 0.9));
+        clean_shapes(sub_shapes);
+
+        detect_grid_size(sub_shapes, &rows, &cols);
+        //printf("After filtering, grid size: %d rows x %d cols\n", rows, cols);
+
+
+        Image *** cell_images = get_grid_cells(sub_img,sub_shapes, rows, cols);
+        //export each cell image with name cell_x_y.bmp
+        for (int r = 0; r < rows; r++)
+        {
+            for (int c = 0; c < cols; c++)
+            {
+                if (cell_images[r][c] == NULL)
+                    continue;
+                char cell_filename[256];
+                snprintf(cell_filename, sizeof(cell_filename), "../../resources/pre_process/output/cells/image%d/cell_%d_%d.bmp", i + 1, c + 1, r + 1);
+                SDL_Surface *cell_surf = image_to_sdl_surface(cell_images[r][c]);
+                export_image(cell_surf, cell_filename);
+                SDL_FreeSurface(cell_surf);
+                free_image(cell_images[r][c]);
+            }
+            free(cell_images[r]);
+        }
+        free(cell_images);
 
         for (int k = 0; sub_shapes[k] != NULL; ++k)
         {
@@ -222,43 +262,6 @@ int main()
         }
     }
 
-
-    // for (int i = 0; files[i] != NULL; i++) {
-    //     Image *scale = resize_image(imgs[i], 600, 600, true);
-    //     free_image(imgs[i]);
-    //     imgs[i] = scale;
-    // }
-    // Image *img =
-    //     load_image("../../resources/pre_process/input/level_1_image_2.png");
-    //
-    // Image *scale = resize_image(img, 800, 800, true);
-    // free_image(img);
-    //
-    // SDL_Surface *surf1 = image_to_sdl_surface(scale);
-    // export_image(surf1, "scale_output.bmp");
-    // SDL_FreeSurface(surf1);  // ✅
-    //
-    // Image *rot = manual_rotate_image(scale, 20);
-    // free_image(scale);
-    //
-    // grayscale_image(rot);
-    //
-    // Image *bin = sauvola(rot, 10, 128, 0.07);
-    // free_image(rot);
-    //
-    // SDL_Surface *surf2 = image_to_sdl_surface(bin);
-    // export_image(surf2, "output.bmp");
-    // SDL_FreeSurface(surf2);  // ✅
-    //
-    // // long double *nn_input = malloc(28 * 28 * sizeof(long double));
-    // // get_nn_input(bin, nn_input);
-    // // for (int i = 0; i < 28 * 28; i++)
-    // // {
-    // //     printf("%d ", (int)nn_input[i]);
-    // // }
-    // // printf("\n");
-    // free_image(bin);
-    //free(nn_input);  // ✅
 
 
     for (int i = 0; imgs[i] != NULL; i++)

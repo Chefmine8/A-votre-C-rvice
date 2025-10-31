@@ -160,3 +160,13 @@ void filter_by_density(Image *img,Shape **shapes, int min_neighbors);
  * @param cols Output parameter for the number of columns detected.
  */
 void detect_grid_size(Shape **shapes, int *rows, int *cols);
+
+/** * @brief Extracts individual grid cells from the image based on detected shapes.
+ *
+ * @param img Pointer to the input Image structure.
+ * @param shapes NULL-terminated array of detected Shape pointers.
+ * @param rows Number of rows in the grid.
+ * @param cols Number of columns in the grid.
+ * @return 2D array of Image pointers representing the extracted grid cells.
+ */
+Image ***get_grid_cells(Image *img, Shape **shapes, int rows, int cols);

@@ -658,5 +658,102 @@ void detect_grid_size(Shape **shapes, int *rows, int *cols)
 
     free(col_per_row);
     free(shapes_by_y);
+}
 
+Image ***get_grid_cells(Image *img, Shape **shapes, int rows, int cols)
+{
+    Image ***grid = malloc(rows * sizeof(Image **));
+    if (!grid)
+    {
+        printf("Cannot allocate memory for grid cells\n");
+        exit(EXIT_FAILURE);
+    }
+    for (int r = 0; r < rows; r++)
+    {
+        grid[r] = malloc(cols * sizeof(Image *));
+        if (!grid[r])
+        {
+            printf("Cannot allocate memory for grid cells\n");
+            exit(EXIT_FAILURE);
+        }
+    }
+
+    double cell_w = (double)img->width / cols;
+    double cell_h = (double)img->height / rows;
+
+    Shape ***assigned = malloc(rows * sizeof(Shape **));
+    for (int r = 0; r < rows; r++)
+    {
+        assigned[r] = calloc(cols, sizeof(Shape *));
+    }
+
+    for (int i = 0; shapes[i] != NULL; i++)
+    {
+        Shape *s = shapes[i];
+        if (s->has_been_removed != 0)
+            continue;
+
+        int center_x = (s->min_x + s->max_x) / 2;
+        int center_y = (s->min_y + s->max_y) / 2;
+
+        int col = (int)(center_x / cell_w);
+        int row = (int)(center_y / cell_h);
+
+        if(col < 0) col = 0;
+        if(col >= cols) col = cols -1;
+        if(row < 0) row = 0;
+        if(row >= rows) row = rows -1;
+
+        double expected_cx = (col + 0.5) * cell_w;
+        double expected_cy = (row + 0.5) * cell_h;
+
+        double dist = sqrt(pow(center_x - expected_cx, 2) + pow(center_y - expected_cy, 2));
+
+        if (assigned[row][col] != NULL)
+        {
+            Shape *existing = assigned[row][col];
+            int existing_cx = (existing->min_x + existing->max_x) / 2;
+            int existing_cy = (existing->min_y + existing->max_y) / 2;
+            double existing_dist = sqrt(pow(existing_cx - expected_cx, 2) + pow(existing_cy - expected_cy, 2));
+
+            if (dist < existing_dist)
+            {
+                existing->has_been_removed = 1;
+                assigned[row][col] = s;
+            }
+            else
+            {
+                s->has_been_removed = 1;
+            }
+        }
+        else
+        {
+            assigned[row][col] = s;
+        }
+    }
+    for (int r = 0; r < rows; r++)
+    {
+        for (int c = 0; c < cols; c++)
+        {
+            if(assigned[r][c] == NULL)
+            {
+                grid[r][c] = NULL;
+                continue;
+            }
+
+            Shape *s = assigned[r][c];
+            int x_start = s->min_x;
+            int y_start = s->min_y;
+            int x_end = s->max_x;
+            int y_end = s->max_y;
+
+            grid[r][c] = extract_sub_image(img, x_start, y_start, x_end , y_end);
+        }
+    }
+
+    for (int r = 0; r < rows; r++)
+        free(assigned[r]);
+    free(assigned);
+
+    return grid;
 }
