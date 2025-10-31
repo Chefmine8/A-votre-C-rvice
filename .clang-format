@@ -1,0 +1,5 @@
+BasedOnStyle: LLVM
+IndentWidth: 4 # Use 4 spaces for indentation
+UseTab: Never # Do not use tab characters
+BreakBeforeBraces: Allman # Place braces on a separate line
+ColumnLimit: 80 # Maximum line width is 80 characters

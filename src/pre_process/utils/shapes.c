@@ -60,7 +60,7 @@ void shape_add_pixel(Shape *s, Pixel *p)
     p->shape_ptr = s;
 
     // update bounding box
-    if (s->count == 0) {
+    if (s->count == 1) {
         s->max_x = s->min_x = p->x;
         s->max_y = s->min_y = p->y;
     } else {
@@ -360,4 +360,32 @@ void remove_aspect_ration(Image *img, Shape **shapes, double min_ration, double 
             image_remove_shape(img, shapes[i]);
         }
     }
+}
+
+void merge_shapes(Shape **shapes, int spacing)
+{
+    for (int i = 0; shapes[i] != NULL; ++i)
+    {
+        Shape *a = shapes[i];
+        if (a->has_been_removed) continue;
+
+        for (int j = i + 1; shapes[j] != NULL; ++j)
+        {
+            Shape *b = shapes[j];
+            if (b->has_been_removed) continue;
+
+            if ((a->min_x - spacing <= b->max_x && a->max_x + spacing >= b->min_x) &&
+                (a->min_y - spacing <= b->max_y && a->max_y + spacing >= b->min_y))
+            {
+                for (int k = 0; k < b->count; ++k)
+                {
+                    b->pixels[k]->isInShape = 0;
+                    shape_add_pixel(a, b->pixels[k]);
+                }
+
+                b->has_been_removed = 1;
+            }
+        }
+    }
+    clean_shapes(shapes);
 }

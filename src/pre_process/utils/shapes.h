@@ -202,3 +202,11 @@ void remove_outliers_shape(Image *img, Shape **shapes, int low_percentile, int h
  * @param max_ratio Maximum aspect ratio allowed.
  */
 void remove_aspect_ration(Image *img, Shape **shapes, double min_ration, double max_ratio);
+
+/**
+ * @brief Merges shapes that are within a specified spacing of each other.
+ *
+ * @param shapes NULL-terminated array of shape pointers.
+ * @param spacing Maximum distance between shapes to consider for merging.
+ */
+void merge_shapes(Shape **shapes, int spacing);
