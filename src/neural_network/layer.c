@@ -108,7 +108,7 @@ void ReLU_activation_function(const struct  layer *layer) {
 void soft_max_activation_function(const struct  layer *layer) {
     long double sum = 0;
     for (int i = 0; i < layer->layer_size; i++) {
-        layer->outputs[i] = exp(layer->outputs[i]);
+        layer->outputs[i] = isnanf(layer->outputs[i]) ? 0 : exp(layer->outputs[i]);
         sum += layer->outputs[i];
 
     }
