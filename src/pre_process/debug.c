@@ -77,11 +77,30 @@ int main()
             }
         }
 
+
+        // export image after shape filtering for debug
+        SDL_Surface *shape_surf = image_to_sdl_surface(imgs[i]);
+        char shape_filename[256];
+        snprintf(shape_filename, sizeof(shape_filename),
+                 "../../resources/pre_process/output/shape_filtered_image_%d.bmp",
+                 i + 1);
+        export_image(shape_surf, shape_filename);
+        SDL_FreeSurface(shape_surf);
+
         /* Transform to circle image for better hough transform */
         Image *circle = circle_image(imgs[i], shapes, 0.25);
         free_image(imgs[i]);
         imgs[i] = circle;
         /* */
+
+        //export circle image for debug
+        SDL_Surface *circle_surf = image_to_sdl_surface(imgs[i]);
+        char circle_filename[256];
+        snprintf(circle_filename, sizeof(circle_filename),
+                    "../../resources/pre_process/output/circle_image_%d.bmp",
+        i + 1);
+        export_image(circle_surf, circle_filename);
+        SDL_FreeSurface(circle_surf);
 
         /* Perform Hough Transform and detect lines in circle image */
         int theta_range, rho_max;
