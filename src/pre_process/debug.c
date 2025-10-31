@@ -203,7 +203,7 @@ int main()
                 if (cell_images[r][c] == NULL)
                     continue;
                 char cell_filename[256];
-                snprintf(cell_filename, sizeof(cell_filename), "../../resources/pre_process/output/cells/image%d/cell_%d_%d.bmp", i + 1, c + 1, r + 1);
+                snprintf(cell_filename, sizeof(cell_filename), "../../resources/pre_process/output/grid/cells/image%d/cell_%d_%d.bmp", i + 1, c + 1, r + 1);
                 SDL_Surface *cell_surf = image_to_sdl_surface(cell_images[r][c]);
                 export_image(cell_surf, cell_filename);
                 SDL_FreeSurface(cell_surf);
@@ -234,7 +234,7 @@ int main()
 
         SDL_Surface *sub_surf = image_to_sdl_surface(sub_img);
         char sub_filename[256];
-        snprintf(sub_filename, sizeof(sub_filename), "sub_image_%d.bmp", i + 1);
+        snprintf(sub_filename, sizeof(sub_filename), "../../resources/pre_process/output/grid/grid_image_%d.bmp", i + 1);
         export_image(sub_surf, sub_filename);
         SDL_FreeSurface(sub_surf);
 
