@@ -17,8 +17,8 @@ void grayscale_image(const Image *img);
 /**
  * @brief Applies the Sauvola adaptive thresholding algorithm to an image.
  *
- * This algorithm performs local thresholding based on the mean and standard deviation
- * of pixels in a local neighborhood.
+ * This algorithm performs local thresholding based on the mean and standard
+ * deviation of pixels in a local neighborhood.
  *
  * @param img Pointer to the input Image (assumed grayscale)
  * @param n   Size of the neighborhood (block size, typically odd)

@@ -1,28 +1,27 @@
-#include "grayscale.h"
 #include "../core/image.h"
+#include "grayscale.h"
+#include "grid/grid_detection.h"
 #include "rotation.h"
 #include "scale.h"
 #include <time.h>
-#include "grid/grid_detection.h"
 
 int main()
 {
     SDL_Init(SDL_INIT_VIDEO);
     IMG_Init(IMG_INIT_PNG);
 
-    char *files[] = {
-        "../../resources/pre_process/input/level_1_image_1.png",
-        "../../resources/pre_process/input/level_1_image_2.png",
-        "../../resources/pre_process/input/level_2_image_1.png",
-        "../../resources/pre_process/input/level_2_image_2.png",
-        "../../resources/pre_process/input/level_3_image_1.png",
-        "../../resources/pre_process/input/level_3_image_2.png",
-        NULL
-    };
+    char *files[] = {"../../resources/pre_process/input/level_1_image_1.png",
+                     "../../resources/pre_process/input/level_1_image_2.png",
+                     "../../resources/pre_process/input/level_2_image_1.png",
+                     "../../resources/pre_process/input/level_2_image_2.png",
+                     "../../resources/pre_process/input/level_3_image_1.png",
+                     "../../resources/pre_process/input/level_3_image_2.png",
+                     NULL};
 
     // Load all images
-    Image *imgs[] = { NULL, NULL, NULL, NULL, NULL, NULL, NULL };
-    for (int i = 0; files[i] != NULL; i++) {
+    Image *imgs[] = {NULL, NULL, NULL, NULL, NULL, NULL, NULL};
+    for (int i = 0; files[i] != NULL; i++)
+    {
         imgs[i] = load_image(files[i]);
 
         /* Manual Rotation for specific images */
@@ -51,7 +50,9 @@ int main()
         // export image after binarization for debug
         SDL_Surface *bin_surf = image_to_sdl_surface(imgs[i]);
         char bin_filename[256];
-        snprintf(bin_filename, sizeof(bin_filename), "../../resources/pre_process/output/binarized_image_%d.bmp", i + 1);
+        snprintf(bin_filename, sizeof(bin_filename),
+                 "../../resources/pre_process/output/binarized_image_%d.bmp",
+                 i + 1);
         export_image(bin_surf, bin_filename);
         SDL_FreeSurface(bin_surf);
 
@@ -60,7 +61,7 @@ int main()
 
         /* Filter shapes */
         remove_small_shape(imgs[i], shapes, 8);
-        remove_outliers_shape(imgs[i], shapes, 25,75,2.5,3);
+        remove_outliers_shape(imgs[i], shapes, 25, 75, 2.5, 3);
         remove_aspect_ration(imgs[i], shapes, 0.1, 5);
 
         // copy of original image
@@ -90,14 +91,15 @@ int main()
 
         // remove lines that are not 90 or 180 or 0 degrees
         // also remove lines that are too close to each other
-        filter_line(hs, theta_range, rho_max, 15 ,20);
+        filter_line(hs, theta_range, rho_max, 15, 20);
 
         // sort all lines to have horizontal and vertical lines
         int **h_lines = horizontal_lines(hs, theta_range, rho_max, 5);
         int **v_lines = vertical_lines(hs, theta_range, rho_max, 5);
 
         // filter horizontal and vertical lines independently
-        // this will only keep the lines that form the biggest set with regular gaps
+        // this will only keep the lines that form the biggest set with regular
+        // gaps
         filter_gaps(h_lines, theta_range, rho_max);
         filter_gaps(v_lines, theta_range, rho_max);
 
@@ -107,11 +109,12 @@ int main()
 
         // get bounding box of the grid
         int x_start, y_start, x_end, y_end;
-        get_bounding_box(v_lines, h_lines, theta_range, rho_max, &x_start, &x_end, &y_start, &y_end);
-//        set_pixel_color(imgs[i], x_start, y_start, 0, 255, 0);
-//        set_pixel_color(imgs[i], x_end, y_end, 0, 255, 0);
-//        set_pixel_color(imgs[i], x_start, y_end, 0, 255, 0);
-//        set_pixel_color(imgs[i], x_end, y_start, 0, 255, 0);
+        get_bounding_box(v_lines, h_lines, theta_range, rho_max, &x_start,
+                         &x_end, &y_start, &y_end);
+        //        set_pixel_color(imgs[i], x_start, y_start, 0, 255, 0);
+        //        set_pixel_color(imgs[i], x_end, y_end, 0, 255, 0);
+        //        set_pixel_color(imgs[i], x_start, y_end, 0, 255, 0);
+        //        set_pixel_color(imgs[i], x_end, y_start, 0, 255, 0);
 
         // free memory
         free_hough(h_lines, theta_range);
@@ -120,11 +123,12 @@ int main()
 
         clean_shapes(shapes);
 
-        //restore original image
+        // restore original image
         free_image(imgs[i]);
         imgs[i] = orig;
 
-        /* Adjust bounding box with mean shape size to compensate the circle image transformation */
+        /* Adjust bounding box with mean shape size to compensate the circle
+         * image transformation */
         double mean_shape_width = 0.0, mean_shape_height = 0.0;
         int shape_count = 0;
         for (int j = 0; shapes[j] != NULL; j++)
@@ -136,13 +140,14 @@ int main()
         mean_shape_width /= shape_count;
         mean_shape_height /= shape_count;
 
-
-        int offset_x = ceil(mean_shape_width *1.6);
-        int offset_y = ceil(mean_shape_height *1.2);
+        int offset_x = ceil(mean_shape_width * 1.6);
+        int offset_y = ceil(mean_shape_height * 1.2);
         x_start = x_start - offset_x < 0 ? 0 : x_start - offset_x;
         y_start = y_start - offset_y < 0 ? 0 : y_start - offset_y;
-        x_end = x_end + offset_x >= imgs[i]->width ? imgs[i]->width - 1 : x_end + offset_x;
-        y_end = y_end + offset_y >= imgs[i]->height ? imgs[i]->height - 1 : y_end + offset_y;
+        x_end = x_end + offset_x >= imgs[i]->width ? imgs[i]->width - 1
+                                                   : x_end + offset_x;
+        y_end = y_end + offset_y >= imgs[i]->height ? imgs[i]->height - 1
+                                                    : y_end + offset_y;
 
         // if x_start is in first 5% of image width, set to 0 ans same for x_end
         if (x_start < imgs[i]->width * 0.1 && x_end > imgs[i]->width * 0.90)
@@ -152,17 +157,36 @@ int main()
         }
         /* */
 
-
         /* Draw bounding box of grid*/
         // draw line with a offset of 1 pixel to be more visible
-        draw_line(imgs[i], x_start - 1 < 0 ? 0 : x_start - 1, y_start - 1 < 0 ? 0 : y_start - 1, x_end + 1 >= imgs[i]->width ? imgs[i]->width - 1 : x_end + 1, y_start - 1 < 0 ? 0 : y_start - 1, 0, 255, 0);
-        draw_line(imgs[i], x_start - 1 < 0 ? 0 : x_start - 1, y_end + 1 >= imgs[i]->height ? imgs[i]->height - 1 : y_end + 1, x_end + 1 >= imgs[i]->width ? imgs[i]->width - 1 : x_end + 1, y_end + 1 >= imgs[i]->height ? imgs[i]->height - 1 : y_end + 1, 0, 255, 0);
-        draw_line(imgs[i], x_start - 1 < 0 ? 0 : x_start - 1, y_start - 1 < 0 ? 0 : y_start - 1, x_start - 1 < 0 ? 0 : x_start - 1, y_end + 1 >= imgs[i]->height ? imgs[i]->height - 1 : y_end + 1, 0, 255, 0);
-        draw_line(imgs[i], x_end + 1 >= imgs[i]->width ? imgs[i]->width - 1 : x_end + 1, y_start - 1 < 0 ? 0 : y_start - 1, x_end + 1 >= imgs[i]->width ? imgs[i]->width - 1 : x_end + 1, y_end + 1 >= imgs[i]->height ? imgs[i]->height - 1 : y_end + 1, 0, 255, 0);
+        draw_line(imgs[i], x_start - 1 < 0 ? 0 : x_start - 1,
+                  y_start - 1 < 0 ? 0 : y_start - 1,
+                  x_end + 1 >= imgs[i]->width ? imgs[i]->width - 1 : x_end + 1,
+                  y_start - 1 < 0 ? 0 : y_start - 1, 0, 255, 0);
+        draw_line(
+            imgs[i], x_start - 1 < 0 ? 0 : x_start - 1,
+            y_end + 1 >= imgs[i]->height ? imgs[i]->height - 1 : y_end + 1,
+            x_end + 1 >= imgs[i]->width ? imgs[i]->width - 1 : x_end + 1,
+            y_end + 1 >= imgs[i]->height ? imgs[i]->height - 1 : y_end + 1, 0,
+            255, 0);
+        draw_line(imgs[i], x_start - 1 < 0 ? 0 : x_start - 1,
+                  y_start - 1 < 0 ? 0 : y_start - 1,
+                  x_start - 1 < 0 ? 0 : x_start - 1,
+                  y_end + 1 >= imgs[i]->height ? imgs[i]->height - 1
+                                               : y_end + 1,
+                  0, 255, 0);
+        draw_line(imgs[i],
+                  x_end + 1 >= imgs[i]->width ? imgs[i]->width - 1 : x_end + 1,
+                  y_start - 1 < 0 ? 0 : y_start - 1,
+                  x_end + 1 >= imgs[i]->width ? imgs[i]->width - 1 : x_end + 1,
+                  y_end + 1 >= imgs[i]->height ? imgs[i]->height - 1
+                                               : y_end + 1,
+                  0, 255, 0);
         /* */
 
         /* Extract sub-image of the grid */
-        Image *sub_img = extract_sub_image(imgs[i], x_start, y_start, x_end, y_end);
+        Image *sub_img =
+            extract_sub_image(imgs[i], x_start, y_start, x_end, y_end);
 
         // shape of grid area
         Shape *sub_shape = create_shape();
@@ -177,11 +201,11 @@ int main()
         image_remove_shape(before, sub_shape);
         free_shape(sub_shape);
 
-        Shape ** before_shapes = get_all_shape(before);
+        Shape **before_shapes = get_all_shape(before);
         remove_small_shape(before, before_shapes, 8);
         remove_aspect_ration(before, before_shapes, 0.1, 5);
 
-        Image* before_circle = circle_image(before, before_shapes, 0.25);
+        Image *before_circle = circle_image(before, before_shapes, 0.25);
         free_image(before);
         before = before_circle;
 
@@ -192,16 +216,17 @@ int main()
 
         // remove lines that are not 90 or 180 or 0 degrees
         // also remove lines that are too close to each other
-        filter_line(hs__, theta_range__, rho_max__, 15 ,20);
+        filter_line(hs__, theta_range__, rho_max__, 15, 20);
 
         // sort all lines to have horizontal and vertical lines
         int **h_lines__ = horizontal_lines(hs__, theta_range__, rho_max__, 5);
         int **v_lines__ = vertical_lines(hs__, theta_range__, rho_max__, 5);
 
         // filter horizontal and vertical lines independently
-        // this will only keep the lines that form the biggest set with regular gaps
+        // this will only keep the lines that form the biggest set with regular
+        // gaps
         filter_gaps(h_lines__, theta_range__, rho_max__);
-        //filter_gaps(v_lines__, theta_range__, rho_max__);
+        // filter_gaps(v_lines__, theta_range__, rho_max__);
 
         // draw lines on image for debug
         draw_lines(before, h_lines__, theta_range__, rho_max__, 255, 0, 0);
@@ -212,11 +237,13 @@ int main()
         free_hough(v_lines__, theta_range__);
         free_hough(hs__, theta_range__);
 
-
         // export before image for debug
         SDL_Surface *before_surf = image_to_sdl_surface(before);
         char before_filename[256];
-        snprintf(before_filename, sizeof(before_filename), "../../resources/pre_process/output/grid/word_list_image_%d.bmp", i + 1);
+        snprintf(
+            before_filename, sizeof(before_filename),
+            "../../resources/pre_process/output/grid/word_list_image_%d.bmp",
+            i + 1);
         export_image(before_surf, before_filename);
         SDL_FreeSurface(before_surf);
         free_image(before);
@@ -245,36 +272,35 @@ int main()
             sub_img = scale;
         }
 
-
         /* */
 
         Shape **sub_shapes = get_all_shape(sub_img);
 
-        remove_small_shape(sub_img,sub_shapes , 15);
-        remove_outliers_shape(sub_img,sub_shapes , 25,75,2.5,3);
-        remove_aspect_ration(sub_img,sub_shapes , 0.1, 2);
+        remove_small_shape(sub_img, sub_shapes, 15);
+        remove_outliers_shape(sub_img, sub_shapes, 25, 75, 2.5, 3);
+        remove_aspect_ration(sub_img, sub_shapes, 0.1, 2);
 
         clean_shapes(sub_shapes);
 
         merge_shapes(sub_shapes, 3);
 
-        filter_by_density(sub_img,sub_shapes, 5);
+        filter_by_density(sub_img, sub_shapes, 5);
         clean_shapes(sub_shapes);
 
         int rows, cols;
         detect_grid_size(sub_shapes, &rows, &cols);
-        //printf("Detected grid size: %d rows x %d cols\n", rows, cols);
+        // printf("Detected grid size: %d rows x %d cols\n", rows, cols);
 
         int min = rows < cols ? rows : cols;
         filter_by_density(sub_img, sub_shapes, (int)(min * 0.9));
         clean_shapes(sub_shapes);
 
         detect_grid_size(sub_shapes, &rows, &cols);
-        //printf("After filtering, grid size: %d rows x %d cols\n", rows, cols);
+        // printf("After filtering, grid size: %d rows x %d cols\n", rows,
+        // cols);
 
-
-        Image *** cell_images = get_grid_cells(sub_img,sub_shapes, rows, cols);
-        //export each cell image with name cell_x_y.bmp
+        Image ***cell_images = get_grid_cells(sub_img, sub_shapes, rows, cols);
+        // export each cell image with name cell_x_y.bmp
         for (int r = 0; r < rows; r++)
         {
             for (int c = 0; c < cols; c++)
@@ -282,8 +308,12 @@ int main()
                 if (cell_images[r][c] == NULL)
                     continue;
                 char cell_filename[256];
-                snprintf(cell_filename, sizeof(cell_filename), "../../resources/pre_process/output/grid/cells/image%d/cell_%d_%d.bmp", i + 1, c + 1, r + 1);
-                SDL_Surface *cell_surf = image_to_sdl_surface(cell_images[r][c]);
+                snprintf(cell_filename, sizeof(cell_filename),
+                         "../../resources/pre_process/output/grid/cells/"
+                         "image%d/cell_%d_%d.bmp",
+                         i + 1, c + 1, r + 1);
+                SDL_Surface *cell_surf =
+                    image_to_sdl_surface(cell_images[r][c]);
                 export_image(cell_surf, cell_filename);
                 SDL_FreeSurface(cell_surf);
                 free_image(cell_images[r][c]);
@@ -313,14 +343,13 @@ int main()
 
         SDL_Surface *sub_surf = image_to_sdl_surface(sub_img);
         char sub_filename[256];
-        snprintf(sub_filename, sizeof(sub_filename), "../../resources/pre_process/output/grid/grid_image_%d.bmp", i + 1);
+        snprintf(sub_filename, sizeof(sub_filename),
+                 "../../resources/pre_process/output/grid/grid_image_%d.bmp",
+                 i + 1);
         export_image(sub_surf, sub_filename);
         SDL_FreeSurface(sub_surf);
 
-
-
         free_image(sub_img);
-
 
         for (int j = 0; shapes[j] != NULL; j++)
         {
@@ -328,20 +357,21 @@ int main()
         }
         free(shapes);
 
-
         // Export
         char out_filename[256];
-        snprintf(out_filename, sizeof(out_filename), "processed_image_%d.bmp", i + 1);
+        snprintf(out_filename, sizeof(out_filename), "processed_image_%d.bmp",
+                 i + 1);
         SDL_Surface *surf = image_to_sdl_surface(imgs[i]);
-        if (surf) {
+        if (surf)
+        {
             export_image(surf, out_filename);
             SDL_FreeSurface(surf);
-        } else {
+        }
+        else
+        {
             printf("Failed to convert image to SDL_Surface: %s\n", files[i]);
         }
     }
-
-
 
     for (int i = 0; imgs[i] != NULL; i++)
         free_image(imgs[i]);

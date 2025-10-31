@@ -3,11 +3,15 @@
 static SDL_Window *hidden_window = NULL;
 static SDL_Renderer *hidden_renderer = NULL;
 
-static void ensure_hidden_renderer(void) {
-    if (!hidden_window) {
-        hidden_window = SDL_CreateWindow("Hidden", SDL_WINDOWPOS_UNDEFINED,
-                                         SDL_WINDOWPOS_UNDEFINED, 1, 1, SDL_WINDOW_HIDDEN);
-        hidden_renderer = SDL_CreateRenderer(hidden_window, -1, SDL_RENDERER_ACCELERATED);
+static void ensure_hidden_renderer(void)
+{
+    if (!hidden_window)
+    {
+        hidden_window =
+            SDL_CreateWindow("Hidden", SDL_WINDOWPOS_UNDEFINED,
+                             SDL_WINDOWPOS_UNDEFINED, 1, 1, SDL_WINDOW_HIDDEN);
+        hidden_renderer =
+            SDL_CreateRenderer(hidden_window, -1, SDL_RENDERER_ACCELERATED);
     }
 }
 
@@ -21,16 +25,17 @@ Image *manual_rotate_image(const Image *src, const double angle)
     ensure_hidden_renderer();
 
     SDL_Surface *temp_surf = image_to_sdl_surface(src);
-    SDL_Texture *tex =
-        SDL_CreateTextureFromSurface(hidden_renderer, temp_surf);
+    SDL_Texture *tex = SDL_CreateTextureFromSurface(hidden_renderer, temp_surf);
     SDL_FreeSurface(temp_surf);
 
     // angle in radian
     const double rad = angle * M_PI / 180;
 
     // new width and height after rotation
-    const int new_w = src->width * fabs(cos(rad)) + src->height * fabs(sin(rad));
-    const int new_h = src->width * fabs(sin(rad)) + src->height * fabs(cos(rad));
+    const int new_w =
+        src->width * fabs(cos(rad)) + src->height * fabs(sin(rad));
+    const int new_h =
+        src->width * fabs(sin(rad)) + src->height * fabs(cos(rad));
 
     // texture target
     SDL_Texture *target =
@@ -42,8 +47,9 @@ Image *manual_rotate_image(const Image *src, const double angle)
 
     // center of rotation and destination rect
     const SDL_Point center = {src->width / 2, src->height / 2};
-    const SDL_Rect dstRect = {(new_w - src->width) / 2, (new_h - src->height) / 2,
-                        src->width, src->height};
+    const SDL_Rect dstRect = {(new_w - src->width) / 2,
+                              (new_h - src->height) / 2, src->width,
+                              src->height};
     // rotate texture using SDL_RenderCopyEx
     SDL_RenderCopyEx(hidden_renderer, tex, NULL, &dstRect, angle, &center,
                      SDL_FLIP_NONE);
@@ -64,16 +70,18 @@ Image *manual_rotate_image(const Image *src, const double angle)
     SDL_DestroyTexture(target);
     SDL_FreeSurface(resultSurf);
 
-
     return result;
 }
 
-void cleanup_hidden_renderer() {
-    if (hidden_renderer) {
+void cleanup_hidden_renderer()
+{
+    if (hidden_renderer)
+    {
         SDL_DestroyRenderer(hidden_renderer);
         hidden_renderer = NULL;
     }
-    if (hidden_window) {
+    if (hidden_window)
+    {
         SDL_DestroyWindow(hidden_window);
         hidden_window = NULL;
     }

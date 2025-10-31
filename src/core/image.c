@@ -27,7 +27,8 @@ Image *create_image(const int width, const int height)
             exit(EXIT_FAILURE);
         }
         // init to white
-        for (int x = 0; x < width; x++) {
+        for (int x = 0; x < width; x++)
+        {
             img->pixels[y][x].r = 255;
             img->pixels[y][x].g = 255;
             img->pixels[y][x].b = 255;
@@ -72,7 +73,8 @@ void set_pixel(const Image *img, const int x, const int y, const Pixel *p)
 }
 
 // change the pixel color at (x,y)
-void set_pixel_color(const Image *img, int x, int y, uint8_t r, uint8_t g, uint8_t b)
+void set_pixel_color(const Image *img, int x, int y, uint8_t r, uint8_t g,
+                     uint8_t b)
 {
     if (x >= 0 && x < img->width && y >= 0 && y < img->height)
     {
@@ -100,9 +102,9 @@ Image *copy_image(const Image *img)
     return new;
 }
 
-
 // convert SDL_Surface to custom struct Image
-// if img is NULL a new image is created else the surface is copied in img inplace
+// if img is NULL a new image is created else the surface is copied in img
+// inplace
 Image *sdl_surface_to_image(const SDL_Surface *surf, Image *img)
 {
     if (!img)
@@ -179,39 +181,45 @@ void export_image(SDL_Surface *surf, const char *file)
     SDL_SaveBMP(surf, file);
 }
 
-void draw_line(Image *img, int x0, int y0, int x1, int y1, uint8_t r, uint8_t g, uint8_t b) {
+void draw_line(Image *img, int x0, int y0, int x1, int y1, uint8_t r, uint8_t g,
+               uint8_t b)
+{
     int dx = abs(x1 - x0);
     int dy = -abs(y1 - y0);
     int sx = x0 < x1 ? 1 : -1;
     int sy = y0 < y1 ? 1 : -1;
     int err = dx + dy;
 
-    while (1) {
+    while (1)
+    {
         set_pixel_color(img, x0, y0, r, g, b);
 
         if (x0 == x1 && y0 == y1)
             break;
 
         int e2 = 2 * err;
-        if (e2 >= dy) {
+        if (e2 >= dy)
+        {
             err += dy;
             x0 += sx;
         }
-        if (e2 <= dx) {
+        if (e2 <= dx)
+        {
             err += dx;
             y0 += sy;
         }
     }
 }
 
-Image* extract_sub_image(const Image* img, int x_start, int y_start, int x_end, int y_end)
+Image *extract_sub_image(const Image *img, int x_start, int y_start, int x_end,
+                         int y_end)
 {
-    Image* sub_img = create_image(x_end - x_start, y_end - y_start);
+    Image *sub_img = create_image(x_end - x_start, y_end - y_start);
     for (int y = y_start; y < y_end; y++)
     {
         for (int x = x_start; x < x_end; x++)
         {
-            Pixel* p = get_pixel(img, x, y);
+            Pixel *p = get_pixel(img, x, y);
             set_pixel(sub_img, x - x_start, y - y_start, p);
         }
     }
