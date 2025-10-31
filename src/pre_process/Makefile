@@ -2,10 +2,11 @@
 TARGET = test
 
 CC = gcc
+SANFLAGS = -fsanitize=address
 CFLAGS = -Wall -Wextra -g `sdl2-config --cflags`
 LDFLAGS = `sdl2-config --libs` -lSDL2_image -lm
 
-SRCS = $(wildcard ../pre_process/*.c ../core/*.c)
+SRCS = $(wildcard ../pre_process/*.c ../core/*.c ../pre_process/utils/*.c ../pre_process/grid/*.c)
 
 OBJS = $(SRCS:.c=.o)
 
@@ -20,5 +21,6 @@ $(TARGET): $(OBJS)
 
 clean:
 	rm -f $(OBJS) $(TARGET) *.bmp
-
+	rm -f ../../resources/pre_process/output/grid/*/*/*.bmp
+	rm -f ../../resources/pre_process/output/grid/*.bmp
 .PHONY: all clean

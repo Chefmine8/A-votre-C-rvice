@@ -17,7 +17,7 @@ struct layer *create_layer(const int prev_layer_size, const int layer_size)
 
     res->prev_layer = NULL;
 
-    res->outputs = malloc(sizeof(long double ) * layer_size);
+    res->outputs = calloc(sizeof(long double ) , layer_size);
     res->is_output_layer = false;
 
     res->prev_layer_size = prev_layer_size;
@@ -29,6 +29,9 @@ struct layer *create_layer(const int prev_layer_size, const int layer_size)
 
     for (int i = 0; i < layer_size; i++)
     {
+        if(isnanf(res->outputs[i])){
+            errx(EXIT_FAILURE, "layer->outputs is nan");
+        }
         res->weights[i] = malloc(prev_layer_size * sizeof(long double));
         for (int j = 0; j < prev_layer_size; j++)
         {
@@ -129,6 +132,10 @@ void layer_calculate_output(const struct layer *layer)
     }
     for (int i = 0; i < layer->layer_size; i++)
     {
+        if(isnanf(layer->outputs[i])){
+            layer->outputs[i] = 0;
+        }
+
         long double output = 0;
         if (layer->prev_layer == NULL) {
             for (int j = 0; j < layer->prev_layer_size; j++)
@@ -179,6 +186,7 @@ void free_layers(struct layer *layer) {
 
 
 void check_layer(const struct layer *layer) {
+    layer_calculate_output(layer);
     printf("---------- layer nb: %d ----------\n", layer->layer_size);
 
     if (layer->prev_layer != NULL) {

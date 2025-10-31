@@ -2,6 +2,8 @@
 
 #include "../core/image.h"
 
+
+
 /**
  * @brief Rotates an image by a given angle (degrees) using SDL texture rendering.
  *
@@ -13,3 +15,5 @@
  * @return Image* Pointer to a newly allocated rotated Image
  */
 Image *manual_rotate_image(const Image *src, double angle);
+
+void cleanup_hidden_renderer();
