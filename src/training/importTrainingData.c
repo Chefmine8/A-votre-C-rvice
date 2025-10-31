@@ -117,17 +117,16 @@ void test_neural_network(struct neural_network *neural_network)
 int main()
 {
     long double shift = 1.0;
-    int arr[] = {2, 15, 20, 15, 2};
-    struct neural_network *neural_network = create_neural_network(5, arr);
+    int arr[] = {5, 2};
+    struct neural_network *neural_network = create_neural_network(2, arr);
     // check_neural_network(neural_network);
     print_values(neural_network->layers[neural_network->number_of_layers - 1]);
     time_t t = time(NULL);
-    for (int i = 0; i < 5000; ++i)
-    {
-
-        single_train_cession(neural_network, shift);
-        shift /= 1.01;
-    }
+     for (int i = 0; i < 10000; ++i)
+     {
+         single_train_cession(neural_network, shift);
+         shift /= 1.001;
+     }
 
     printf("Time to train : %lds\n", time(NULL) - t);
 
