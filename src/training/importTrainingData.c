@@ -105,7 +105,9 @@ void test_neural_network(struct neural_network *neural_network)
                            (*neural_network
                                  ->outputs)[letter_char[0] - 'A' + 1 % 2] *
                                100.0);
-
+                    printf("Loss: %Lg\n\n",
+                           categorical_cross_entropy(neural_network,
+                                                     letter_char[0]));
                     free_image(img);
                 }
             }
