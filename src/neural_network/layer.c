@@ -106,6 +106,10 @@ void soft_max_activation_function(const struct  layer *layer) {
     long double sum = 0;
     for (int i = 0; i < layer->layer_size; i++) {
         layer->outputs[i] = exp(layer->outputs[i]);
+        if(isnanf( layer->outputs[i]))
+        {
+            layer->outputs[i] = 0;
+        }
         sum += layer->outputs[i];
 
     }
