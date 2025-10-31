@@ -48,6 +48,13 @@ int main()
         imgs[i] = tmp;
         /* */
 
+        // export image after binarization for debug
+        SDL_Surface *bin_surf = image_to_sdl_surface(imgs[i]);
+        char bin_filename[256];
+        snprintf(bin_filename, sizeof(bin_filename), "../../resources/pre_process/output/binarized_image_%d.bmp", i + 1);
+        export_image(bin_surf, bin_filename);
+        SDL_FreeSurface(bin_surf);
+
         /* get components connected */
         Shape **shapes = get_all_shape(imgs[i]);
 
