@@ -1,8 +1,8 @@
 #pragma once
 
+#include "../pre_process/utils/shapes.h"
 #include <SDL2/SDL_image.h>
 #include <stdint.h>
-#include "../pre_process/utils/shapes.h"
 
 /**
  * @brief Pixel struct to store RGB values
@@ -10,12 +10,12 @@
  */
 typedef struct Pixel
 {
-    uint8_t r; /**< Red component */
-    uint8_t g; /**< Green component */
-    uint8_t b; /**< Blue component */
-    int x, y;  /**< coord */
-    int isInShape;     /**< if is actually in shape */
-    Shape *shape_ptr;  /**< pointer to the shape or NULL if not */
+    uint8_t r;        /**< Red component */
+    uint8_t g;        /**< Green component */
+    uint8_t b;        /**< Blue component */
+    int x, y;         /**< coord */
+    int isInShape;    /**< if is actually in shape */
+    Shape *shape_ptr; /**< pointer to the shape or NULL if not */
 } Pixel;
 
 /**
@@ -25,7 +25,7 @@ typedef struct Pixel
 typedef struct Image
 {
     int width, height; /**< Width and height of the image */
-    Pixel **pixels; /**< 2D array of pixels [height][width] */
+    Pixel **pixels;    /**< 2D array of pixels [height][width] */
 } Image;
 
 // func
@@ -81,7 +81,8 @@ void set_pixel(const Image *img, int x, int y, const Pixel *p);
  * @param y   Y coordinate
  * @param r,g,b color (0-255)
  */
-void set_pixel_color(const Image *img, int x, int y, uint8_t r, uint8_t g, uint8_t b);
+void set_pixel_color(const Image *img, int x, int y, uint8_t r, uint8_t g,
+                     uint8_t b);
 
 /*<----------------------------->*/
 
@@ -93,7 +94,6 @@ void set_pixel_color(const Image *img, int x, int y, uint8_t r, uint8_t g, uint8
  */
 Image *copy_image(const Image *img);
 
-
 /*<----------------------------->*/
 
 /**
@@ -101,7 +101,8 @@ Image *copy_image(const Image *img);
  *
  * @param surf Pointer to the SDL_Surface
  * @param img  Pointer to an existing Image (NULL to create a new one)
- * @return Image* Pointer to the resulting Image (can be ignored if img is not NULL)
+ * @return Image* Pointer to the resulting Image (can be ignored if img is not
+ * NULL)
  */
 Image *sdl_surface_to_image(const SDL_Surface *surf, Image *img);
 
@@ -126,7 +127,6 @@ SDL_Surface *image_to_sdl_surface(const Image *img);
 
 /*<----------------------------->*/
 
-
 Image *load_image(const char *file);
 
 /**
@@ -136,7 +136,6 @@ Image *load_image(const char *file);
  * @param file Output file path
  */
 void export_image(SDL_Surface *surf, const char *file);
-
 
 /**
  * @brief Draws a line on the image using Bresenham's line algorithm.
@@ -150,7 +149,8 @@ void export_image(SDL_Surface *surf, const char *file);
  * @param g   Green component of the line color
  * @param b   Blue component of the line color
  */
-void draw_line(Image *img, int x0, int y0, int x1, int y1, uint8_t r, uint8_t g, uint8_t b);
+void draw_line(Image *img, int x0, int y0, int x1, int y1, uint8_t r, uint8_t g,
+               uint8_t b);
 
 /**
  * @brief Extracts a sub-image from the given image.
@@ -162,4 +162,5 @@ void draw_line(Image *img, int x0, int y0, int x1, int y1, uint8_t r, uint8_t g,
  * @param y_end    Ending y coordinate
  * @return Image*  Pointer to the extracted sub-image
  */
-Image* extract_sub_image(const Image* img, int x_start, int y_start, int x_end, int y_end);
+Image *extract_sub_image(const Image *img, int x_start, int y_start, int x_end,
+                         int y_end);

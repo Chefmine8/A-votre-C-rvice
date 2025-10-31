@@ -1,7 +1,7 @@
 #include "shapes.h"
 #include "../../core/image.h"
 
-Shape* create_shape()
+Shape *create_shape()
 {
     Shape *shape = malloc(sizeof(Shape));
     if (!shape)
@@ -19,7 +19,7 @@ Shape* create_shape()
     shape->capacity = 4;
     shape->has_been_removed = 0;
 
-    shape->pixels = malloc(shape->capacity * sizeof(Pixel*));
+    shape->pixels = malloc(shape->capacity * sizeof(Pixel *));
     if (!shape->pixels)
     {
         printf("Cannot allocate memory for the pixels of the shape\n");
@@ -30,7 +30,7 @@ Shape* create_shape()
 
 void shape_add_pixel(Shape *s, Pixel *p)
 {
-    if(!s || !p)
+    if (!s || !p)
     {
         printf("NULL value\n");
         exit(EXIT_FAILURE);
@@ -42,11 +42,11 @@ void shape_add_pixel(Shape *s, Pixel *p)
     }
 
     // if not enough capacity realloc with capacity * 2
-    if(s->count >= s->capacity)
+    if (s->count >= s->capacity)
     {
         s->capacity *= 2;
-        s->pixels = realloc(s->pixels, s->capacity * sizeof (Pixel*));
-        if(!s->pixels)
+        s->pixels = realloc(s->pixels, s->capacity * sizeof(Pixel *));
+        if (!s->pixels)
         {
             printf("Realloc failed\n");
             free_shape(s);
@@ -60,20 +60,29 @@ void shape_add_pixel(Shape *s, Pixel *p)
     p->shape_ptr = s;
 
     // update bounding box
-    if (s->count == 1) {
+    if (s->count == 1)
+    {
         s->max_x = s->min_x = p->x;
         s->max_y = s->min_y = p->y;
-    } else {
-        if (p->x > s->max_x) s->max_x = p->x;
-        if (p->y > s->max_y) s->max_y = p->y;
-        if (p->x < s->min_x) s->min_x = p->x;
-        if (p->y < s->min_y) s->min_y = p->y;
+    }
+    else
+    {
+        if (p->x > s->max_x)
+            s->max_x = p->x;
+        if (p->y > s->max_y)
+            s->max_y = p->y;
+        if (p->x < s->min_x)
+            s->min_x = p->x;
+        if (p->y < s->min_y)
+            s->min_y = p->y;
     }
 }
 
-void image_change_shape_color(Image *img, Shape *s, uint8_t r, uint8_t g, uint8_t b)
+void image_change_shape_color(Image *img, Shape *s, uint8_t r, uint8_t g,
+                              uint8_t b)
 {
-    for (int i = 0; i < s->count; ++i) {
+    for (int i = 0; i < s->count; ++i)
+    {
         Pixel *curr = s->pixels[i];
         set_pixel_color(img, curr->x, curr->y, r, g, b);
     }
@@ -81,7 +90,8 @@ void image_change_shape_color(Image *img, Shape *s, uint8_t r, uint8_t g, uint8_
 
 void image_remove_shape(Image *img, Shape *s)
 {
-    for (int i = 0; i < s->count; ++i) {
+    for (int i = 0; i < s->count; ++i)
+    {
         Pixel *curr = s->pixels[i];
         curr->isInShape = 0;
         curr->shape_ptr = NULL;
@@ -91,27 +101,18 @@ void image_remove_shape(Image *img, Shape *s)
 
 void image_add_shape(Image *img, Shape *s, uint8_t r, uint8_t g, uint8_t b)
 {
-    for (int i = 0; i < s->count; ++i) {
+    for (int i = 0; i < s->count; ++i)
+    {
         Pixel *curr = s->pixels[i];
         set_pixel_color(img, curr->x, curr->y, r, g, b);
     }
 }
 
+int shape_width(Shape *s) { return s->max_x - s->min_x + 1; }
 
-int shape_width(Shape *s)
-{
-    return s->max_x - s->min_x + 1;
-}
+int shape_height(Shape *s) { return s->max_y - s->min_y + 1; }
 
-int shape_height(Shape *s)
-{
-    return s->max_y - s->min_y + 1;
-}
-
-int shape_area(Shape *s)
-{
-    return shape_width(s) * shape_height(s);
-}
+int shape_area(Shape *s) { return shape_width(s) * shape_height(s); }
 
 double shape_aspect_ratio(Shape *s)
 {
@@ -126,14 +127,13 @@ double shape_density(Shape *s)
     return area == 0 ? 0 : (double)s->count / area;
 }
 
-
 void free_shape(Shape *s)
 {
     free(s->pixels);
     free(s);
 }
 
-Shape **get_all_shape(Image* img)
+Shape **get_all_shape(Image *img)
 {
     // initial capacity for the shapes array
     int capacity = 4;
@@ -141,7 +141,7 @@ Shape **get_all_shape(Image* img)
     int count = 0;
 
     // malloc for shapes array with initial capacity
-    Shape **res = malloc(sizeof (Shape*) * (capacity + 1));
+    Shape **res = malloc(sizeof(Shape *) * (capacity + 1));
     if (!res)
     {
         printf("Cannot allocate memory for the shape\n");
@@ -154,13 +154,14 @@ Shape **get_all_shape(Image* img)
         for (int x = 0; x < img->width; x++)
         {
             // when a black pixel not in a shape is found start a flood fill
-            Pixel* p = get_pixel(img, x, y);
+            Pixel *p = get_pixel(img, x, y);
             if (p->r < 128 && p->isInShape == 0)
             {
                 // create new shape
                 Shape *new_shape = create_shape();
 
-                // custom stack for flood fill using malloc with modular capacity
+                // custom stack for flood fill using malloc with modular
+                // capacity
                 int stack_capacity = 4;
                 int stack_count = 0;
 
@@ -175,13 +176,13 @@ Shape **get_all_shape(Image* img)
                 stack[stack_count++] = (Coord){x, y};
 
                 // DFS
-                while(stack_count > 0)
+                while (stack_count > 0)
                 {
                     // if not enough capacity realloc with capacity * 2
-                    if (stack_count +1 >= stack_capacity)
+                    if (stack_count + 1 >= stack_capacity)
                     {
-                        stack_capacity *=2;
-                        stack = realloc(stack, sizeof(Coord)* stack_capacity);
+                        stack_capacity *= 2;
+                        stack = realloc(stack, sizeof(Coord) * stack_capacity);
                         if (!stack)
                         {
                             printf("Cannot realloc memory for the shape\n");
@@ -194,7 +195,8 @@ Shape **get_all_shape(Image* img)
                     int _y = c.y;
                     Pixel *pixel = get_pixel(img, _x, _y);
 
-                    // if the pixel is black and not in a shape add it to the current shape
+                    // if the pixel is black and not in a shape add it to the
+                    // current shape
                     if (pixel->r < 128 && pixel->isInShape == 0)
                     {
                         shape_add_pixel(new_shape, pixel);
@@ -207,11 +209,13 @@ Shape **get_all_shape(Image* img)
                         {
                             int nx = _x + dx[i];
                             int ny = _y + dy[i];
-                            if(nx >= 0 && ny >= 0 && nx < img->width && ny < img->height)
+                            if (nx >= 0 && ny >= 0 && nx < img->width &&
+                                ny < img->height)
                             {
                                 Pixel *npx = get_pixel(img, nx, ny);
-                                // if neighbor is black and not in a shape push it to the stack
-                                if(npx->r < 128 && npx->isInShape == 0)
+                                // if neighbor is black and not in a shape push
+                                // it to the stack
+                                if (npx->r < 128 && npx->isInShape == 0)
                                 {
                                     stack[stack_count++] = (Coord){nx, ny};
                                 }
@@ -224,10 +228,10 @@ Shape **get_all_shape(Image* img)
                 free(stack);
 
                 // if not enough capacity realloc with capacity * 2
-                if(count +1 >= capacity)
+                if (count + 1 >= capacity)
                 {
-                    capacity *=2;
-                    res = realloc(res, sizeof(Shape*) * (capacity + 1));
+                    capacity *= 2;
+                    res = realloc(res, sizeof(Shape *) * (capacity + 1));
                     if (!res)
                     {
                         printf("Cannot realloc memory for the shape\n");
@@ -246,7 +250,8 @@ Shape **get_all_shape(Image* img)
 
 void clean_shapes(Shape **shapes)
 {
-    if (!shapes) return;
+    if (!shapes)
+        return;
 
     int write_i = 0;
     for (int read_i = 0; shapes[read_i] != NULL; read_i++)
@@ -261,7 +266,6 @@ void clean_shapes(Shape **shapes)
     shapes[write_i] = NULL;
 }
 
-
 void remove_small_shape(Image *img, Shape **shapes, int threshold)
 {
     for (int i = 0; shapes[i] != NULL; ++i)
@@ -275,45 +279,55 @@ void remove_small_shape(Image *img, Shape **shapes, int threshold)
 }
 
 // Comparison function for qsort to sort doubles in ascending order
-static int comp(const void *a, const void *b) {
-    if (*(double*)a > *(double*)b) return 1;
-    else if (*(double*)a < *(double*)b) return -1;
-    else return 0;
+static int comp(const void *a, const void *b)
+{
+    if (*(double *)a > *(double *)b)
+        return 1;
+    else if (*(double *)a < *(double *)b)
+        return -1;
+    else
+        return 0;
 }
 
 // Function to compute the p-th percentile of a sorted array
-static double percentile(double  *sorted_array, int size, double percentile) {
-    if (size <= 0) return 0.0;
+static double percentile(double *sorted_array, int size, double percentile)
+{
+    if (size <= 0)
+        return 0.0;
 
     double index = (percentile / 100.0) * (size - 1);
     int idx = (int)index;
     double frac = index - idx;
-    if(idx < 0) idx =0;
-    if(idx >= size - 1) return sorted_array[size - 1];
+    if (idx < 0)
+        idx = 0;
+    if (idx >= size - 1)
+        return sorted_array[size - 1];
 
-    return sorted_array[idx] + frac * (sorted_array[idx + 1] - sorted_array[idx]);
+    return sorted_array[idx] +
+           frac * (sorted_array[idx + 1] - sorted_array[idx]);
 }
 
-
-void remove_outliers_shape(Image *img, Shape **shapes, int low_percentile, int high_percentile, double iqr_factor, double mean_factor)
+void remove_outliers_shape(Image *img, Shape **shapes, int low_percentile,
+                           int high_percentile, double iqr_factor,
+                           double mean_factor)
 {
     int index = 0;
     int global_size = 0;
     int real_size = 0;
     while (shapes[global_size] != NULL)
     {
-        if(shapes[global_size]->has_been_removed == 0)
+        if (shapes[global_size]->has_been_removed == 0)
             real_size++;
         global_size++;
     }
-    double *area = malloc(sizeof(double ) * real_size);
+    double *area = malloc(sizeof(double) * real_size);
     if (!area)
     {
         printf("Cannot malloc memory for the area filter\n");
         exit(EXIT_FAILURE);
     }
     double sum = 0;
-    for (int j = 0; j< global_size; j++)
+    for (int j = 0; j < global_size; j++)
     {
         if (shapes[j]->has_been_removed == 0)
         {
@@ -327,7 +341,7 @@ void remove_outliers_shape(Image *img, Shape **shapes, int low_percentile, int h
     qsort(area, real_size, sizeof(double), comp);
 
     // compute percentiles
-    double percentile_low  = percentile(area, real_size, low_percentile);
+    double percentile_low = percentile(area, real_size, low_percentile);
     double percentile_high = percentile(area, real_size, high_percentile);
 
     double IQR = percentile_high - percentile_low;
@@ -335,11 +349,13 @@ void remove_outliers_shape(Image *img, Shape **shapes, int low_percentile, int h
     double mean_area = sum / real_size;
 
     // threshold based on IQR and mean
-    double threshold = fmax(mean_area * mean_factor, percentile_high + iqr_factor * IQR);
+    double threshold =
+        fmax(mean_area * mean_factor, percentile_high + iqr_factor * IQR);
 
-    for (int i = 0; i< global_size; i++)
+    for (int i = 0; i < global_size; i++)
     {
-        if (shapes[i]->has_been_removed == 0 && shape_area(shapes[i]) > threshold)
+        if (shapes[i]->has_been_removed == 0 &&
+            shape_area(shapes[i]) > threshold)
         {
             shapes[i]->has_been_removed = 1;
             image_remove_shape(img, shapes[i]);
@@ -349,12 +365,14 @@ void remove_outliers_shape(Image *img, Shape **shapes, int low_percentile, int h
     free(area);
 }
 
-
-void remove_aspect_ration(Image *img, Shape **shapes, double min_ration, double max_ratio)
+void remove_aspect_ration(Image *img, Shape **shapes, double min_ration,
+                          double max_ratio)
 {
     for (int i = 0; shapes[i] != NULL; ++i)
     {
-        if (shapes[i]->has_been_removed == 0 && (shape_aspect_ratio(shapes[i]) < min_ration || shape_aspect_ratio(shapes[i]) > max_ratio))
+        if (shapes[i]->has_been_removed == 0 &&
+            (shape_aspect_ratio(shapes[i]) < min_ration ||
+             shape_aspect_ratio(shapes[i]) > max_ratio))
         {
             shapes[i]->has_been_removed = 1;
             image_remove_shape(img, shapes[i]);
@@ -367,15 +385,19 @@ void merge_shapes(Shape **shapes, int spacing)
     for (int i = 0; shapes[i] != NULL; ++i)
     {
         Shape *a = shapes[i];
-        if (a->has_been_removed) continue;
+        if (a->has_been_removed)
+            continue;
 
         for (int j = i + 1; shapes[j] != NULL; ++j)
         {
             Shape *b = shapes[j];
-            if (b->has_been_removed) continue;
+            if (b->has_been_removed)
+                continue;
 
-            if ((a->min_x - spacing <= b->max_x && a->max_x + spacing >= b->min_x) &&
-                (a->min_y - spacing <= b->max_y && a->max_y + spacing >= b->min_y))
+            if ((a->min_x - spacing <= b->max_x &&
+                 a->max_x + spacing >= b->min_x) &&
+                (a->min_y - spacing <= b->max_y &&
+                 a->max_y + spacing >= b->min_y))
             {
                 for (int k = 0; k < b->count; ++k)
                 {
