@@ -4,13 +4,28 @@
 Image *create_image(const int width, const int height)
 {
     Image *img = malloc(sizeof(Image));
+    if (!img)
+    {
+        printf("Cannot allocate memory for image\n");
+        exit(EXIT_FAILURE);
+    }
     img->width = width;
     img->height = height;
 
     img->pixels = malloc(height * sizeof(Pixel *));
+    if (!img->pixels)
+    {
+        printf("Cannot allocate memory for image pixels\n");
+        exit(EXIT_FAILURE);
+    }
     for (int y = 0; y < height; y++)
     {
         img->pixels[y] = malloc(width * sizeof(Pixel));
+        if (!img->pixels[y])
+        {
+            printf("Cannot allocate memory for image pixels row\n");
+            exit(EXIT_FAILURE);
+        }
         // init to white
         for (int x = 0; x < width; x++) {
             img->pixels[y][x].r = 255;
@@ -56,6 +71,20 @@ void set_pixel(const Image *img, const int x, const int y, const Pixel *p)
     }
 }
 
+// change the pixel color at (x,y)
+void set_pixel_color(const Image *img, int x, int y, uint8_t r, uint8_t g, uint8_t b)
+{
+    if (x >= 0 && x < img->width && y >= 0 && y < img->height)
+    {
+        if (img->pixels != NULL)
+        {
+            img->pixels[y][x].r = r;
+            img->pixels[y][x].g = g;
+            img->pixels[y][x].b = b;
+        }
+    }
+}
+
 // create a new image from a image struct
 Image *copy_image(const Image *img)
 {
@@ -84,35 +113,14 @@ Image *sdl_surface_to_image(const SDL_Surface *surf, Image *img)
     {
         for (int x = 0; x < img->width; x++)
         {
+            Uint8 *pixels = (Uint8 *)surf->pixels;
             const int bpp = surf->format->BytesPerPixel;
 
-            Uint8 *pPixel = (Uint8 *)surf->pixels + y * surf->pitch + x * bpp;
-            Uint32 pixel_value = 0;
-
-            switch (bpp) {
-                case 1:
-                    pixel_value = *pPixel;
-                    break;
-                case 2:
-                    pixel_value = *(Uint16 *)pPixel;
-                    break;
-                case 3:
-                    if (SDL_BYTEORDER == SDL_BIG_ENDIAN)
-                        pixel_value = pPixel[0] << 16 | pPixel[1] << 8 | pPixel[2];
-                    else
-                        pixel_value = pPixel[0] | pPixel[1] << 8 | pPixel[2] << 16;
-                    break;
-                case 4:
-                    pixel_value = *(Uint32 *)pPixel;
-                    break;
-                default:
-                    printf("Unknown BytesPerPixel: %d\n", bpp);
-                    exit(EXIT_FAILURE);
-            }
+            Uint8 *pPixel = pixels + y * surf->pitch + x * bpp;
 
             Uint8 r, g, b;
-            SDL_GetRGB(pixel_value, surf->format, &r, &g, &b);
-            Pixel p = {r, g, b};
+            SDL_GetRGB(*(Uint32 *)pPixel, surf->format, &r, &g, &b);
+            Pixel p = {r, g, b, x, y, 0, NULL};
             set_pixel(img, x, y, &p);
         }
     }
@@ -171,3 +179,41 @@ void export_image(SDL_Surface *surf, const char *file)
     SDL_SaveBMP(surf, file);
 }
 
+void draw_line(Image *img, int x0, int y0, int x1, int y1, uint8_t r, uint8_t g, uint8_t b) {
+    int dx = abs(x1 - x0);
+    int dy = -abs(y1 - y0);
+    int sx = x0 < x1 ? 1 : -1;
+    int sy = y0 < y1 ? 1 : -1;
+    int err = dx + dy;
+
+    while (1) {
+        set_pixel_color(img, x0, y0, r, g, b);
+
+        if (x0 == x1 && y0 == y1)
+            break;
+
+        int e2 = 2 * err;
+        if (e2 >= dy) {
+            err += dy;
+            x0 += sx;
+        }
+        if (e2 <= dx) {
+            err += dx;
+            y0 += sy;
+        }
+    }
+}
+
+Image* extract_sub_image(const Image* img, int x_start, int y_start, int x_end, int y_end)
+{
+    Image* sub_img = create_image(x_end - x_start, y_end - y_start);
+    for (int y = y_start; y < y_end; y++)
+    {
+        for (int x = x_start; x < x_end; x++)
+        {
+            Pixel* p = get_pixel(img, x, y);
+            set_pixel(sub_img, x - x_start, y - y_start, p);
+        }
+    }
+    return sub_img;
+}
