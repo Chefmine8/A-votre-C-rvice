@@ -105,21 +105,25 @@ int main()
 {
     long double shift = 1.0;
     int arr[] = {2, 10, 10, 10, 2};
+    printf("create nn 0\n");
     struct neural_network *neural_network = create_neural_network(5, arr);
+    printf("create nn end\n");
     // check_neural_network(neural_network);
-    print_values(neural_network->layers[neural_network->number_of_layers -1]);
-    time_t t = time(NULL);
-     for (int i = 0; i < 5000; ++i) {
-
-
-         single_train_cession(neural_network, shift);
-         shift /= 1.001;
-
-
-     }
-
-     printf("Time to train : %lds\n", time(NULL) - t );
-
-     test_neural_network(neural_network);
-     //free_neural_network(neural_network);
+//    print_values(neural_network->layers[neural_network->number_of_layers -1]);
+//    time_t t = time(NULL);
+//     for (int i = 0; i < 5000; ++i) {
+//
+//
+//         single_train_cession(neural_network, shift);
+//         shift /= 1.001;
+//
+//
+//     }
+//
+//     printf("Time to train : %lds\n", time(NULL) - t );
+//
+//     test_neural_network(neural_network);
+    printf("free nn 1\n");
+     free_neural_network(neural_network);
+    printf("free nn end\n");
 }

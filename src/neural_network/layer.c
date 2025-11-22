@@ -23,7 +23,7 @@ struct layer *create_layer(const int prev_layer_size, const int layer_size)
     res->prev_layer_size = prev_layer_size;
     res->layer_size = layer_size;
 
-    res->inputs = malloc(sizeof(long double *));
+    res->inputs = NULL;
 
     res->weights = malloc(layer_size * sizeof(long double *));
 
@@ -52,40 +52,48 @@ struct layer *create_layer(const int prev_layer_size, const int layer_size)
 
 void link_layers(struct layer **back_layer, struct layer **front_layer)
 {
+    printf("link layer 1 1\n");
+    printf("link layer %p\n", (*back_layer));
+    printf("link layer %p\n", (*front_layer));
     if ((*back_layer)->layer_size != (*front_layer)->prev_layer_size) {
-        errx(EXIT_FAILURE, "Trying to link two incompatible layers ! back_layer->layer_size != front_layer->prev_layer_size");
+        errx(EXIT_FAILURE, "Trying to link two incompatible layers ! back_layer->layer_size (= %d) != front_layer->prev_layer_size (= %d)",(*back_layer)->layer_size, (*front_layer)->prev_layer_size );
     }
-    free((*front_layer)->prev_layer);
+    // free((*front_layer)->prev_layer);
+    printf("link layer 1 2\n");
     (*front_layer)->prev_layer = *back_layer;
-    *(*front_layer)->inputs = (*back_layer)->outputs;
+    printf("link layer 1 3\n");
+    (*front_layer)->inputs = &(*back_layer)->outputs;
+
+    printf("link layer 1 end\n");
 }
 
 
 void link_layer_output(struct layer *layer, const struct neural_network *neural_network)
 {
+    printf("1\n");
     if (neural_network->output_size != layer->layer_size) {
         errx(EXIT_FAILURE, "layer not the same size as the outputs");
     }
 
-
+    printf("2\n");
     if(layer->outputs != NULL){
-
         free(layer->outputs);
-
     }
-
+    printf("3\n");
     *neural_network->outputs = layer->outputs;
+    printf("4\n");
     layer->is_output_layer = true;
+    printf("end\n");
 }
 
 
 void link_layer_input(struct layer *layer, int input_size, long double **inputs)
 {
-    if (input_size != layer->layer_size) {
-        errx(EXIT_FAILURE, "layer not the same size as the inputs");
+    if (input_size != layer->prev_layer_size) {
+        errx(EXIT_FAILURE, "prev_layer_size not the same size as the inputs");
     }
 
-    free(layer->inputs);
+
     layer->inputs = inputs;
 }
 
@@ -166,11 +174,6 @@ void free_layers(struct layer *layer) {
 
 
 
-    if(layer->inputs != NULL) {
-        printf("fl 1.5\n");
-        printf("fl 1.5 : %Lg\n", (*layer->inputs)[0]);
-        free(layer->inputs); // ERROR
-    }
     printf("fl 2\n");
     free((layer->biases));
     printf("fl 3\n");
