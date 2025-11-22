@@ -46,12 +46,11 @@ void single_train_cession(const struct neural_network *neural_network, long doub
                 }
 
             }
+
+			closedir(letter);
         }
-        // free(letter_char);
-
-        //printf("%Lg\n", sum_loss / sum);
-
     }
+	closedir(directory);
 }
 
 void test_neural_network(struct neural_network *neural_network) {
@@ -81,7 +80,7 @@ void test_neural_network(struct neural_network *neural_network) {
                     }
                     // get_nn_input(img, neural_network->inputs);
                     neural_network_calculate_output(neural_network);
-
+                    // printf("qqq\n");
                     char output = get_neural_network_output(neural_network);
                     printf("Expected: %c, Got: %c at %Lg%;\t other at %lg%\n", letter_char[0], output, (*neural_network->outputs)[letter_char[0] - 'A'] * 100.0, (*neural_network->outputs)[letter_char[0] - 'A' + 1 % 2] * 100.0);
 
@@ -92,10 +91,13 @@ void test_neural_network(struct neural_network *neural_network) {
                 }
 
             }
+
+			closedir(letter);
         }
         // free(letter_char);
 
     }
+	closedir(directory);
 
 }
 
