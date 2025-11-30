@@ -3,8 +3,8 @@ TARGET = test
 
 CC = gcc
 SANFLAGS = -fsanitize=address
-CFLAGS = -Wall -Wextra -g `sdl2-config --cflags`
-LDFLAGS = `sdl2-config --libs` -lSDL2_image -lm
+CFLAGS = -Wall -Wextra -g `sdl2-config --cflags` $(SANFLAGS)
+LDFLAGS = `sdl2-config --libs` -lSDL2_image -lm $(SANFLAGS)
 
 SRCS = $(wildcard ../pre_process/*.c ../core/*.c ../pre_process/utils/*.c ../pre_process/grid/*.c)
 
