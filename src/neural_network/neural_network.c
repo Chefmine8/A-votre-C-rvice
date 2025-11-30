@@ -17,31 +17,32 @@ struct neural_network *create_neural_network(int size_of_arr, int arr[size_of_ar
      }
      struct neural_network *neural_network = malloc(sizeof(struct neural_network));
 
-     neural_network->number_of_layers = size_of_arr;
+     neural_network->number_of_layers = size_of_arr - 1;
 
      neural_network->inputs = malloc(sizeof(long double) * arr[0]);
      neural_network->input_size = arr[0];
 
      neural_network->output_size = arr[size_of_arr - 1];
+     neural_network->outputs = malloc(sizeof(long double *));
 
      neural_network->layers = malloc(sizeof(struct layer *) * size_of_arr);
 
-     printf("create layer 0 0\n");
      neural_network->layers[0] = create_layer(arr[0], arr[1]);
-     printf("create layer 0 end\n");
-     printf("link layer 0 0\n");
      link_layer_input(neural_network->layers[0], neural_network->input_size, &neural_network->inputs);
-     printf("link layer 0 end\n");
+
+
      for(int i = 2; i < size_of_arr; i++)
      {
           printf("link layer i=%d\n", i);
-          neural_network->layers[i - 1] = create_layer(arr[i - 1], arr[i]);
+          neural_network->layers[i-1] = create_layer(arr[i-1], arr[i]);
 
-          link_layers(&neural_network->layers[i - 2], &neural_network->layers[i - 1]);
+          link_layers(&neural_network->layers[i - 2], &neural_network->layers[i-1]);
           printf("link layer i: %d end \n", i);
      }
+     printf("lli\n");
+
      printf("llo\n");
-     link_layer_output(neural_network->layers[size_of_arr - 1], neural_network);
+     link_layer_output(neural_network->layers[size_of_arr - 2], neural_network);
      printf("llo end \n");
      return neural_network;
 }

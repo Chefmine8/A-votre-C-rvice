@@ -105,9 +105,9 @@ int main()
 {
     long double shift = 1.0;
     int arr[] = {2, 10, 10, 10, 2};
-    printf("create nn 0\n");
+    printf("##############################\n               Create NN\n##############################\n");
     struct neural_network *neural_network = create_neural_network(5, arr);
-    printf("create nn end\n");
+    printf("##############################\n               Print NN\n##############################\n");
     // check_neural_network(neural_network);
 //    print_values(neural_network->layers[neural_network->number_of_layers -1]);
 //    time_t t = time(NULL);
@@ -123,7 +123,8 @@ int main()
 //     printf("Time to train : %lds\n", time(NULL) - t );
 //
 //     test_neural_network(neural_network);
-    printf("free nn 1\n");
+    print_values(neural_network->layers[neural_network->number_of_layers -1]);
+    printf("##############################\n               Free NN\n##############################\n");
      free_neural_network(neural_network);
-    printf("free nn end\n");
+    printf("##############################\n               END NN\n##############################\n");
 }

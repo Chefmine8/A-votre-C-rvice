@@ -71,6 +71,8 @@ void link_layers(struct layer **back_layer, struct layer **front_layer)
 void link_layer_output(struct layer *layer, const struct neural_network *neural_network)
 {
     printf("1\n");
+    printf("nn: %p, l: %p\n", neural_network, layer);
+    printf("nn: %d, l: %d\n", neural_network->output_size, layer->layer_size);
     if (neural_network->output_size != layer->layer_size) {
         errx(EXIT_FAILURE, "layer not the same size as the outputs");
     }
@@ -79,7 +81,7 @@ void link_layer_output(struct layer *layer, const struct neural_network *neural_
     if(layer->outputs != NULL){
         free(layer->outputs);
     }
-    printf("3\n");
+    printf("3 %p\n", neural_network->outputs);
     *neural_network->outputs = layer->outputs;
     printf("4\n");
     layer->is_output_layer = true;
@@ -170,21 +172,20 @@ void layer_calculate_output(const struct layer *layer)
 
 
 void free_layers(struct layer *layer) {
-    printf("fl 1 layer nb: %d\n", layer->layer_size);
-
-
-
-    printf("fl 2\n");
-    free((layer->biases));
-    printf("fl 3\n");
+    printf("fl 1.%d\n", layer->layer_size);
     if (layer->prev_layer != NULL) {
-        printf("fl 3.5\n");
+        printf("fl recccall.%d\n", layer->layer_size);
         free_layers(layer->prev_layer);
     }
-    printf("fl 4\n");
+    printf("fl 2.%d\n", layer->layer_size);
+    free((layer->biases));
+    printf("fl 3.%d\n", layer->layer_size);
     free(layer->outputs);
+
+    printf("fl 4.%d\n", layer->layer_size);
+
+    printf("fl END.%d\n", layer->layer_size);
     free(layer);
-    printf("fl 5\n");
 }
 
 
@@ -209,6 +210,7 @@ void check_layer(const struct layer *layer) {
 
 
 void print_values(const struct layer *layer) {
+    printf("print layer %d\n", layer->layer_size);
     if (layer->prev_layer != NULL) {
         print_values(layer->prev_layer);
     }
@@ -222,4 +224,6 @@ void print_values(const struct layer *layer) {
         }
         printf("}\n\n");
     }
+
+    printf("end print layer %d\n", layer->layer_size);
 }
