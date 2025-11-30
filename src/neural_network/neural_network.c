@@ -76,7 +76,7 @@ void neural_network_calculate_output(const struct neural_network *neural_network
  * @return The calculated loss
  */
 long double categorical_cross_entropy(const struct neural_network *neural_network, char expected_output) {
-     return - log((*neural_network->outputs)[expected_output - 'A']);
+     return - log((*neural_network->outputs)[expected_output - 'A'+1e-15]);
 }
 char get_neural_network_output(const struct neural_network *neural_network) {
      long double max = (*neural_network->outputs)[0];
@@ -92,6 +92,8 @@ char get_neural_network_output(const struct neural_network *neural_network) {
      }
      errx(EXIT_FAILURE, "wtf");
 }
+
+
 void minimise_loss(const struct neural_network *neural_network, char expected_output, long double shift) {
 
      for (int i = 0; i < neural_network->number_of_layers; ++i) {
