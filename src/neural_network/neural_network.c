@@ -76,7 +76,7 @@ void neural_network_calculate_output(const struct neural_network *neural_network
  * @return The calculated loss
  */
 long double categorical_cross_entropy(const struct neural_network *neural_network, char expected_output) {
-     return - log((*neural_network->outputs)[expected_output - 'A'+1e-15]);
+     return - log((*neural_network->outputs)[expected_output - 'A']+1e-15);
 }
 char get_neural_network_output(const struct neural_network *neural_network) {
      long double max = (*neural_network->outputs)[0];
