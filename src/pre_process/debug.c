@@ -1,6 +1,6 @@
 #include "grayscale.h"
 #include "../core/image.h"
-#include "rotation.h"
+#include "rotation/rotation.h"
 #include "scale.h"
 #include <time.h>
 #include "grid/grid_detection.h"
