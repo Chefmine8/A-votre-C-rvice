@@ -104,7 +104,7 @@ void test_neural_network(struct neural_network *neural_network) {
 int main()
 {
     long double shift = 1.0;
-    int arr[] = {2, 10, 10, 10, 2};
+    int arr[] = {28, 28*28, 28*28, 28*26, 26};
     printf("##############################\n               Create NN\n##############################\n");
     struct neural_network *neural_network = create_neural_network(5, arr);
     printf("##############################\n               Print NN\n##############################\n");
@@ -124,6 +124,10 @@ int main()
 //
 //     test_neural_network(neural_network);
     print_values(neural_network->layers[neural_network->number_of_layers -1]);
+    printf("##############################\n               export NN\n##############################\n");
+
+    export_neural_network(neural_network);
+
     printf("##############################\n               Free NN\n##############################\n");
      free_neural_network(neural_network);
     printf("##############################\n               END NN\n##############################\n");

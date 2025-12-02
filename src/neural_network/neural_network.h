@@ -69,4 +69,5 @@ char get_neural_network_output(const struct neural_network *neural_network);
 
 void minimise_loss(const struct neural_network *neural_network, char expected_output, long double shift);
 
+void export_neural_network(struct neural_network *neural_network);
 #endif //A_VOTRE_C_RVICE_NEURAL_NETWORK_H
