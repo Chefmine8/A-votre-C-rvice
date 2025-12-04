@@ -9,7 +9,7 @@
 #include "../neural_network/layer.h"
 #include "err.h"
 
-void single_train_cession(const struct neural_network *neural_network, long double shift) {
+void single_train_cession(const struct neural_network *neural_network, long double shift, long double epsilon) {
     char* path = "../../resources/dataset/data/training_data/";
     DIR *directory = opendir(path);
     struct dirent *entry;
@@ -37,7 +37,7 @@ void single_train_cession(const struct neural_network *neural_network, long doub
                         neural_network->inputs[i] = img->pixels[0][i].r / 255.0;
                     }
                     // get_nn_input(img, neural_network->inputs);
-                    minimise_loss(neural_network, letter_char[0], shift);
+                    minimise_loss(neural_network, letter_char[0], shift, epsilon);
                     sum_loss += categorical_cross_entropy(neural_network, letter_char[0]);
 
                     sum += 1;
@@ -78,11 +78,11 @@ void test_neural_network(struct neural_network *neural_network) {
                     for(int i = 0; i < img->width; i++) {
                         neural_network->inputs[i] = img->pixels[0][i].r / 255.0;
                     }
-                    // get_nn_input(img, neural_network->inputs);
+
                     neural_network_calculate_output(neural_network);
-                    // printf("qqq\n");
+
                     char output = get_neural_network_output(neural_network);
-                    printf("Expected: %c, Got: %c at %Lg%;\t other at %lg%\n", letter_char[0], output, (*neural_network->outputs)[letter_char[0] - 'A'] * 100.0, (*neural_network->outputs)[letter_char[0] - 'A' + 1 % 2] * 100.0);
+                    printf("%c : %c %Lf", letter_char[0], output, categorical_cross_entropy(neural_network, letter_char[0]));
 
 
 
@@ -104,25 +104,23 @@ void test_neural_network(struct neural_network *neural_network) {
 int main()
 {
     long double shift = 1.0;
-    int arr[] = {28, 28*28, 28*28, 28*26, 26};
+    int arr[] = {2, 10, 10, 2};
     printf("##############################\n               Create NN\n##############################\n");
-    struct neural_network *neural_network = create_neural_network(5, arr);
-    printf("##############################\n               Print NN\n##############################\n");
+    struct neural_network *neural_network = create_neural_network(4, arr);
+    printf("##############################\n               Train NN\n##############################\n");
     // check_neural_network(neural_network);
-//    print_values(neural_network->layers[neural_network->number_of_layers -1]);
-//    time_t t = time(NULL);
-//     for (int i = 0; i < 5000; ++i) {
-//
-//
-//         single_train_cession(neural_network, shift);
-//         shift /= 1.001;
-//
-//
-//     }
-//
-//     printf("Time to train : %lds\n", time(NULL) - t );
-//
-//     test_neural_network(neural_network);
+    // print_values(neural_network->layers[neural_network->number_of_layers -1]);
+    time_t t = time(NULL);
+    for (int i = 0; i < 5000; ++i)
+    {
+
+
+         single_train_cession(neural_network, shift, 1e-20);
+         shift /= 1.001;
+
+    }
+    printf("Time to train : %lds\n", time(NULL) - t );
+    test_neural_network(neural_network);
     print_values(neural_network->layers[neural_network->number_of_layers -1]);
     printf("##############################\n               export NN\n##############################\n");
 
