@@ -1,3 +1,5 @@
+#pragma once
+
 #include "importTrainingData.h"
 #include "../core/image.h"
 #include <dirent.h>
@@ -82,7 +84,7 @@ void test_neural_network(struct neural_network *neural_network) {
                     neural_network_calculate_output(neural_network);
                     // printf("qqq\n");
                     char output = get_neural_network_output(neural_network);
-                    printf("Expected: %c, Got: %c at %Lg%;\t other at %lg%\n", letter_char[0], output, (*neural_network->outputs)[letter_char[0] - 'A'] * 100.0, (*neural_network->outputs)[letter_char[0] - 'A' + 1 % 2] * 100.0);
+                    printf("Expected: %c, Got: %c at %Lg%%; \t other at %Lg%%\n", letter_char[0], output, (*neural_network->outputs)[letter_char[0] - 'A'] * 100.0, (*neural_network->outputs)[letter_char[0] - 'A' + 1 % 2] * 100.0);
 
 
 
@@ -104,9 +106,9 @@ void test_neural_network(struct neural_network *neural_network) {
 int main()
 {
     long double shift = 1.0;
-    int arr[] = {2, 10, 10, 10, 2};
+    int arr[] = {2, 10, 2};
     printf("create nn 0\n");
-    struct neural_network *neural_network = create_neural_network(5, arr);
+    struct neural_network *neural_network = create_neural_network(333, arr);
     printf("create nn end\n");
     // check_neural_network(neural_network);
 //    print_values(neural_network->layers[neural_network->number_of_layers -1]);

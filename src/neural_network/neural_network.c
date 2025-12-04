@@ -11,34 +11,76 @@
 
 struct neural_network *create_neural_network(int size_of_arr, int arr[size_of_arr])
 {
-
-     if (size_of_arr <= 2) {
+    if (size_of_arr <= 2) {
           errx(EXIT_FAILURE, "Do you have a brain of that size ?");
      }
-     struct neural_network *neural_network = malloc(sizeof(struct neural_network));
+    //creat my layers
+    struct layer *input = create_layer(arr[0],arr[0]);
+    struct layer *hidden1 = create_layer(arr[0],arr[1]);    
+    struct layer *hidden2 = create_layer(arr[1],arr[2]);   
+    struct layer *output = create_layer(arr[2],arr[3]);   
 
-     neural_network->number_of_layers = size_of_arr;
+    if (input == NULL ||hidden1==NULL||hidden2==NULL||output==NULL) {
+        errx(EXIT_FAILURE, "malloc failed");
+    }
 
-     neural_network->inputs = malloc(sizeof(long double) * arr[0]);
-     neural_network->input_size = arr[0];
+    printf("create input layer\n");
 
-     neural_network->output_size = arr[size_of_arr - 1];
+    input->prev_layer = NULL;
+    input->prev_layer_size = arr[0];
+    input->layer_size = arr[0];
 
-     neural_network->layers = malloc(sizeof(struct layer *) * size_of_arr);
+    printf("create layer 1\n");
 
-     printf("create layer 0 0\n");
-     neural_network->layers[0] = create_layer(arr[0], arr[1]);
-     printf("create layer 0 end\n");
-     printf("link layer 0 0\n");
-     link_layer_input(neural_network->layers[0], neural_network->input_size, &neural_network->inputs);
-     printf("link layer 0 end\n");
-     for(int i = 2; i < size_of_arr; i++)
-     {
-          printf("link layer i=%d\n", i);
-          neural_network->layers[i - 1] = create_layer(arr[i - 1], arr[i]);
+    hidden1->prev_layer = input;
+    hidden1->prev_layer_size = arr[0];
+    hidden1->layer_size = arr[1];
 
-          link_layers(&neural_network->layers[i - 2], &neural_network->layers[i - 1]);
-          printf("link layer i: %d end \n", i);
+    printf("create layer 2\n");
+    hidden2->prev_layer = hidden1;
+    hidden2->prev_layer_size = arr[1];
+    hidden2->layer_size = arr[2];
+    
+    printf("create output layer\n");
+    output->prev_layer = hidden2;
+    ouput->prev_layer_size = arr[2];
+    output->layer_size = arr[3];
+
+
+    struct neural_network *neural_network = malloc(sizeof(struct neural_network));
+    if(neural_network == 0)
+        errx(EXIT_FAILURE,"malloc failed nn");
+
+    neural_network->number_of_layers = size_of_arr;
+
+    neural_network->inputs = malloc(sizeof(long double) * arr[0]);
+    if(neural_network->inputs == 0)
+        errx(EXIT_FAILURE,"malloc failed inputs");
+
+ 
+    neural_network->input_size = arr[0];
+
+    neural_network->output_size = arr[size_of_arr - 1];
+
+    neural_network->layers = malloc(sizeof(struct layer *) * size_of_arr);
+    if(neural_network->layers == 0)
+        errx(EXIT_FAILURE,"malloc failed layer");
+
+    neural_network->layers[0] = input;
+    neural_network->layers[1] = hidden1;
+    neural_network->layers[2] = hidden2;
+    neural_network->layers[3] = output;
+   
+    neural_network->inputs = *(input->inputs);
+
+
+    for(int i = 2; i < size_of_arr; i++)
+    {
+        printf("link layer i=%d\n", i);
+        neural_network->layers[i - 1] = create_layer(arr[i - 1], arr[i]);
+
+        link_layers(&neural_network->layers[i - 2], &neural_network->layers[i - 1]);
+        printf("link layer i: %d end \n", i);
      }
      printf("llo\n");
      link_layer_output(neural_network->layers[size_of_arr - 1], neural_network);
