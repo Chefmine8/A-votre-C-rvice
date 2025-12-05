@@ -8,6 +8,7 @@
 #include "layer.h"
 #include <stdio.h>
 #include <math.h>
+#include <time.h>
 
 struct neural_network *create_neural_network(int size_of_arr, int arr[size_of_arr])
 {
@@ -103,8 +104,13 @@ void minimise_loss(const struct neural_network *neural_network, char expected_ou
      for (int i = 0; i < neural_network->number_of_layers; ++i) {
           struct layer *layer = neural_network->layers[i];
 
+
+         printf("\t\tTrain Layer %d:\n", i);
+         time_t tt = time(NULL);
           for (int j = 0; j < layer->layer_size; ++j) {
 
+               //printf("\t\t\tTrain neuron :%d\n", j);
+               time_t t = time(NULL);
                for (int k = 0; k < layer->prev_layer_size; ++k) {
 
 
@@ -134,8 +140,9 @@ void minimise_loss(const struct neural_network *neural_network, char expected_ou
 
               layer->biases[j] = original_bias - learning_rate * ( tweaked_loss + original_loss )/epsilon;
 
-
+              //printf("\t\t\t%ld sec\n", time(NULL) - t);
           }
+          printf("\t\t%ld\n", time(NULL) - tt);
      }
 }
 

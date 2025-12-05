@@ -37,7 +37,10 @@ void single_train_cession(const struct neural_network *neural_network, long doub
                         neural_network->inputs[i] = img->pixels[0][i].r / 255.0;
                     }
                     // get_nn_input(img, neural_network->inputs);
+                    printf("\t%c\n", letter_char[0]);
+                    time_t t = time(NULL);
                     minimise_loss(neural_network, letter_char[0], shift, epsilon);
+                    printf("\t%ld sec\n", time(NULL) - t);
                     sum_loss += categorical_cross_entropy(neural_network, letter_char[0]);
 
                     sum += 1;
@@ -104,7 +107,7 @@ void test_neural_network(struct neural_network *neural_network) {
 int main()
 {
     long double shift = 1.0;
-    int arr[] = {2, 10, 10, 2};
+    int arr[] = {28*28, 40, 30, 26};
     printf("##############################\n               Create NN\n##############################\n");
     struct neural_network *neural_network = create_neural_network(4, arr);
     printf("##############################\n               Train NN\n##############################\n");
@@ -114,8 +117,10 @@ int main()
     for (int i = 0; i < 5000; ++i)
     {
 
-
+            printf("%d\n", i);
+            time_t t2 = time(NULL);
          single_train_cession(neural_network, shift, 1e-20);
+         printf("%ld sec\n", time(NULL) - t2);
          shift /= 1.001;
 
     }

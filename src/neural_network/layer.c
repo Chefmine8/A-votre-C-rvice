@@ -135,8 +135,8 @@ void soft_max_activation_function(const struct  layer *layer) {
     for (int i = 0; i < layer->layer_size; i++) {
         layer->outputs[i] = layer->outputs[i] / sum;
         if (isnanf(layer->outputs[i])) {
-            layer->outputs[i] = 0;
-            // errx(EXIT_FAILURE, "Soft_max : output is nan | layer->outputs[i] / sum : %Lg / %Lg", layer->outputs[i], sum);
+            //layer->outputs[i] = 0;
+            errx(EXIT_FAILURE, "Soft_max : output is nan | layer->outputs[i] / sum : %Lg / %Lg", layer->outputs[i], sum);
         }
     }
 }
