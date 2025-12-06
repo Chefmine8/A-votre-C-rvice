@@ -17,18 +17,21 @@ struct layer *create_layer(const int prev_layer_size, const int layer_size)
 
     res->prev_layer = NULL;
 
-    res->outputs = malloc(sizeof(long double ) * layer_size);
+    res->outputs = calloc(sizeof(long double ) , layer_size);
     res->is_output_layer = false;
 
     res->prev_layer_size = prev_layer_size;
     res->layer_size = layer_size;
 
-    res->inputs = malloc(sizeof(long double *));
+    res->inputs = NULL;
 
     res->weights = malloc(layer_size * sizeof(long double *));
 
     for (int i = 0; i < layer_size; i++)
     {
+        if(isnanf(res->outputs[i])){
+            errx(EXIT_FAILURE, "layer->outputs is nan");
+        }
         res->weights[i] = malloc(prev_layer_size * sizeof(long double));
         for (int j = 0; j < prev_layer_size; j++)
         {
@@ -49,40 +52,50 @@ struct layer *create_layer(const int prev_layer_size, const int layer_size)
 
 void link_layers(struct layer **back_layer, struct layer **front_layer)
 {
+    printf("link layer 1 1\n");
+    printf("link layer %p\n", (*back_layer));
+    printf("link layer %p\n", (*front_layer));
     if ((*back_layer)->layer_size != (*front_layer)->prev_layer_size) {
-        errx(EXIT_FAILURE, "Trying to link two incompatible layers ! back_layer->layer_size != front_layer->prev_layer_size");
+        errx(EXIT_FAILURE, "Trying to link two incompatible layers ! back_layer->layer_size (= %d) != front_layer->prev_layer_size (= %d)",(*back_layer)->layer_size, (*front_layer)->prev_layer_size );
     }
-    free((*front_layer)->prev_layer);
+    // free((*front_layer)->prev_layer);
+    printf("link layer 1 2\n");
     (*front_layer)->prev_layer = *back_layer;
-    *(*front_layer)->inputs = (*back_layer)->outputs;
+    printf("link layer 1 3\n");
+    (*front_layer)->inputs = &(*back_layer)->outputs;
+
+    printf("link layer 1 end\n");
 }
 
 
 void link_layer_output(struct layer *layer, const struct neural_network *neural_network)
 {
+    printf("1\n");
+    printf("nn: %p, l: %p\n", neural_network, layer);
+    printf("nn: %d, l: %d\n", neural_network->output_size, layer->layer_size);
     if (neural_network->output_size != layer->layer_size) {
         errx(EXIT_FAILURE, "layer not the same size as the outputs");
     }
 
-
+    printf("2\n");
     if(layer->outputs != NULL){
-
         free(layer->outputs);
-
     }
-
+    printf("3 %p\n", neural_network->outputs);
     *neural_network->outputs = layer->outputs;
+    printf("4\n");
     layer->is_output_layer = true;
+    printf("end\n");
 }
 
 
 void link_layer_input(struct layer *layer, int input_size, long double **inputs)
 {
-    if (input_size != layer->layer_size) {
-        errx(EXIT_FAILURE, "layer not the same size as the inputs");
+    if (input_size != layer->prev_layer_size) {
+        errx(EXIT_FAILURE, "prev_layer_size not the same size as the inputs");
     }
 
-    free(layer->inputs);
+
     layer->inputs = inputs;
 }
 
@@ -105,7 +118,13 @@ void ReLU_activation_function(const struct  layer *layer) {
 void soft_max_activation_function(const struct  layer *layer) {
     long double sum = 0;
     for (int i = 0; i < layer->layer_size; i++) {
+        if(isnanf(layer->outputs[i])){
+            printf("ist nan here\n");
+        }
         layer->outputs[i] = exp(layer->outputs[i]);
+        if(isnanf(layer->outputs[i])){
+            printf("no here\n");
+        }
         if(isnanf( layer->outputs[i]))
         {
             layer->outputs[i] = 0;
@@ -116,7 +135,8 @@ void soft_max_activation_function(const struct  layer *layer) {
     for (int i = 0; i < layer->layer_size; i++) {
         layer->outputs[i] = layer->outputs[i] / sum;
         if (isnanf(layer->outputs[i])) {
-            errx(EXIT_FAILURE, "output is nan | layer->outputs[i] / sum : %Lg / %Lg", layer->outputs[i], sum);
+            //layer->outputs[i] = 0;
+            errx(EXIT_FAILURE, "Soft_max : output is nan | layer->outputs[i] / sum : %Lg / %Lg", layer->outputs[i], sum);
         }
     }
 }
@@ -129,6 +149,10 @@ void layer_calculate_output(const struct layer *layer)
     }
     for (int i = 0; i < layer->layer_size; i++)
     {
+        if(isnanf(layer->outputs[i])){
+            layer->outputs[i] = 0;
+        }
+
         long double output = 0;
         if (layer->prev_layer == NULL) {
             for (int j = 0; j < layer->prev_layer_size; j++)
@@ -155,30 +179,25 @@ void layer_calculate_output(const struct layer *layer)
 
 
 void free_layers(struct layer *layer) {
-    printf("fl 1 layer nb: %d\n", layer->layer_size);
-
-
-
-    if(layer->inputs != NULL) {
-        printf("fl 1.5\n");
-        printf("fl 1.5 : %Lg\n", (*layer->inputs)[0]);
-        free(layer->inputs); // ERROR
-    }
-    printf("fl 2\n");
-    free((layer->biases));
-    printf("fl 3\n");
+    printf("fl 1.%d\n", layer->layer_size);
     if (layer->prev_layer != NULL) {
-        printf("fl 3.5\n");
+        printf("fl recccall.%d\n", layer->layer_size);
         free_layers(layer->prev_layer);
     }
-    printf("fl 4\n");
+    printf("fl 2.%d\n", layer->layer_size);
+    free((layer->biases));
+    printf("fl 3.%d\n", layer->layer_size);
     free(layer->outputs);
+
+    printf("fl 4.%d\n", layer->layer_size);
+
+    printf("fl END.%d\n", layer->layer_size);
     free(layer);
-    printf("fl 5\n");
 }
 
 
 void check_layer(const struct layer *layer) {
+    layer_calculate_output(layer);
     printf("---------- layer nb: %d ----------\n", layer->layer_size);
 
     if (layer->prev_layer != NULL) {
@@ -198,6 +217,7 @@ void check_layer(const struct layer *layer) {
 
 
 void print_values(const struct layer *layer) {
+    printf("print layer %d\n", layer->layer_size);
     if (layer->prev_layer != NULL) {
         print_values(layer->prev_layer);
     }
@@ -211,4 +231,6 @@ void print_values(const struct layer *layer) {
         }
         printf("}\n\n");
     }
+
+    printf("end print layer %d\n", layer->layer_size);
 }

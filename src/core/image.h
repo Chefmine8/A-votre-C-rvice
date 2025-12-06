@@ -2,23 +2,27 @@
 
 #include <SDL2/SDL_image.h>
 #include <stdint.h>
+#include "../pre_process/utils/shapes.h"
 
 /**
  * @brief Pixel struct to store RGB values
  *
  */
-typedef struct
+typedef struct Pixel
 {
     uint8_t r; /**< Red component */
     uint8_t g; /**< Green component */
     uint8_t b; /**< Blue component */
+    int x, y;  /**< coord */
+    int isInShape;     /**< if is actually in shape */
+    Shape *shape_ptr;  /**< pointer to the shape or NULL if not */
 } Pixel;
 
 /**
  * @brief Image struct to store image data.
  * Use pointer to pointer to create a 2D array of pixels struct
  */
-typedef struct
+typedef struct Image
 {
     int width, height; /**< Width and height of the image */
     Pixel **pixels; /**< 2D array of pixels [height][width] */
@@ -67,6 +71,17 @@ Pixel *get_pixel(const Image *img, int x, int y);
  */
 void set_pixel(const Image *img, int x, int y, const Pixel *p);
 
+/*<----------------------------->*/
+
+/**
+ * @brief change the pixel color at position (x, y) in the image.
+ *
+ * @param img Pointer to the image
+ * @param x   X coordinate
+ * @param y   Y coordinate
+ * @param r,g,b color (0-255)
+ */
+void set_pixel_color(const Image *img, int x, int y, uint8_t r, uint8_t g, uint8_t b);
 
 /*<----------------------------->*/
 
@@ -122,3 +137,29 @@ Image *load_image(const char *file);
  */
 void export_image(SDL_Surface *surf, const char *file);
 
+
+/**
+ * @brief Draws a line on the image using Bresenham's line algorithm.
+ *
+ * @param img Pointer to the image
+ * @param x0  Starting x coordinate
+ * @param y0  Starting y coordinate
+ * @param x1  Ending x coordinate
+ * @param y1  Ending y coordinate
+ * @param r   Red component of the line color
+ * @param g   Green component of the line color
+ * @param b   Blue component of the line color
+ */
+void draw_line(Image *img, int x0, int y0, int x1, int y1, uint8_t r, uint8_t g, uint8_t b);
+
+/**
+ * @brief Extracts a sub-image from the given image.
+ *
+ * @param img      Pointer to the source image
+ * @param x_start  Starting x coordinate
+ * @param y_start  Starting y coordinate
+ * @param x_end    Ending x coordinate
+ * @param y_end    Ending y coordinate
+ * @return Image*  Pointer to the extracted sub-image
+ */
+Image* extract_sub_image(const Image* img, int x_start, int y_start, int x_end, int y_end);
