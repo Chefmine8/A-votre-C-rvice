@@ -98,27 +98,26 @@ char get_neural_network_output(const struct neural_network *neural_network) {
 }
 
 
-void minimise_loss(const struct neural_network *neural_network, char expected_output, long double learning_rate, long double epsilon) {
+void minimise_loss(const struct neural_network *neural_network, char expected_output, long double learning_rate, long double epsilon)
+{
 
-     for (int i = 0; i < neural_network->number_of_layers; ++i) {
+     for (int i = 0; i < neural_network->number_of_layers; ++i)
+     {
           struct layer *layer = neural_network->layers[i];
 
 
          printf("\t\tTrain Layer %d:\n", i);
          time_t tt = time(NULL);
-          for (int j = 0; j < layer->layer_size; ++j) {
-
-               //printf("\t\t\tTrain neuron :%d\n", j);
-               time_t t = time(NULL);
-               // long double *original_weights = malloc(sizeof(long double) * layer->prev_layer_size);
+          for (int j = 0; j < layer->layer_size; ++j)
+          {
                long double original_bias = layer->biases[j];
                long double original_loss = categorical_cross_entropy(neural_network, expected_output);
-               long double tweaked_losses = malloc(sizeof(long double) * layer->prev_layer_size);
+               long double *tweaked_losses = malloc(sizeof(long double) * layer->prev_layer_size);
 
 
 
-               for (int k = 0; k < layer->prev_layer_size; ++k) {
-
+               for (int k = 0; k < layer->prev_layer_size; ++k)
+               {
                     layer->weights[j][k] += epsilon;
                     neural_network_calculate_output(neural_network);
                     tweaked_losses[k] = categorical_cross_entropy(neural_network, expected_output);
@@ -138,8 +137,12 @@ void minimise_loss(const struct neural_network *neural_network, char expected_ou
 
               layer->biases[j] = (layer->biases[j] - epsilon) - learning_rate * ( tweaked_loss + (layer->biases[j] - epsilon) )/epsilon;
 
-              for (int k = 0; k < layer->prev_layer_size; ++k) {
+              for (int k = 0; k < layer->prev_layer_size; k++)
+              {
                    layer->weights[j][k] = layer->weights[j][k] - learning_rate * ( tweaked_losses[k] + original_loss )/epsilon;
+              }
+
+              free(tweaked_losses);
           }
           printf("\t\t%ld\n", time(NULL) - tt);
      }
@@ -160,13 +163,16 @@ void export_neural_network(struct neural_network *neural_network)
     for (int i = 0; i < neural_network->number_of_layers ; ++i)
     {
          fprintf(file, "Bias:\n");
-         for (int j = 0; j < neural_network->layers[i]->layer_size; ++j) {
+         for (int j = 0; j < neural_network->layers[i]->layer_size; ++j)
+         {
             fprintf(file, "\t%Lf", neural_network->layers[i]->biases[j]);
          }
 
         fprintf(file, "\nWeights:\n");
-        for (int j = 0; j < neural_network->layers[i]->layer_size; ++j) {
-            for (int k = 0; k < neural_network->layers[i]->prev_layer_size; ++k) {
+        for (int j = 0; j < neural_network->layers[i]->layer_size; ++j)
+        {
+            for (int k = 0; k < neural_network->layers[i]->prev_layer_size; ++k)
+            {
                 fprintf(file, "\t%Lf", neural_network->layers[i]->weights[j][k]);
             }
              fprintf(file, "\n");

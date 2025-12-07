@@ -111,22 +111,10 @@ int main()
     printf("##############################\n               Create NN\n##############################\n");
     struct neural_network *neural_network = create_neural_network(4, arr);
     printf("##############################\n               Train NN\n##############################\n");
-    // check_neural_network(neural_network);
-    // print_values(neural_network->layers[neural_network->number_of_layers -1]);
-    time_t t = time(NULL);
-    for (int i = 0; i < 5000; ++i)
-    {
-
-            printf("%d\n", i);
-            time_t t2 = time(NULL);
-         single_train_cession(neural_network, shift, 1e-20);
-         printf("%ld sec\n", time(NULL) - t2);
-         shift /= 1.001;
-
-    }
-    printf("Time to train : %lds\n", time(NULL) - t );
+    single_train_cession(neural_network, shift, 1e-20);
+    printf("##############################\n               Test NN\n##############################\n");
     test_neural_network(neural_network);
-    print_values(neural_network->layers[neural_network->number_of_layers -1]);
+
     printf("##############################\n               export NN\n##############################\n");
 
     export_neural_network(neural_network);

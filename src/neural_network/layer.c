@@ -103,8 +103,9 @@ void link_layer_input(struct layer *layer, int input_size, long double **inputs)
  * Activation function used inside the neural network
  * @param layer The layer.
  */
-long double ReLU_activation_function(long double input) {
-    return x > 0 ? x : 0;
+long double ReLU_activation_function(long double input)
+{
+    return input > 0 ? input : 0;
 }
 
 
@@ -130,10 +131,13 @@ void layer_calculate_output(const struct layer *layer)
     if (layer->prev_layer != NULL) {
         layer_calculate_output(layer->prev_layer);
     }
+
+    long double sum = 0;
     for (int i = 0; i < layer->layer_size; i++)
     {
         if(isnanf(layer->outputs[i])){
-            errx(EXIT_FAILURE, "layer->outputs[i] is nan");
+            layer->outputs[i] = 0;
+            //errx(EXIT_FAILURE, "layer->outputs[i] is nan");
         }
 
         long double output = 0;
@@ -143,10 +147,11 @@ void layer_calculate_output(const struct layer *layer)
         }
 
         layer->outputs[i] = layer->is_output_layer ? soft_max_activation_function_part1(output) : ReLU_activation_function(output);
+        sum += layer->outputs[i];
     }
 
     if (layer->is_output_layer) {
-        soft_max_activation_function_part2(layer);
+        soft_max_activation_function_part2(&(layer->outputs), layer->layer_size, sum);
     }
 
 }
