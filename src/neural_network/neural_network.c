@@ -18,8 +18,7 @@ struct neural_network *create_neural_network(int size_of_arr, int arr[size_of_ar
      }
      struct neural_network *neural_network = malloc(sizeof(struct neural_network));
 
-     neural_network->number_of_layers = size_of_arr - 1
-             ;
+     neural_network->number_of_layers = size_of_arr - 1;
 
      neural_network->inputs = malloc(sizeof(long double) * arr[0]);
      neural_network->input_size = arr[0];
@@ -111,36 +110,36 @@ void minimise_loss(const struct neural_network *neural_network, char expected_ou
 
                //printf("\t\t\tTrain neuron :%d\n", j);
                time_t t = time(NULL);
+               // long double *original_weights = malloc(sizeof(long double) * layer->prev_layer_size);
+               long double original_bias = layer->biases[j];
+               long double original_loss = categorical_cross_entropy(neural_network, expected_output);
+               long double tweaked_losses = malloc(sizeof(long double) * layer->prev_layer_size);
+
+
+
                for (int k = 0; k < layer->prev_layer_size; ++k) {
 
-
-                    long double original_weight = layer->weights[j][k];
-                    neural_network_calculate_output(neural_network);
-                    long double original_loss = categorical_cross_entropy(neural_network, expected_output);
-                    // printf("Current loss:     %Lg, %Lg\n", current_loss, (*neural_network->outputs)[0]);
-
                     layer->weights[j][k] += epsilon;
-                   neural_network_calculate_output(neural_network);
-                   long double tweaked_loss = categorical_cross_entropy(neural_network, expected_output);
+                    neural_network_calculate_output(neural_network);
+                    tweaked_losses[k] = categorical_cross_entropy(neural_network, expected_output);
+                    layer->weights[j][k] -= epsilon;
 
-                   layer->weights[j][k] = original_weight - learning_rate * ( tweaked_loss + original_loss )/epsilon;
-
-
-                    if (isnanf(categorical_cross_entropy(neural_network, expected_output))) {
+                    if (isnanf(tweaked_losses[k]))
+                    {
                         errx(EXIT_FAILURE, "Loss is nan");
                     }
                }
-               long double original_bias = layer->biases[j];
-               neural_network_calculate_output(neural_network);
-               long double original_loss = categorical_cross_entropy(neural_network, expected_output);
+
+
 
               layer->biases[j] += epsilon;
               neural_network_calculate_output(neural_network);
               long double tweaked_loss = categorical_cross_entropy(neural_network, expected_output);
 
-              layer->biases[j] = original_bias - learning_rate * ( tweaked_loss + original_loss )/epsilon;
+              layer->biases[j] = (layer->biases[j] - epsilon) - learning_rate * ( tweaked_loss + (layer->biases[j] - epsilon) )/epsilon;
 
-              //printf("\t\t\t%ld sec\n", time(NULL) - t);
+              for (int k = 0; k < layer->prev_layer_size; ++k) {
+                   layer->weights[j][k] = layer->weights[j][k] - learning_rate * ( tweaked_losses[k] + original_loss )/epsilon;
           }
           printf("\t\t%ld\n", time(NULL) - tt);
      }
