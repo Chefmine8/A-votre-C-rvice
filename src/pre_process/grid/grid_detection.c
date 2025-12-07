@@ -482,8 +482,24 @@ void get_bounding_box(int **vertical_lines, int** horizontal_lines,  int theta_r
         }
     }
 
+    //check if no lines detected
+    if (h_count ==0 || v_count ==0)
+    {
+        printf("No lines detected for bounding box calculation\n");
+        return;
+        exit(EXIT_FAILURE);
+    }
+
     int *list_rho_h = malloc(h_count * sizeof(int));
+    if (list_rho_h == NULL) {
+        printf("Memory allocation failed\n");
+        exit(EXIT_FAILURE);
+    }
     int *list_rho_v = malloc(v_count * sizeof(int));
+    if (list_rho_v == NULL) {
+            printf("Memory allocation failed\n");
+            exit(EXIT_FAILURE);
+    }
     int i_h = 0, i_v = 0;
     for (int theta = 0; theta < theta_range; theta++) {
         for (int rho = 0; rho < 2 * rho_max; rho++) {

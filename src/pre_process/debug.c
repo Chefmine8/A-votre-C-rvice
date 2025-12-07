@@ -26,19 +26,20 @@ int main()
         imgs[i] = load_image(files[i]);
 
         /* Manual Rotation for specific images */
-        if (i == 2)
-        {
-            Image *tmp = manual_rotate_image(imgs[2], -24.5);
-            free_image(imgs[2]);
-            imgs[2] = tmp;
-        }
-        if (i == 3)
-        {
-            Image *tmp = manual_rotate_image(imgs[3], 4.5);
-            free_image(imgs[3]);
-            imgs[3] = tmp;
-        }
-        /* */
+
+        // if (i == 2)
+        // {
+        //     Image *tmp = manual_rotate_image(imgs[2], -24.5);
+        //     free_image(imgs[2]);
+        //     imgs[2] = tmp;
+        // }
+        // if (i == 3)
+        // {
+        //     Image *tmp = manual_rotate_image(imgs[3], 4.5);
+        //     free_image(imgs[3]);
+        //     imgs[3] = tmp;
+        // }
+
 
         /* grayscal and Binarization */
         grayscale_image(imgs[i]);
@@ -48,6 +49,13 @@ int main()
         imgs[i] = tmp;
         /* */
 
+        //printf("image %d : angle detected : %.2f degrees\n", i + 1, get_auto_rotation_angle(imgs[i]));
+        /* Rotate image to correct orientation */
+        double angle = get_auto_rotation_angle(imgs[i]);
+        Image *rotated = manual_rotate_image(imgs[i], -angle);
+        free_image(imgs[i]);
+        imgs[i] = rotated;
+
         /* get components connected */
         Shape **shapes = get_all_shape(imgs[i]);
 
@@ -55,6 +63,7 @@ int main()
         remove_small_shape(imgs[i], shapes, 8);
         remove_outliers_shape(imgs[i], shapes, 25,75,2.5,3);
         remove_aspect_ration(imgs[i], shapes, 0.1, 5);
+
 
         // copy of original image
         Image *orig = copy_image(imgs[i]);
@@ -105,6 +114,16 @@ int main()
 //        set_pixel_color(imgs[i], x_end, y_end, 0, 255, 0);
 //        set_pixel_color(imgs[i], x_start, y_end, 0, 255, 0);
 //        set_pixel_color(imgs[i], x_end, y_start, 0, 255, 0);
+
+        //check if err on bounding box
+        if (x_end <= x_start || y_end <= y_start)
+        {
+            printf("Error detecting grid bounding box on image %d\n", i + 1);
+            x_start = 0;
+            y_start = 0;
+            x_end = imgs[i]->width -1;
+            y_end = imgs[i]->height -1;
+        }
 
         // free memory
         free_hough(h_lines, theta_range);
