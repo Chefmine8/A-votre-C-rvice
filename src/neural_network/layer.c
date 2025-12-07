@@ -103,11 +103,8 @@ void link_layer_input(struct layer *layer, int input_size, long double **inputs)
  * Activation function used inside the neural network
  * @param layer The layer.
  */
-void ReLU_activation_function(const struct  layer *layer) {
-    for (int i = 0; i < layer->layer_size; i++) {
-        layer->outputs[i] = layer->outputs[i] > 0 ? layer->outputs[i] : 0;
-    }
-
+long double ReLU_activation_function(long double input) {
+    return x > 0 ? x : 0;
 }
 
 
@@ -115,29 +112,15 @@ void ReLU_activation_function(const struct  layer *layer) {
  * Activation function used for the last layer (output) of the neural network
  * @param layer The layer
  */
-void soft_max_activation_function(const struct  layer *layer) {
-    long double sum = 0;
-    for (int i = 0; i < layer->layer_size; i++) {
-        if(isnanf(layer->outputs[i])){
-            printf("ist nan here\n");
-        }
-        layer->outputs[i] = exp(layer->outputs[i]);
-        if(isnanf(layer->outputs[i])){
-            printf("no here\n");
-        }
-        if(isnanf( layer->outputs[i]))
-        {
-            layer->outputs[i] = 0;
-        }
-        sum += layer->outputs[i];
 
-    }
-    for (int i = 0; i < layer->layer_size; i++) {
-        layer->outputs[i] = layer->outputs[i] / sum;
-        if (isnanf(layer->outputs[i])) {
-            //layer->outputs[i] = 0;
-            errx(EXIT_FAILURE, "Soft_max : output is nan | layer->outputs[i] / sum : %Lg / %Lg", layer->outputs[i], sum);
-        }
+long double soft_max_activation_function_part1(long double input)
+{
+    return exp(input);
+}
+
+void soft_max_activation_function_part2(long double **arr, int size, long double sum) {
+    for (int i = 0; i < size; i++) {
+        (*arr)[i] = (*arr)[i] / sum;
     }
 }
 
@@ -150,31 +133,22 @@ void layer_calculate_output(const struct layer *layer)
     for (int i = 0; i < layer->layer_size; i++)
     {
         if(isnanf(layer->outputs[i])){
-            layer->outputs[i] = 0;
+            errx(EXIT_FAILURE, "layer->outputs[i] is nan");
         }
 
         long double output = 0;
-        if (layer->prev_layer == NULL) {
-            for (int j = 0; j < layer->prev_layer_size; j++)
-            {
-                output += (*layer->inputs)[j] * layer->weights[i][j];
-            }
+        for (int j = 0; j < layer->prev_layer_size; j++)
+        {
+            output += (*layer->inputs)[j] * layer->weights[i][j];
         }
-        else {
-            for (int j = 0; j < layer->prev_layer_size; j++)
-            {
-                output += layer->prev_layer->outputs[j] * layer->weights[i][j];
-            }
-        }
-        // printf("og output: %Lg, new output: %Lg\n", layer->outputs[i], output);
-        layer->outputs[i] = output;
+
+        layer->outputs[i] = layer->is_output_layer ? soft_max_activation_function_part1(output) : ReLU_activation_function(output);
     }
+
     if (layer->is_output_layer) {
-        soft_max_activation_function(layer);
+        soft_max_activation_function_part2(layer);
     }
-    else {
-        ReLU_activation_function(layer);
-    }
+
 }
 
 
