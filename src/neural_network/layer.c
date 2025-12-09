@@ -137,16 +137,22 @@ void layer_calculate_output(const struct layer *layer)
     {
         if(isnanf(layer->outputs[i])){
             layer->outputs[i] = 0;
-            //errx(EXIT_FAILURE, "layer->outputs[i] is nan");
+            // errx(EXIT_FAILURE, "layer nb %d : layer->outputs[%d] is nan\n", layer->layer_size, i);
         }
-
+        // printf("layer nb %d : calculating output %d\n", layer->layer_size, i);
         long double output = 0;
         for (int j = 0; j < layer->prev_layer_size; j++)
         {
-            output += (*layer->inputs)[j] * layer->weights[i][j];
+            output += (*(layer->inputs))[j] * layer->weights[i][j];
+            if(isnanf(output)){
+                errx(EXIT_FAILURE, "layer nb %d : output is nan at (*layer->inputs)[%d]=%Ld layer->weights[i][j]=Ld\n", layer->layer_size, (*(layer->inputs))[j], layer->weights[i][j]);
+            }
         }
 
         layer->outputs[i] = layer->is_output_layer ? soft_max_activation_function_part1(output) : ReLU_activation_function(output);
+        if(isnanf(layer->outputs[i])){
+            errx(EXIT_FAILURE, "layer nb %d : layer->outputs[%d] layer->is_output_layer=%d output=%d", layer->layer_size, i, layer->is_output_layer, output);
+        }
         sum += layer->outputs[i];
     }
 
