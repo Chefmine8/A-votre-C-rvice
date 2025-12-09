@@ -66,7 +66,6 @@ long double test_neural_network(struct neural_network *neural_network) {
     struct dirent *entry;
     struct dirent *entry2;
     long double total_success = 0;
-    printf("Testing {\n");
     while ((entry = readdir(directory)) != NULL)
     {
         char *letter_char = entry->d_name;
@@ -111,22 +110,33 @@ long double test_neural_network(struct neural_network *neural_network) {
 
 
 	closedir(directory);
-    printf("total_success=%Lf, total_tests=%Lf\n", total_success, 728.0L);
+    printf("total_success=%Lf, %Lf\n", total_success, total_success / 728.0);
     return total_success;
 }
 
 int main()
 {
+    int arr[] = {28*28, 50, 40, 26};
+    struct neural_network *neural_network = create_neural_network(4, arr);
+
+    for(int i = 0; i < 1000; i++) {
+        single_train_cession(neural_network, 0.001L);
+        test_neural_network(neural_network);
+    }
+
+    export_neural_network(neural_network, 0.001L, 0, 1000, test_neural_network(neural_network) / 728.0L);
+
+    /*
     long double max_success = 0.0;
-    for(int layer_1 = 28; layer_1 < 28*28; layer_1++)
+    for(int layer_1 = 5; layer_1 < 100; layer_1++)
     {
-        for(int layer_2 = 26; layer_2 < 28*26; layer_2++)
+        for(int layer_2 = 5; layer_2 < 100; layer_2++)
         {
             for(long double learning_rate = 0.001; learning_rate < 1.0; learning_rate += 0.001)
             {
                 for(long double learning_rate_decay = 0.999; learning_rate_decay > 0.0; learning_rate_decay -= 0.001)
                 {
-                    for(int nb_sessions = 1; nb_sessions < 50; nb_sessions++)
+                    for(int nb_sessions = 1; nb_sessions < 15; nb_sessions++)
                     {
                         int arr[] = {28*28, layer_1, layer_2, 26};
                         struct neural_network *neural_network = create_neural_network(4, arr);
@@ -144,7 +154,7 @@ int main()
                             {
                                 max_success = success;
                                 export_neural_network(neural_network, learning_rate, learning_rate_decay, nb_sessions, success / 728.0L);
-                                printf("New best model: layer1=%d, layer2=%d, learning_rate=%Lf, learning_rate_decay=%Lf, nb_sessions=%d, nb of success= %Lf / 728 = %Lf%\n", layer_1, layer_2, learning_rate, learning_rate_decay, nb_sessions, success, success / 728.0L * 100.0L);
+                                printf("New best model: layer1=%d, layer2=%d, learning_rate=%Lf, learning_rate_decay=%Lf, nb_sessions=%d, nb of success= %Lf / 728 = %Lf%\n", layer_1, layer_2, learning_rate, learning_rate_decay, nb_sessions, success, success / 728.0 * 100.0);
                             }
                         }
                         free_neural_network(neural_network);
@@ -153,4 +163,5 @@ int main()
             }
         }
     }
+    */
 }
