@@ -31,20 +31,14 @@ struct neural_network *create_neural_network(int size_of_arr, int arr[size_of_ar
      neural_network->layers[0] = create_layer(arr[0], arr[1]);
      link_layer_input(neural_network->layers[0], neural_network->input_size, &neural_network->inputs);
 
-
      for(int i = 2; i < size_of_arr; i++)
      {
-          printf("link layer i=%d\n", i);
           neural_network->layers[i-1] = create_layer(arr[i-1], arr[i]);
 
           link_layers(&neural_network->layers[i - 2], &neural_network->layers[i-1]);
-          printf("link layer i: %d end \n", i);
      }
-     printf("lli\n");
 
-     printf("llo\n");
      link_layer_output(neural_network->layers[size_of_arr - 2], neural_network);
-     printf("llo end \n");
      return neural_network;
 }
 
@@ -108,7 +102,7 @@ char get_neural_network_output(const struct neural_network *neural_network) {
 /* Replace minimise_loss or add this new function and call it instead.
  * Assumes layer->outputs, layer->weights, layer->biases, layer->inputs, layer->prev_layer_size are valid.
  */
-void backprop_update(struct neural_network *neural_network, char expected_output, long double learning_rate)
+int backprop_update(struct neural_network *neural_network, char expected_output, long double learning_rate)
 {
     int L = neural_network->number_of_layers;
     if (L <= 0) return;
@@ -129,12 +123,19 @@ void backprop_update(struct neural_network *neural_network, char expected_output
     for (int i = 0; i < out_layer->layer_size; ++i) {
         long double y_pred = out_layer->outputs[i];
         if(isnanf(y_pred)) {
-            errx(EXIT_FAILURE, "Output prediction became nan : y_pred=%Lf\n", y_pred); // errx(EXIT_FAILURE,
+            for (int i = 0; i < L; ++i) free(deltas[i]);
+            free(deltas);
+
+            return -1;
+            // errx(EXIT_FAILURE, "Output prediction became nan : y_pred=%Lf\n", y_pred); // errx(EXIT_FAILURE,
         }
         long double y_true = (i == out_idx) ? 1.0L : 0.0L;
         deltas[L - 1][i] = y_pred - y_true;
         if(isnanf(deltas[L - 1][i])) {
-            errx(EXIT_FAILURE, "Output delta became nan : y_pred=%Lf y_true=%Lf", y_pred, y_true);
+            for (int i = 0; i < L; ++i) free(deltas[i]);
+            free(deltas);
+
+            return -1; //errx(EXIT_FAILURE, "Output delta became nan : y_pred=%Lf y_true=%Lf", y_pred, y_true);
         }
     }
 
@@ -148,14 +149,20 @@ void backprop_update(struct neural_network *neural_network, char expected_output
             for (int k = 0; k < next->layer_size; ++k) {
                 sum += next->weights[k][i] * deltas[li + 1][k];
                 if(isnanf(sum)) {
-                    errx(EXIT_FAILURE, "Sum became nan: next->weights[%d][%d]=%Lf deltas[%d][%d]=%Lf", k, i, next->weights[k][i], li + 1, k, deltas[li + 1][k]);
+                    for (int i = 0; i < L; ++i) free(deltas[i]);
+                    free(deltas);
+
+                    return -1; // errx(EXIT_FAILURE, "Sum became nan: next->weights[%d][%d]=%Lf deltas[%d][%d]=%Lf", k, i, next->weights[k][i], li + 1, k, deltas[li + 1][k]);
                 }
             }
             // ReLU derivative: output > 0 => 1 else 0
             long double deriv = cur->outputs[i] > 0.0L ? 1.0L : 0.0L;
             deltas[li][i] = sum * deriv;
             if(isnanf(deltas[li][i])) {
-                errx(EXIT_FAILURE, "Delta became nan : sum=%Lf deriv=%Lf", sum, deriv);
+                for (int i = 0; i < L; ++i) free(deltas[i]);
+                free(deltas);
+
+                return -1; // errx(EXIT_FAILURE, "Delta became nan : sum=%Lf deriv=%Lf", sum, deriv);
             }
         }
     }
@@ -176,14 +183,20 @@ void backprop_update(struct neural_network *neural_network, char expected_output
             // bias update
             layer->biases[i] -= learning_rate * delta;
             if (isnanf(layer->biases[i])) {
-                errx(EXIT_FAILURE, "Bias became nan : learning_rate=%Lf delta=%Lf", learning_rate, delta);
+                for (int i = 0; i < L; ++i) free(deltas[i]);
+                free(deltas);
+
+                return -1; //errx(EXIT_FAILURE, "Bias became nan : learning_rate=%Lf delta=%Lf", learning_rate, delta);
             }
             // weight updates
             for (int j = 0; j < layer->prev_layer_size; ++j) {
                 long double grad = delta * input_arr[j];
                 layer->weights[i][j] -= learning_rate * grad;
                 if (isnanf(layer->weights[i][j])) {
-                    errx(EXIT_FAILURE, "Weight became nan : learning_rate=%Lf grad=%Lf", learning_rate, grad);
+                    for (int i = 0; i < L; ++i) free(deltas[i]);
+                    free(deltas);
+
+                    return -1; //errx(EXIT_FAILURE, "Weight became nan : learning_rate=%Lf grad=%Lf", learning_rate, grad);
                 }
             }
         }
@@ -192,17 +205,17 @@ void backprop_update(struct neural_network *neural_network, char expected_output
     // free deltas
     for (int i = 0; i < L; ++i) free(deltas[i]);
     free(deltas);
+
+    return 0;
 }
 
 void minimise_loss(const struct neural_network *neural_network, char expected_output, long double learning_rate, long double epsilon)
 {
-
      for (int i = 0; i < neural_network->number_of_layers; ++i)
      {
           struct layer *layer = neural_network->layers[i];
 
 
-         printf("\t\tTrain Layer %d:\n", i);
          time_t tt = time(NULL);
           for (int j = 0; j < layer->layer_size; ++j)
           {
@@ -240,13 +253,14 @@ void minimise_loss(const struct neural_network *neural_network, char expected_ou
 
               free(tweaked_losses);
           }
-          printf("\t\t%ld\n", time(NULL) - tt);
      }
 }
 
-void export_neural_network(struct neural_network *neural_network)
+void export_neural_network(struct neural_network *neural_network, long double learning_rate, long double learning_rate_decay, long double success_rate, int nb_sessions)
 {
     FILE *file = fopen("exported_neural_network.nn", "w");
+
+    fprintf(file, "Learning Rate: %Lf\t| Learning Rate Decay: %Lf\t| Number of sessions : %d\t| Success Rate: %Lf%\n##########\n", learning_rate, learning_rate_decay, nb_sessions, success_rate * 100.0);
 
     fprintf(file, "%d ", neural_network->input_size);
 
@@ -269,7 +283,7 @@ void export_neural_network(struct neural_network *neural_network)
         {
             for (int k = 0; k < neural_network->layers[i]->layer_size; ++k)
             {
-                fprintf(file, "\t%Lf", neural_network->layers[i]->weights[j][k]);
+                fprintf(file, "\t%Lf", neural_network->layers[i]->weights[k][j]);
             }
              fprintf(file, "\n");
         }
