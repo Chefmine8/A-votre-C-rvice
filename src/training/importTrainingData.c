@@ -159,10 +159,10 @@ int main()
     load_dataset();
     int max_success = 0;
     for(long double learning_rate = 0.001; learning_rate < 1.0; learning_rate += 0.001){
-        for(long double batch_size = 1; batch_size < 100; batch_size++){
-            for(int layer_1 = 25; layer_1 < 100; layer_1++){
-                for(int layer_2 = 25; layer_2 < 100; layer_2++){
-                    for(int nb_sessions = 1; nb_sessions < 10000; nb_sessions++){
+        for(long double batch_size = 5; batch_size < 100; batch_size++){
+            for(int layer_1 = 40; layer_1 < 100; layer_1++){
+                for(int layer_2 = 40; layer_2 < 100; layer_2++){
+                    for(int nb_sessions = 100; nb_sessions < 1000; nb_sessions+= 100){
 
                         int arr[] = {28*28, layer_1, layer_2, 26};
                         struct neural_network *neural_network = create_neural_network(4, arr);
