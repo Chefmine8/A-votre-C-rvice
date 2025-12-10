@@ -71,5 +71,5 @@ int backprop_update(struct neural_network *neural_network, char expected_output,
 
 void minimise_loss(const struct neural_network *neural_network, char expected_output, long double learning_rate, long double epsilon);
 
-void export_neural_network(struct neural_network *neural_network, long double learning_rate, long double learning_rate_decay, long double success_rate, int nb_sessions);
+void export_neural_network(struct neural_network *neural_network, long double learning_rate, int batch_size, int nb_sessions, int success);
 #endif //A_VOTRE_C_RVICE_NEURAL_NETWORK_H

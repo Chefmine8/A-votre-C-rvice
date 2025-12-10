@@ -72,24 +72,20 @@ void neural_network_calculate_output(const struct neural_network *neural_network
  * @return The calculated loss
  */
 long double categorical_cross_entropy(const struct neural_network *neural_network, char expected_output) {
-     return - log((*neural_network->outputs)[expected_output - 'A']);
+     return - log((*neural_network->outputs)[expected_output - 'A'] + 1e-15);
 }
 
 
 char get_neural_network_output(const struct neural_network *neural_network) {
      long double max = (*neural_network->outputs)[0];
+    long double max_index = 0;
      for (int i = 1; i < neural_network->output_size; ++i) {
           if (max < (*neural_network->outputs)[i]) {
                max = (*neural_network->outputs)[i];
+               max_index = i;
           }
      }
-     for (int i = 0; i < neural_network->output_size; ++i) {
-          // printf("%Lf\n", (*neural_network->outputs)[i]);
-          if (max == (*neural_network->outputs)[i]) {
-               return i + 'A';
-          }
-     }
-     errx(EXIT_FAILURE, "wtf");
+    return 'A' + max_index;
 }
 
 
@@ -256,11 +252,11 @@ void minimise_loss(const struct neural_network *neural_network, char expected_ou
      }
 }
 
-void export_neural_network(struct neural_network *neural_network, long double learning_rate, long double learning_rate_decay, long double success_rate, int nb_sessions)
+void export_neural_network(struct neural_network *neural_network, long double learning_rate, int batch_size, int nb_sessions, int success)
 {
     FILE *file = fopen("exported_neural_network.nn", "w");
 
-    fprintf(file, "Learning Rate: %Lf\t| Learning Rate Decay: %Lf\t| Number of sessions : %d\t| Success Rate: %Lf%\n##########\n", learning_rate, learning_rate_decay, nb_sessions, success_rate * 100.0);
+    fprintf(file, "Learning Rate: %Lf\t| Batch Size: %d\t| Number of sessions : %d\t| Number of Success: %d\n##############################\n", learning_rate, batch_size, nb_sessions, success);
 
     fprintf(file, "%d ", neural_network->input_size);
 
@@ -268,7 +264,7 @@ void export_neural_network(struct neural_network *neural_network, long double le
     {
         fprintf(file, "%d ", neural_network->layers[i]->layer_size);
     }
-    fprintf(file, "\n##########\n");
+    fprintf(file, "\n##############################\n");
 
     for (int i = 0; i < neural_network->number_of_layers ; ++i)
     {
