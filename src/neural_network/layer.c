@@ -106,22 +106,27 @@ float ReLU_activation_function(float input)
  * @param layer The layer
  */
 
-float soft_max_activation_function_part1(float input)
+float soft_max_activation_function(float input)
 {
-    return exp(input);
+    // printf("softmax input:\t%f\t->\t%f\n", input, 1.0 / (1.0 + exp(-input)));
+    return 1.0 / (1.0 + exp(-input));
 }
-
+/*
 void soft_max_activation_function_part2(float **arr, int size, float sum) {
     for (int i = 0; i < size; i++) {
         (*arr)[i] = (*arr)[i] / sum;
-        if( isnanf((*arr)[i]) ){
+        if( isnanf((*arr)[i]) || isinff(sum) ) {
+            for(int j = 0; j < size; j++){
+                printf("%d:\t%f\n", j, (*arr)[j]);
+            }
             errx(EXIT_FAILURE, "softmax output is nan at index %d: sum=%f", i, sum);
         }
     }
 }
+*/
 
 
-void layer_calculate_output(const struct layer *layer)
+ layer_calculate_output(const struct layer *layer)
 {
     if (layer->prev_layer != NULL) {
         layer_calculate_output(layer->prev_layer);
@@ -133,23 +138,26 @@ void layer_calculate_output(const struct layer *layer)
         float output = 0;
         for (int j = 0; j < layer->prev_layer_size; j++)
         {
+
+
             output += (*(layer->inputs))[j] * layer->weights[i][j];
-            if(isnanf(output)){
+
+            if(isnanf(output) || isinff(output) ) {
                 errx(EXIT_FAILURE, "layer nb %d : output is nan at ((*layer->inputs)[%d]=%f) * (weight[%d][%d]=%f) = %f %f\n", layer->layer_size, i, (*(layer->inputs))[j], i, j, layer->weights[i][j], (*(layer->inputs))[i] < 0.00001 ? 0 : (*(layer->inputs))[i] * layer->weights[i][j], output);
             }
         }
 
-        layer->outputs[i] = layer->is_output_layer ? soft_max_activation_function_part1(output) : ReLU_activation_function(output);
-        if(isnanf(layer->outputs[i])){
+        layer->outputs[i] = layer->is_output_layer ? soft_max_activation_function(output) : ReLU_activation_function(output);
+        if(isnanf(layer->outputs[i]) || isinff(layer->outputs[i]) ) {
             errx(EXIT_FAILURE, "layer nb %d : layer->outputs[%d] layer->is_output_layer=%d output=%f", layer->layer_size, i, layer->is_output_layer, output);
         }
         sum += layer->outputs[i];
     }
-
+    /*
     if (layer->is_output_layer) {
         soft_max_activation_function_part2(&(layer->outputs), layer->layer_size, sum);
     }
-
+    */
 }
 
 
@@ -196,10 +204,10 @@ void print_values(const struct layer *layer) {
 
     printf("########################################\n");
     for (int i = 0; i < layer->layer_size; ++i) {
-        printf("output: %Lg\n", layer->outputs[i]);
-        printf("bias: %Lg\nweights{\n", layer->biases[i]);
+        printf("output: %f\n", layer->outputs[i]);
+        printf("bias: %f\nweights{\n", layer->biases[i]);
         for (int j = 0; j < layer->prev_layer_size; ++j) {
-            printf("%Lg,\n", layer->weights[i][j]);
+            printf("%f,\n", layer->weights[i][j]);
         }
         printf("}\n\n");
     }

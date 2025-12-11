@@ -167,18 +167,13 @@ int backprop_update(struct neural_network *neural_network, char expected_output,
     for (int li = 0; li < L; ++li) {
         struct layer *layer = neural_network->layers[li];
         float *input_arr = NULL;
-        if (layer->prev_layer != NULL) {
-            input_arr = layer->prev_layer->outputs;
-        } else {
-            // layer->inputs is float** pointing to neural_network->inputs
-            input_arr = *(layer->inputs);
-        }
+        input_arr = *(layer->inputs);
 
         for (int i = 0; i < layer->layer_size; ++i) {
             float delta = deltas[li][i];
             // bias update
             layer->biases[i] -= learning_rate * delta;
-            if (isnanf(layer->biases[i])) {
+            if (isnanf(layer->biases[i]) || layer->biases[i] > 1e15) {
                 for (int i = 0; i < L; ++i) free(deltas[i]);
                 free(deltas);
 
@@ -188,7 +183,7 @@ int backprop_update(struct neural_network *neural_network, char expected_output,
             for (int j = 0; j < layer->prev_layer_size; ++j) {
                 float grad = delta * input_arr[j];
                 layer->weights[i][j] -= learning_rate * grad;
-                if (isnanf(layer->weights[i][j])) {
+                if (isnanf(layer->weights[i][j]) ||layer->weights[i][j] > 1e15) {
                     for (int i = 0; i < L; ++i) free(deltas[i]);
                     free(deltas);
 
@@ -204,7 +199,7 @@ int backprop_update(struct neural_network *neural_network, char expected_output,
 
     return 0;
 }
-
+/*
 void minimise_loss(const struct neural_network *neural_network, char expected_output, float learning_rate, float epsilon)
 {
      for (int i = 0; i < neural_network->number_of_layers; ++i)
@@ -212,7 +207,6 @@ void minimise_loss(const struct neural_network *neural_network, char expected_ou
           struct layer *layer = neural_network->layers[i];
 
 
-         time_t tt = time(NULL);
           for (int j = 0; j < layer->layer_size; ++j)
           {
                float original_bias = layer->biases[j];
@@ -251,7 +245,7 @@ void minimise_loss(const struct neural_network *neural_network, char expected_ou
           }
      }
 }
-
+*/
 void export_neural_network(struct neural_network *neural_network, float learning_rate, int batch_size, int nb_sessions, int success)
 {
     FILE *file = fopen("exported_neural_network.nn", "w");

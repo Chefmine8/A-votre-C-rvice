@@ -8,6 +8,7 @@
 #include <time.h>
 #include "../neural_network/layer.h"
 #include "err.h"
+#include <setjmp.h>
 
 Image *** DATASET;
 
@@ -85,7 +86,6 @@ Image* get_image(char *expected_output)
 }
 
 int single_train_cession(const struct neural_network *neural_network, float learning_rate, int batch_size) {
-    printf("Training cession with learning_rate=%f, batch_size=%d\n", learning_rate, batch_size);
     int returned_value = 0;
     for(int b = 0; b < batch_size && returned_value == 0; b++) {
         char expected_output;
@@ -95,7 +95,6 @@ int single_train_cession(const struct neural_network *neural_network, float lear
 
         returned_value = backprop_update(neural_network, expected_output, learning_rate);
     }
-    printf("\t\tcession over\n");
     return returned_value;
 }
 
@@ -160,11 +159,11 @@ int main()
 {
     load_dataset();
     int max_success = 0;
-    for(float learning_rate = 0.001; learning_rate < 1.0; learning_rate += 0.001){
+    int nb_sessions = 1000;
         for(float batch_size = 5; batch_size < 100; batch_size++){
             for(int layer_1 = 40; layer_1 < 100; layer_1++){
                 for(int layer_2 = 40; layer_2 < 100; layer_2++){
-                    for(int nb_sessions = 100; nb_sessions < 1000; nb_sessions+= 100){
+                    for(float learning_rate = 0.001; learning_rate < 1.0; learning_rate += 0.001){
 
                         int arr[] = {28*28, layer_1, layer_2, 26};
                         struct neural_network *neural_network = create_neural_network(4, arr);
@@ -188,7 +187,6 @@ int main()
                 }
             }
         }
-    }
 
 
 
