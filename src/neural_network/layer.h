@@ -32,24 +32,24 @@ struct layer
     /**
      * pointer of inputs[prev_layer_size]
      */
-    long double **inputs;
+    float **inputs;
 
     /**
      * weights[layer_size][prev_layer_size]
      */
-    long double **weights;
+    float **weights;
 
 
     /**
      * biases[layer_size]
      */
-    long double *biases;
+    float *biases;
 
     /**
      * /!\ USE layer_calculate_output() BEFORE USING!
      *  output[layer_size]
      */
-    long double *outputs;
+    float *outputs;
 
     bool is_output_layer;
 };
@@ -82,7 +82,7 @@ void link_layer_output(struct layer *layer, const struct neural_network *neural_
  * @param input_size the size of inputs (for security)
  * @param inputs the array of size input_size that will contain the input of the neural network
  */
-void link_layer_input(struct layer *layer, int input_size, long double **inputs);
+void link_layer_input(struct layer *layer, int input_size, float **inputs);
 
 /**
  * Update the layer->outputs array, use before reading the values

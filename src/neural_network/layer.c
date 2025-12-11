@@ -18,7 +18,7 @@ struct layer *create_layer(const int prev_layer_size, const int layer_size)
 
     res->prev_layer = NULL;
 
-    res->outputs = malloc(layer_size * sizeof(long double));
+    res->outputs = malloc(layer_size * sizeof(float));
 
     if(res->outputs == NULL){
         errx(EXIT_FAILURE, "malloc failed");
@@ -33,27 +33,27 @@ struct layer *create_layer(const int prev_layer_size, const int layer_size)
 
     res->inputs = NULL;
 
-    res->weights = malloc(layer_size * sizeof(long double *));
+    res->weights = malloc(layer_size * sizeof(float *));
 
 
     for (int i = 0; i < layer_size; i++)
     {
-        res->weights[i] = malloc(prev_layer_size * sizeof(long double));
+        res->weights[i] = malloc(prev_layer_size * sizeof(float));
 
         if(res->weights[i] == NULL){
             errx(EXIT_FAILURE, "malloc failed");
         }
         for (int j = 0; j < prev_layer_size; j++)
         {
-            res->weights[i][j] = ((long double)rand() / (long double)RAND_MAX * 2.0 - 1.0);
+            res->weights[i][j] = ((float)rand() / (float)RAND_MAX * 2.0 - 1.0);
         }
     }
 
-    res->biases = malloc(layer_size * sizeof(long double));
+    res->biases = malloc(layer_size * sizeof(float));
 
     for (int i = 0; i < layer_size; i++)
     {
-        res->biases[i] =  (long double)rand() / (long double)RAND_MAX * 2 - 1;
+        res->biases[i] =  (float)rand() / (float)RAND_MAX * 2 - 1;
     }
 
     return res;
@@ -81,7 +81,7 @@ void link_layer_output(struct layer *layer, const struct neural_network *neural_
 }
 
 
-void link_layer_input(struct layer *layer, int input_size, long double **inputs)
+void link_layer_input(struct layer *layer, int input_size, float **inputs)
 {
     if (input_size != layer->prev_layer_size) {
         errx(EXIT_FAILURE, "prev_layer_size not the same size as the inputs");
@@ -95,7 +95,7 @@ void link_layer_input(struct layer *layer, int input_size, long double **inputs)
  * Activation function used inside the neural network
  * @param layer The layer.
  */
-long double ReLU_activation_function(long double input)
+float ReLU_activation_function(float input)
 {
     return input > 0 ? input : 0;
 }
@@ -106,16 +106,16 @@ long double ReLU_activation_function(long double input)
  * @param layer The layer
  */
 
-long double soft_max_activation_function_part1(long double input)
+float soft_max_activation_function_part1(float input)
 {
     return exp(input);
 }
 
-void soft_max_activation_function_part2(long double **arr, int size, long double sum) {
+void soft_max_activation_function_part2(float **arr, int size, float sum) {
     for (int i = 0; i < size; i++) {
         (*arr)[i] = (*arr)[i] / sum;
         if( isnanf((*arr)[i]) ){
-            errx(EXIT_FAILURE, "softmax output is nan at index %d: sum=%Lf", i, sum);
+            errx(EXIT_FAILURE, "softmax output is nan at index %d: sum=%f", i, sum);
         }
     }
 }
@@ -127,21 +127,21 @@ void layer_calculate_output(const struct layer *layer)
         layer_calculate_output(layer->prev_layer);
     }
 
-    long double sum = 0;
+    float sum = 0;
     for (int i = 0; i < layer->layer_size; i++)
     {
-        long double output = 0;
+        float output = 0;
         for (int j = 0; j < layer->prev_layer_size; j++)
         {
             output += (*(layer->inputs))[j] * layer->weights[i][j];
             if(isnanf(output)){
-                errx(EXIT_FAILURE, "layer nb %d : output is nan at ((*layer->inputs)[%d]=%Lf) * (weight[%d][%d]=%Lf) = %Lf %Lf\n", layer->layer_size, i, (*(layer->inputs))[j], i, j, layer->weights[i][j], (*(layer->inputs))[i] < 0.00001 ? 0 : (*(layer->inputs))[i] * layer->weights[i][j], output);
+                errx(EXIT_FAILURE, "layer nb %d : output is nan at ((*layer->inputs)[%d]=%f) * (weight[%d][%d]=%f) = %f %f\n", layer->layer_size, i, (*(layer->inputs))[j], i, j, layer->weights[i][j], (*(layer->inputs))[i] < 0.00001 ? 0 : (*(layer->inputs))[i] * layer->weights[i][j], output);
             }
         }
 
         layer->outputs[i] = layer->is_output_layer ? soft_max_activation_function_part1(output) : ReLU_activation_function(output);
         if(isnanf(layer->outputs[i])){
-            errx(EXIT_FAILURE, "layer nb %d : layer->outputs[%d] layer->is_output_layer=%d output=%Lf", layer->layer_size, i, layer->is_output_layer, output);
+            errx(EXIT_FAILURE, "layer nb %d : layer->outputs[%d] layer->is_output_layer=%d output=%f", layer->layer_size, i, layer->is_output_layer, output);
         }
         sum += layer->outputs[i];
     }

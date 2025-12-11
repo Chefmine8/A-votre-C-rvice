@@ -20,11 +20,11 @@ struct neural_network *create_neural_network(int size_of_arr, int arr[size_of_ar
 
      neural_network->number_of_layers = size_of_arr - 1;
 
-     neural_network->inputs = malloc(sizeof(long double) * arr[0]);
+     neural_network->inputs = malloc(sizeof(float) * arr[0]);
      neural_network->input_size = arr[0];
 
      neural_network->output_size = arr[size_of_arr - 1];
-     neural_network->outputs = malloc(sizeof(long double *));
+     neural_network->outputs = malloc(sizeof(float *));
 
      neural_network->layers = malloc(sizeof(struct layer *) * size_of_arr);
 
@@ -71,14 +71,14 @@ void neural_network_calculate_output(const struct neural_network *neural_network
  * @param expected_output The expected output
  * @return The calculated loss
  */
-long double categorical_cross_entropy(const struct neural_network *neural_network, char expected_output) {
+float categorical_cross_entropy(const struct neural_network *neural_network, char expected_output) {
      return - log((*neural_network->outputs)[expected_output - 'A'] + 1e-15);
 }
 
 
 char get_neural_network_output(const struct neural_network *neural_network) {
-     long double max = (*neural_network->outputs)[0];
-    long double max_index = 0;
+     float max = (*neural_network->outputs)[0];
+    float max_index = 0;
      for (int i = 1; i < neural_network->output_size; ++i) {
           if (max < (*neural_network->outputs)[i]) {
                max = (*neural_network->outputs)[i];
@@ -98,7 +98,7 @@ char get_neural_network_output(const struct neural_network *neural_network) {
 /* Replace minimise_loss or add this new function and call it instead.
  * Assumes layer->outputs, layer->weights, layer->biases, layer->inputs, layer->prev_layer_size are valid.
  */
-int backprop_update(struct neural_network *neural_network, char expected_output, long double learning_rate)
+int backprop_update(struct neural_network *neural_network, char expected_output, float learning_rate)
 {
     int L = neural_network->number_of_layers;
     if (L <= 0) return;
@@ -107,31 +107,31 @@ int backprop_update(struct neural_network *neural_network, char expected_output,
     neural_network_calculate_output(neural_network);
 
     // Allocate deltas per layer
-    long double **deltas = malloc(sizeof(long double*) * L);
+    float **deltas = malloc(sizeof(float*) * L);
     for (int i = 0; i < L; ++i) {
         int sz = neural_network->layers[i]->layer_size;
-        deltas[i] = calloc(sz, sizeof(long double));
+        deltas[i] = calloc(sz, sizeof(float));
     }
 
     // Output layer delta: softmax + cross-entropy => delta = y_pred - y_true
     int out_idx = expected_output - 'A';
     struct layer *out_layer = neural_network->layers[L - 1];
     for (int i = 0; i < out_layer->layer_size; ++i) {
-        long double y_pred = out_layer->outputs[i];
+        float y_pred = out_layer->outputs[i];
         if(isnanf(y_pred)) {
             for (int i = 0; i < L; ++i) free(deltas[i]);
             free(deltas);
 
             return -1;
-            // errx(EXIT_FAILURE, "Output prediction became nan : y_pred=%Lf\n", y_pred); // errx(EXIT_FAILURE,
+            // errx(EXIT_FAILURE, "Output prediction became nan : y_pred=%f\n", y_pred); // errx(EXIT_FAILURE,
         }
-        long double y_true = (i == out_idx) ? 1.0L : 0.0L;
+        float y_true = (i == out_idx) ? 1.0L : 0.0L;
         deltas[L - 1][i] = y_pred - y_true;
         if(isnanf(deltas[L - 1][i])) {
             for (int i = 0; i < L; ++i) free(deltas[i]);
             free(deltas);
 
-            return -1; //errx(EXIT_FAILURE, "Output delta became nan : y_pred=%Lf y_true=%Lf", y_pred, y_true);
+            return -1; //errx(EXIT_FAILURE, "Output delta became nan : y_pred=%f y_true=%f", y_pred, y_true);
         }
     }
 
@@ -140,7 +140,7 @@ int backprop_update(struct neural_network *neural_network, char expected_output,
         struct layer *cur = neural_network->layers[li];
         struct layer *next = neural_network->layers[li + 1];
         for (int i = 0; i < cur->layer_size; ++i) {
-            long double sum = 0.0L;
+            float sum = 0.0L;
             // sum over next layer neurons: next.weights[k][i] * delta_next[k]
             for (int k = 0; k < next->layer_size; ++k) {
                 sum += next->weights[k][i] * deltas[li + 1][k];
@@ -148,17 +148,17 @@ int backprop_update(struct neural_network *neural_network, char expected_output,
                     for (int i = 0; i < L; ++i) free(deltas[i]);
                     free(deltas);
 
-                    return -1; // errx(EXIT_FAILURE, "Sum became nan: next->weights[%d][%d]=%Lf deltas[%d][%d]=%Lf", k, i, next->weights[k][i], li + 1, k, deltas[li + 1][k]);
+                    return -1; // errx(EXIT_FAILURE, "Sum became nan: next->weights[%d][%d]=%f deltas[%d][%d]=%f", k, i, next->weights[k][i], li + 1, k, deltas[li + 1][k]);
                 }
             }
             // ReLU derivative: output > 0 => 1 else 0
-            long double deriv = cur->outputs[i] > 0.0L ? 1.0L : 0.0L;
+            float deriv = cur->outputs[i] > 0.0L ? 1.0L : 0.0L;
             deltas[li][i] = sum * deriv;
             if(isnanf(deltas[li][i])) {
                 for (int i = 0; i < L; ++i) free(deltas[i]);
                 free(deltas);
 
-                return -1; // errx(EXIT_FAILURE, "Delta became nan : sum=%Lf deriv=%Lf", sum, deriv);
+                return -1; // errx(EXIT_FAILURE, "Delta became nan : sum=%f deriv=%f", sum, deriv);
             }
         }
     }
@@ -166,33 +166,33 @@ int backprop_update(struct neural_network *neural_network, char expected_output,
     // Update weights and biases using gradients: grad_w = delta_i * input_j
     for (int li = 0; li < L; ++li) {
         struct layer *layer = neural_network->layers[li];
-        long double *input_arr = NULL;
+        float *input_arr = NULL;
         if (layer->prev_layer != NULL) {
             input_arr = layer->prev_layer->outputs;
         } else {
-            // layer->inputs is long double** pointing to neural_network->inputs
+            // layer->inputs is float** pointing to neural_network->inputs
             input_arr = *(layer->inputs);
         }
 
         for (int i = 0; i < layer->layer_size; ++i) {
-            long double delta = deltas[li][i];
+            float delta = deltas[li][i];
             // bias update
             layer->biases[i] -= learning_rate * delta;
             if (isnanf(layer->biases[i])) {
                 for (int i = 0; i < L; ++i) free(deltas[i]);
                 free(deltas);
 
-                return -1; //errx(EXIT_FAILURE, "Bias became nan : learning_rate=%Lf delta=%Lf", learning_rate, delta);
+                return -1; //errx(EXIT_FAILURE, "Bias became nan : learning_rate=%f delta=%f", learning_rate, delta);
             }
             // weight updates
             for (int j = 0; j < layer->prev_layer_size; ++j) {
-                long double grad = delta * input_arr[j];
+                float grad = delta * input_arr[j];
                 layer->weights[i][j] -= learning_rate * grad;
                 if (isnanf(layer->weights[i][j])) {
                     for (int i = 0; i < L; ++i) free(deltas[i]);
                     free(deltas);
 
-                    return -1; //errx(EXIT_FAILURE, "Weight became nan : learning_rate=%Lf grad=%Lf", learning_rate, grad);
+                    return -1; //errx(EXIT_FAILURE, "Weight became nan : learning_rate=%f grad=%f", learning_rate, grad);
                 }
             }
         }
@@ -205,7 +205,7 @@ int backprop_update(struct neural_network *neural_network, char expected_output,
     return 0;
 }
 
-void minimise_loss(const struct neural_network *neural_network, char expected_output, long double learning_rate, long double epsilon)
+void minimise_loss(const struct neural_network *neural_network, char expected_output, float learning_rate, float epsilon)
 {
      for (int i = 0; i < neural_network->number_of_layers; ++i)
      {
@@ -215,9 +215,9 @@ void minimise_loss(const struct neural_network *neural_network, char expected_ou
          time_t tt = time(NULL);
           for (int j = 0; j < layer->layer_size; ++j)
           {
-               long double original_bias = layer->biases[j];
-               long double original_loss = categorical_cross_entropy(neural_network, expected_output);
-               long double *tweaked_losses = malloc(sizeof(long double) * layer->prev_layer_size);
+               float original_bias = layer->biases[j];
+               float original_loss = categorical_cross_entropy(neural_network, expected_output);
+               float *tweaked_losses = malloc(sizeof(float) * layer->prev_layer_size);
 
 
 
@@ -238,7 +238,7 @@ void minimise_loss(const struct neural_network *neural_network, char expected_ou
 
               layer->biases[j] += epsilon;
               neural_network_calculate_output(neural_network);
-              long double tweaked_loss = categorical_cross_entropy(neural_network, expected_output);
+              float tweaked_loss = categorical_cross_entropy(neural_network, expected_output);
 
               layer->biases[j] = (layer->biases[j] - epsilon) - learning_rate * ( tweaked_loss + (layer->biases[j] - epsilon) )/epsilon;
 
@@ -252,11 +252,11 @@ void minimise_loss(const struct neural_network *neural_network, char expected_ou
      }
 }
 
-void export_neural_network(struct neural_network *neural_network, long double learning_rate, int batch_size, int nb_sessions, int success)
+void export_neural_network(struct neural_network *neural_network, float learning_rate, int batch_size, int nb_sessions, int success)
 {
     FILE *file = fopen("exported_neural_network.nn", "w");
 
-    fprintf(file, "Learning Rate: %Lf\t| Batch Size: %d\t| Number of sessions : %d\t| Number of Success: %d\n##############################\n", learning_rate, batch_size, nb_sessions, success);
+    fprintf(file, "Learning Rate: %f\t| Batch Size: %d\t| Number of sessions : %d\t| Number of Success: %d\n##############################\n", learning_rate, batch_size, nb_sessions, success);
 
     fprintf(file, "%d ", neural_network->input_size);
 
@@ -271,7 +271,7 @@ void export_neural_network(struct neural_network *neural_network, long double le
          fprintf(file, "Bias:\n");
          for (int j = 0; j < neural_network->layers[i]->layer_size; ++j)
          {
-            fprintf(file, "\t%Lf", neural_network->layers[i]->biases[j]);
+            fprintf(file, "\t%f", neural_network->layers[i]->biases[j]);
          }
 
         fprintf(file, "\nWeights:\n");
@@ -279,7 +279,7 @@ void export_neural_network(struct neural_network *neural_network, long double le
         {
             for (int k = 0; k < neural_network->layers[i]->layer_size; ++k)
             {
-                fprintf(file, "\t%Lf", neural_network->layers[i]->weights[k][j]);
+                fprintf(file, "\t%f", neural_network->layers[i]->weights[k][j]);
             }
              fprintf(file, "\n");
         }
