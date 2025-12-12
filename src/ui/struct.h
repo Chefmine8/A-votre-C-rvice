@@ -14,6 +14,11 @@
 #include <stdio.h>
 
 
+int create_directory_if_not_exists(const char *path);
+int remove_directory(const char *path);
+void restart_clicked(GtkButton *button, gpointer user_data);
+void manual_rotation_clicked(GtkButton *button, gpointer user_data);
+
 typedef struct {
     GtkWidget *window;
     Image *image;

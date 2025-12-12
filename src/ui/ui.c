@@ -76,14 +76,15 @@ void get_scaled_size(int orig_width, int orig_height, int max_width, int max_hei
     }
 }
 
-void rotate_image(GtkWidget *window, GtkEntry *entry) {
+void rotate_image(GtkWidget *window, GtkEntry *entry, double manual_angle)
+{
     const gchar *text_tmp = gtk_entry_get_text(entry);
     if (!text_tmp || *text_tmp == '\0') {
         g_print("No file path provided.\n");
         return;
     }
     gchar *text = g_strdup(text_tmp);
-
+    g_object_set_data_full(G_OBJECT(window), "current-filename", g_strdup(text), g_free);
 
     /* Blank screen */
     GList *children = gtk_container_get_children(GTK_CONTAINER(window));
@@ -108,10 +109,19 @@ void rotate_image(GtkWidget *window, GtkEntry *entry) {
     free_image(img);
     img = tmp;
 
-    double angle = get_auto_rotation_angle(img);
-    Image *rotated = manual_rotate_image(img, -angle);
-    free_image(img);
-    img = rotated;
+    if (manual_angle != 0.0)
+    {
+        Image *rotated = manual_rotate_image(img, -manual_angle);
+        free_image(img);
+        img = rotated;
+    }
+    else
+    {
+        double angle = get_auto_rotation_angle(img);
+        Image *rotated = manual_rotate_image(img, -angle);
+        free_image(img);
+        img = rotated;
+    }
 
     Shape **shapes = get_all_shape(img);
 
@@ -394,8 +404,23 @@ void rotate_image(GtkWidget *window, GtkEntry *entry) {
     gtk_box_pack_start(GTK_BOX(hbox), image_original, TRUE, TRUE, 0);
     gtk_box_pack_start(GTK_BOX(hbox), image_rotated, TRUE, TRUE, 0);
 
+    /* Bouton recommencer */
+    GtkWidget *restart_button = gtk_button_new_with_label("Recommencer");
+    g_signal_connect(restart_button, "clicked", G_CALLBACK(restart_clicked), window);
+
+    /* Bouton rotation manuelle */
+    GtkWidget *manual_button = gtk_button_new_with_label("Rotation Manuelle");
+    g_signal_connect(manual_button, "clicked", G_CALLBACK(manual_rotation_clicked), window);
+
+    GtkWidget *vbox_display = gtk_box_new(GTK_ORIENTATION_VERTICAL, 6);
+    gtk_box_pack_start(GTK_BOX(vbox_display), hbox, TRUE, TRUE, 0);
+    gtk_box_pack_start(GTK_BOX(vbox_display), restart_button, FALSE, FALSE, 0);
+    gtk_box_pack_start(GTK_BOX(vbox_display), manual_button, FALSE, FALSE, 0);
+
+
     gtk_window_set_default_size(GTK_WINDOW(window), 850, 450);
-    gtk_container_add(GTK_CONTAINER(window), hbox);
+
+    gtk_container_add(GTK_CONTAINER(window), vbox_display);
     gtk_widget_show_all(window);
 
     g_free(text);
@@ -405,12 +430,86 @@ void rotate_image(GtkWidget *window, GtkEntry *entry) {
     SDL_Quit();
 }
 
+void restart_clicked(GtkButton *button, gpointer user_data) {
+    GtkWidget *window = GTK_WIDGET(user_data);
+
+    GtkWidget *dialog = gtk_file_chooser_dialog_new(
+        "Choisir une image",
+        GTK_WINDOW(window),
+        GTK_FILE_CHOOSER_ACTION_OPEN,
+        "_Annuler", GTK_RESPONSE_CANCEL,
+        "_Ouvrir", GTK_RESPONSE_ACCEPT,
+        NULL
+    );
+
+    GtkFileFilter *filter = gtk_file_filter_new();
+    gtk_file_filter_add_pixbuf_formats(filter);
+    gtk_file_filter_set_name(filter, "Images");
+    gtk_file_chooser_add_filter(GTK_FILE_CHOOSER(dialog), filter);
+
+    if (gtk_dialog_run(GTK_DIALOG(dialog)) == GTK_RESPONSE_ACCEPT) {
+        char *filename = gtk_file_chooser_get_filename(GTK_FILE_CHOOSER(dialog));
+
+        GtkEntry *tmp_entry = GTK_ENTRY(gtk_entry_new());
+        gtk_entry_set_text(tmp_entry, filename);
+
+        rotate_image(window, tmp_entry, 0.0);
+
+        gtk_widget_destroy(GTK_WIDGET(tmp_entry));
+        g_free(filename);
+    }
+
+    gtk_widget_destroy(dialog);
+}
+
+void manual_rotation_clicked(GtkButton *button, gpointer user_data)
+{
+    // popup to enter angle
+    GtkWidget *window = GTK_WIDGET(user_data);
+    const char *cur_filename = (const char *)g_object_get_data(G_OBJECT(window), "current-filename");
+    if (!cur_filename)
+    {
+        g_print("Aucun fichier courant enregistré pour la rotation manuelle.\n");
+        return;
+    }
+    GtkWidget *dialog = gtk_dialog_new_with_buttons(
+            "Rotation Manuelle",
+            GTK_WINDOW(window),
+            GTK_DIALOG_MODAL,
+            "_Annuler", GTK_RESPONSE_CANCEL,
+            "_Valider", GTK_RESPONSE_ACCEPT,
+            NULL
+    );
+    GtkWidget *content_area = gtk_dialog_get_content_area(GTK_DIALOG(dialog));
+    GtkWidget *label = gtk_label_new("Entrez l'angle de rotation (en degrés) :");
+    gtk_container_add(GTK_CONTAINER(content_area), label);
+    GtkWidget *angle_entry = gtk_entry_new();
+    gtk_container_add(GTK_CONTAINER(content_area), angle_entry);
+    gtk_widget_show_all(dialog);
+
+    if (gtk_dialog_run(GTK_DIALOG(dialog)) == GTK_RESPONSE_ACCEPT)
+    {
+        const gchar *angle_text = gtk_entry_get_text(GTK_ENTRY(angle_entry));
+        double angle = atof(angle_text);
+
+        GtkEntry *tmp_entry = GTK_ENTRY(gtk_entry_new());
+        gtk_entry_set_text(tmp_entry, cur_filename);
+
+        rotate_image(window, tmp_entry, angle);
+
+        gtk_widget_destroy(GTK_WIDGET(tmp_entry));
+    }
+
+    gtk_widget_destroy(dialog);
+
+}
+
 void validate_path(GtkButton *button, gpointer user_data) {
     GtkEntry *entry = GTK_ENTRY(user_data);
 
     GtkWidget *window = gtk_widget_get_toplevel(GTK_WIDGET(button));
 
-    rotate_image(window, entry);
+    rotate_image(window, entry, 0.0);
 }
 
 /* path  */
