@@ -59,6 +59,6 @@ Image *resize_image(const Image *src, int width, int height,
  * @param input Pointer to a pre-allocated array of long doubles with at least
  * 784 elements (28*28)
  */
-void get_nn_input(const Image *img, long double *input);
+void get_nn_input(const Image *img, float *input);
 
 void cleanup_hidden_renderer_scale(void);

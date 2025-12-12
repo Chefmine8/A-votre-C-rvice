@@ -96,7 +96,7 @@ Image *resize_image(const Image *src, const int width, const int height,
     return manual_image_scaling(src, scale_x, scale_y);
 }
 
-void get_nn_input(const Image *img, long double *input)
+void get_nn_input(const Image *img, float *input)
 {
     if (!input)
     {
