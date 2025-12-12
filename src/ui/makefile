@@ -8,7 +8,7 @@ SRC = ui.c \
       ../core/image.c \
       ../pre_process/grayscale.c \
       ../pre_process/grid/grid_detection.c \
-      ../pre_process/rotation.c \
+      ../pre_process/rotation/rotation.c \
       ../pre_process/scale.c \
 	  ../pre_process/utils/shapes.c
 

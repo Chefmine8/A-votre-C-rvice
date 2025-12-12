@@ -1,5 +1,80 @@
 #include "struct.h"
+int create_directory_if_not_exists(const char *path)
+{
+    struct stat st = {0};
 
+    if (stat(path, &st) == -1) {
+        if (mkdir(path, 0700) != 0) {
+            perror("mkdir");
+            return 0;
+        }
+    }
+    return 1;
+}
+
+int remove_directory(const char *path) {
+    DIR *d = opendir(path);
+    size_t path_len = strlen(path);
+    int r = -1;
+
+    if (d) {
+        struct dirent *p;
+
+        r = 0;
+        while (!r && (p=readdir(d))) {
+            int r2 = -1;
+            char *buf;
+            size_t len;
+
+            /* Skip the names "." and ".." as we don't want to recurse on them. */
+            if (!strcmp(p->d_name, ".") || !strcmp(p->d_name, ".."))
+                continue;
+
+            len = path_len + strlen(p->d_name) + 2;
+            buf = malloc(len);
+
+            if (buf) {
+                struct stat statbuf;
+
+                snprintf(buf, len, "%s/%s", path, p->d_name);
+                if (!stat(buf, &statbuf)) {
+                    if (S_ISDIR(statbuf.st_mode))
+                        r2 = remove_directory(buf);
+                    else
+                        r2 = unlink(buf);
+                }
+                free(buf);
+            }
+            r = r2;
+        }
+        closedir(d);
+    }
+
+    if (!r)
+        r = rmdir(path);
+
+    return r;
+}
+
+void get_scaled_size(int orig_width, int orig_height, int max_width, int max_height, int *new_width, int *new_height) {
+    double ratio = (double)orig_width / (double)orig_height;
+
+    if (orig_width > orig_height) {
+        *new_width = max_width;
+        *new_height = (int)(max_width / ratio);
+        if (*new_height > max_height) {
+            *new_height = max_height;
+            *new_width = (int)(max_height * ratio);
+        }
+    } else {
+        *new_height = max_height;
+        *new_width = (int)(max_height * ratio);
+        if (*new_width > max_width) {
+            *new_width = max_width;
+            *new_height = (int)(max_width / ratio);
+        }
+    }
+}
 
 void rotate_image(GtkWidget *window, GtkEntry *entry) {
     const gchar *text_tmp = gtk_entry_get_text(entry);
@@ -23,29 +98,311 @@ void rotate_image(GtkWidget *window, GtkEntry *entry) {
 
     Image *img = load_image(text);
 
-    Image *scale = resize_image(img, 430, 430, true);
+    Image *original = load_image(text);
+    //Image *scale = resize_image(img, 430, 430, true);
+    //free_image(img);
+
+    grayscale_image(img);
+
+    Image *tmp = sauvola(img, 12, 128, 0.07);
     free_image(img);
+    img = tmp;
 
-    export_image(image_to_sdl_surface(scale), "rotate_tmp.png");
+    double angle = get_auto_rotation_angle(img);
+    Image *rotated = manual_rotate_image(img, -angle);
+    free_image(img);
+    img = rotated;
 
-    GdkPixbuf* pixbuf = gdk_pixbuf_new_from_file("rotate_tmp.png", NULL);
-    GtkWidget* image = gtk_image_new_from_pixbuf(pixbuf);
+    Shape **shapes = get_all_shape(img);
+
+    remove_small_shape(img, shapes, 8);
+    remove_outliers_shape(img, shapes, 25, 75, 2.5, 3);
+    remove_aspect_ration(img, shapes, 0.1, 5);
+
+    Image* before = copy_image(img);
+    // for each pixel in before
+    for (int y = 0; y < before->height; y++)
+    {
+        for (int x = 0; x < before->width; x++)
+        {
+            get_pixel(before, x, y)->isInShape = 0;
+            get_pixel(before, x, y)->shape_ptr = NULL;
+        }
+    }
+    /* Transform to circle image for better hough transform */
+    Image *circle = circle_image(img, shapes, 0.25);
+    //free_image(img);
+    int theta_range, rho_max;
+    int **hs = hough_space(circle, &theta_range, &rho_max);
+    // filter the hough space the only peak important lines
+    hough_space_filter(hs, theta_range, rho_max, 0.495);
+
+    // remove lines that are not 90 or 180 or 0 degrees
+    // also remove lines that are too close to each other
+    filter_line(hs, theta_range, rho_max, 15 ,20);
+
+    // sort all lines to have horizontal and vertical lines
+    int **h_lines = horizontal_lines(hs, theta_range, rho_max, 5);
+    int **v_lines = vertical_lines(hs, theta_range, rho_max, 5);
+
+    // filter horizontal and vertical lines independently
+    // this will only keep the lines that form the biggest set with regular gaps
+    filter_gaps(h_lines, theta_range, rho_max);
+    filter_gaps(v_lines, theta_range, rho_max);
+
+    int x_start, y_start, x_end, y_end;
+    get_bounding_box(v_lines, h_lines, theta_range, rho_max, &x_start, &x_end, &y_start, &y_end);
+
+    // free memory
+    free_hough(h_lines, theta_range);
+    free_hough(v_lines, theta_range);
+    free_hough(hs, theta_range);
+
+    clean_shapes(shapes);
+    free_image(circle);
+
+    double mean_shape_width = 0.0, mean_shape_height = 0.0;
+    int shape_count = 0;
+    for (int j = 0; shapes[j] != NULL; j++)
+    {
+        shape_count++;
+        mean_shape_width += shape_width(shapes[j]);
+        mean_shape_height += shape_height(shapes[j]);
+    }
+    mean_shape_width /= shape_count;
+    mean_shape_height /= shape_count;
+
+
+    int offset_x = ceil(mean_shape_width *1.6);
+    int offset_y = ceil(mean_shape_height *1.2);
+    x_start = x_start - offset_x < 0 ? 0 : x_start - offset_x;
+    y_start = y_start - offset_y < 0 ? 0 : y_start - offset_y;
+    x_end = x_end + offset_x >= img->width ? img->width - 1 : x_end + offset_x;
+    y_end = y_end + offset_y >= img->height ? img->height - 1 : y_end + offset_y;
+
+    // if x_start is in first 5% of image width, set to 0 ans same for x_end
+    if (x_start < img->width * 0.1 && x_end > img->width * 0.90)
+    {
+        x_start = offset_x;
+        x_end = img->width - offset_x;
+    }
+
+    draw_line(img, x_start - 1 < 0 ? 0 : x_start - 1, y_start - 1 < 0 ? 0 : y_start - 1, x_end + 1 >= img->width ? img->width - 1 : x_end + 1, y_start - 1 < 0 ? 0 : y_start - 1, 0, 255, 0);
+    draw_line(img, x_start - 1 < 0 ? 0 : x_start - 1, y_end + 1 >= img->height ? img->height - 1 : y_end + 1, x_end + 1 >= img->width ? img->width - 1 : x_end + 1, y_end + 1 >= img->height ? img->height - 1 : y_end + 1, 0, 255, 0);
+    draw_line(img, x_start - 1 < 0 ? 0 : x_start - 1, y_start - 1 < 0 ? 0 : y_start - 1, x_start - 1 < 0 ? 0 : x_start - 1, y_end + 1 >= img->height ? img->height - 1 : y_end + 1, 0, 255, 0);
+    draw_line(img, x_end + 1 >= img->width ? img->width - 1 : x_end + 1, y_start - 1 < 0 ? 0 : y_start - 1, x_end + 1 >= img->width ? img->width - 1 : x_end + 1, y_end + 1 >= img->height ? img->height - 1 : y_end + 1, 0, 255, 0);
+
+    /* Extract sub-image of the grid */
+    Image *sub_img = extract_sub_image(before, x_start, y_start, x_end, y_end);
+
+    Shape *sub_shape = create_shape();
+    for (int y = y_start - 30 < 0 ? 0 : y_start - 30; y <= (y_end + 30 >= before->height ? before->height -1 : y_end + 30); y++)
+    {
+        for (int x = x_start - 30 < 0 ? 0 : x_start - 30; x <= (x_end + 30 >= before->width ? before->width -1 : x_end + 30); x++)
+        {
+            shape_add_pixel(sub_shape, get_pixel(before, x, y));
+        }
+    }
+    // remove grid shape from before image
+    image_remove_shape(before, sub_shape);
+    free_shape(sub_shape);
+
+    Shape ** before_shapes = get_all_shape(before);
+    remove_small_shape(before, before_shapes, 20);
+    remove_aspect_ration(before, before_shapes, 0.1, 6);
+
+
+    filter_by_density_v(before,before_shapes, 1);
+    clean_shapes(before_shapes);
+
+    Shape ***words = get_all_world(before_shapes);
+    // for each word, channge pixel color to random color (letters in the same word have the same color)
+
+    //if word is to long (> 15 letters) remove it from the list
+    int valid_word_count = 0;
+    for (int w = 0; words[w] != NULL; w++)
+    {
+        Shape **word = words[w];
+        int letter_count = 0;
+        for (int l = 0; word[l] != NULL; l++)
+        {
+            letter_count++;
+        }
+        if (letter_count <= 15)
+        {
+            words[valid_word_count] = words[w];
+            valid_word_count++;
+        }
+        else
+        {
+            free(word);
+        }
+    }
+    words[valid_word_count] = NULL;  // Null-terminate properly
+
+    remove_directory("./output/");
+    //create dir output if not exists
+    create_directory_if_not_exists("./output");
+    create_directory_if_not_exists("./output/word_list");
+    //export each letter from each word
+    for (int w = 0; words[w] != NULL; w++)
+    {
+        Shape **word = words[w];
+        for (int l = 0; word[l] != NULL; l++)
+        {
+            Shape *letter = word[l];
+            char letter_filename[256];
+            snprintf(letter_filename, sizeof(letter_filename), "./output/word_list/word_%d_letter_%d.png", w + 1, l + 1);
+            int start_x = letter->min_x;
+            int start_y = letter->min_y;
+            int end_x = letter->max_x;
+            int end_y = letter->max_y;
+            Image *letter_img = extract_sub_image(before, start_x, start_y, end_x, end_y);
+            SDL_Surface *letter_surf = image_to_sdl_surface(letter_img);
+            export_image(letter_surf, letter_filename);
+            SDL_FreeSurface(letter_surf);
+            free_image(letter_img);
+        }
+    }
+
+    for (int w = 0; words[w] != NULL; w++)
+    {
+        free(words[w]);
+    }
+    free(words);
+    free_image(before);
+
+    for (int j = 0; before_shapes[j] != NULL; j++)
+    {
+        free_shape(before_shapes[j]);
+    }
+    free(before_shapes);
+
+    /* Manual scaling of sub-image to have better processing later */
+    if (sub_img->height > 500)
+    {
+        int height_objective = (int)(sub_img->height * 0.8);
+        float scale_x = (float)height_objective / (float)(sub_img->height);
+        Image *scale = manual_image_scaling(sub_img, scale_x, scale_x);
+        free_image(sub_img);
+        sub_img = scale;
+    }
+    else
+    {
+        int height_objective = (int)(sub_img->height * 1.3);
+        float scale_x = (float)height_objective / (float)(sub_img->height);
+        Image *scale = manual_image_scaling(sub_img, scale_x, scale_x);
+        free_image(sub_img);
+        sub_img = scale;
+    }
+
+    Shape **sub_shapes = get_all_shape(sub_img);
+
+    remove_small_shape(sub_img,sub_shapes , 15);
+    remove_outliers_shape(sub_img,sub_shapes , 25,75,2.5,3);
+    remove_aspect_ration(sub_img,sub_shapes , 0.1, 2);
+
+    clean_shapes(sub_shapes);
+
+    merge_shapes(sub_shapes, 3);
+
+    filter_by_density(sub_img,sub_shapes, 5);
+    clean_shapes(sub_shapes);
+
+    int rows, cols;
+    detect_grid_size(sub_shapes, &rows, &cols);
+    //printf("Detected grid size: %d rows x %d cols\n", rows, cols);
+
+    int min = rows < cols ? rows : cols;
+    filter_by_density(sub_img, sub_shapes, (int)(min * 0.9));
+    clean_shapes(sub_shapes);
+
+    detect_grid_size(sub_shapes, &rows, &cols);
+    //printf("After filtering, grid size: %d rows x %d cols\n", rows, cols);
+
+
+    //cretate dir output/{nom_du_fichier}_{nbr_ligne}_{nbr_colonnes} if not exists
+    create_directory_if_not_exists("./output");
+    char filename[256];
+    snprintf(filename, sizeof(filename), "./output/%d_%d",rows, cols);
+    create_directory_if_not_exists(filename);
+    Image *** cell_images = get_grid_cells(sub_img,sub_shapes, rows, cols);
+    //export each cell image with name cell_x_y.bmp
+    for (int r = 0; r < rows; r++)
+    {
+        for (int c = 0; c < cols; c++)
+        {
+            if (cell_images[r][c] == NULL)
+                continue;
+            char cell_filename[256];
+            snprintf(cell_filename, sizeof(cell_filename), "./output/%d_%d/cell_%d_%d.png",rows, cols, c + 1, r + 1);
+            SDL_Surface *cell_surf = image_to_sdl_surface(cell_images[r][c]);
+            export_image(cell_surf, cell_filename);
+            SDL_FreeSurface(cell_surf);
+            free_image(cell_images[r][c]);
+        }
+        free(cell_images[r]);
+    }
+    free(cell_images);
+
+    for (int j = 0; sub_shapes[j] != NULL; j++)
+    {
+        free_shape(sub_shapes[j]);
+    }
+    free(sub_shapes);
+
+    free_image(sub_img);
+
+    for (int j = 0; shapes[j] != NULL; j++)
+    {
+        free_shape(shapes[j]);
+    }
+    free(shapes);
+
+    export_image(image_to_sdl_surface(img), "rotate_tmp.png");
+
+
+    /* Create GtkImages */
+    int display_width = 400;
+    int display_height = 400;
+
+    GdkPixbuf* pixbuf_original = gdk_pixbuf_new_from_file(text, NULL);
+    int new_width, new_height;
+    get_scaled_size(gdk_pixbuf_get_width(pixbuf_original), gdk_pixbuf_get_height(pixbuf_original),
+                    400, 400, &new_width, &new_height);
+    GdkPixbuf* pixbuf_scaled_original = gdk_pixbuf_scale_simple(
+        pixbuf_original, new_width, new_height, GDK_INTERP_BILINEAR);
+    GtkWidget* image_original = gtk_image_new_from_pixbuf(pixbuf_scaled_original);
+    g_object_unref(pixbuf_original);
+    g_object_unref(pixbuf_scaled_original);
+
+    GdkPixbuf* pixbuf_rotated = gdk_pixbuf_new_from_file("rotate_tmp.png", NULL);
+    get_scaled_size(gdk_pixbuf_get_width(pixbuf_rotated), gdk_pixbuf_get_height(pixbuf_rotated),
+                    400, 400, &new_width, &new_height);
+    GdkPixbuf* pixbuf_scaled_rotated = gdk_pixbuf_scale_simple(
+        pixbuf_rotated, new_width, new_height, GDK_INTERP_BILINEAR);
+    GtkWidget* image_rotated = gtk_image_new_from_pixbuf(pixbuf_scaled_rotated);
+    g_object_unref(pixbuf_rotated);
+    g_object_unref(pixbuf_scaled_rotated);
 
     remove("rotate_tmp.png");
+    free_image(img);
+    free_image(original);
 
-    grayscale_image(scale);
+    /* Horizontal box to hold both images */
+    GtkWidget *hbox = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 5);
+    gtk_box_pack_start(GTK_BOX(hbox), image_original, TRUE, TRUE, 0);
+    gtk_box_pack_start(GTK_BOX(hbox), image_rotated, TRUE, TRUE, 0);
 
-    sauvola(scale, 12, 128, 0.07);
-
-    Shape **shapes = get_all_shape(scale);
-
-    remove_small_shape(scale, shapes, 8);
-    remove_outliers_shape(scale, shapes, 25, 75, 2.5, 3);
-    remove_aspect_ration(scale, shapes, 0.1, 5);
-    
-    gtk_window_set_default_size(GTK_WINDOW(window), 450, 450);
-    gtk_container_add(GTK_CONTAINER(window), image);
+    gtk_window_set_default_size(GTK_WINDOW(window), 850, 450);
+    gtk_container_add(GTK_CONTAINER(window), hbox);
     gtk_widget_show_all(window);
+
+    g_free(text);
+    cleanup_hidden_renderer_scale();
+    cleanup_hidden_renderer();
+    IMG_Quit();
+    SDL_Quit();
 }
 
 void validate_path(GtkButton *button, gpointer user_data) {
