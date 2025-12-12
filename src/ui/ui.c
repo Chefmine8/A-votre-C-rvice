@@ -1,4 +1,6 @@
 #include "struct.h"
+
+
 int create_directory_if_not_exists(const char *path)
 {
     struct stat st = {0};
@@ -334,7 +336,7 @@ void rotate_image(GtkWidget *window, GtkEntry *entry, double manual_angle)
     //cretate dir output/{nom_du_fichier}_{nbr_ligne}_{nbr_colonnes} if not exists
     create_directory_if_not_exists("./output");
     char filename[256];
-    snprintf(filename, sizeof(filename), "./output/%d_%d",rows, cols);
+    snprintf(filename, sizeof(filename), "./output/img_%d_%d",rows, cols);
     create_directory_if_not_exists(filename);
     Image *** cell_images = get_grid_cells(sub_img,sub_shapes, rows, cols);
     //export each cell image with name cell_x_y.bmp
