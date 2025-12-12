@@ -482,8 +482,24 @@ void get_bounding_box(int **vertical_lines, int** horizontal_lines,  int theta_r
         }
     }
 
+    //check if no lines detected
+    if (h_count ==0 || v_count ==0)
+    {
+        printf("No lines detected for bounding box calculation\n");
+        return;
+        exit(EXIT_FAILURE);
+    }
+
     int *list_rho_h = malloc(h_count * sizeof(int));
+    if (list_rho_h == NULL) {
+        printf("Memory allocation failed\n");
+        exit(EXIT_FAILURE);
+    }
     int *list_rho_v = malloc(v_count * sizeof(int));
+    if (list_rho_v == NULL) {
+            printf("Memory allocation failed\n");
+            exit(EXIT_FAILURE);
+    }
     int i_h = 0, i_v = 0;
     for (int theta = 0; theta < theta_range; theta++) {
         for (int rho = 0; rho < 2 * rho_max; rho++) {
@@ -560,6 +576,99 @@ void filter_by_density(Image *img,Shape **shapes, int min_neighbors)
         }
 
         if(h_count < min_neighbors || v_count < min_neighbors)
+        {
+            s->has_been_removed = 1;
+            image_remove_shape(img, s);
+        }
+    }
+
+    // cleanup
+    clean_shapes(shapes);
+}
+
+
+void filter_by_density_h(Image *img,Shape **shapes, int min_neighbors)
+{
+    if (shapes == NULL)
+        return;
+
+    int count = 0;
+    while (shapes[count] != NULL)
+        count++;
+
+    for (int i = 0; i < count; i++)
+    {
+        Shape *s = shapes[i];
+        if (s->has_been_removed != 0)
+            continue;
+
+        int h_count = 0;
+
+        int x_min = s->min_x;
+        int x_max = s->max_x;
+
+        for (int j = 0; j < count; j++)
+        {
+            if (i == j)
+                continue;
+            Shape *other = shapes[j];
+            if (other->has_been_removed != 0)
+                continue;
+
+            int other_x_min = other->min_x;
+            int other_x_max = other->max_x;
+
+            if (!(other_x_max < x_min || other_x_min > x_max))
+                h_count++;
+        }
+
+        if(h_count < min_neighbors)
+        {
+            s->has_been_removed = 1;
+            image_remove_shape(img, s);
+        }
+    }
+
+    // cleanup
+    clean_shapes(shapes);
+}
+
+void filter_by_density_v(Image *img,Shape **shapes, int min_neighbors)
+{
+    if (shapes == NULL)
+        return;
+
+    int count = 0;
+    while (shapes[count] != NULL)
+        count++;
+
+    for (int i = 0; i < count; i++)
+    {
+        Shape *s = shapes[i];
+        if (s->has_been_removed != 0)
+            continue;
+
+        int v_count = 0;
+
+        int y_min = s->min_y;
+        int y_max = s->max_y;
+
+        for (int j = 0; j < count; j++)
+        {
+            if (i == j)
+                continue;
+            Shape *other = shapes[j];
+            if (other->has_been_removed != 0)
+                continue;
+
+            int other_y_min = other->min_y;
+            int other_y_max = other->max_y;
+
+            if (!(other_y_max < y_min || other_y_min > y_max))
+                v_count++;
+        }
+
+        if(v_count < min_neighbors)
         {
             s->has_been_removed = 1;
             image_remove_shape(img, s);
@@ -756,4 +865,197 @@ Image ***get_grid_cells(Image *img, Shape **shapes, int rows, int cols)
     free(assigned);
 
     return grid;
+}
+Shape ***get_all_world(Shape **shapes)
+{
+    if (shapes == NULL)
+        return NULL;
+
+    int total_shapes = 0;
+    while (shapes[total_shapes] != NULL)
+        total_shapes++;
+
+    if (total_shapes == 0)
+        return NULL;
+
+    // marker
+    for (int i = 0; i < total_shapes; i++)
+    {
+        shapes[i]->has_been_removed = 0;
+    }
+
+    // Sort shapes by y then by x
+    Shape **sorted_shapes = malloc(total_shapes * sizeof(Shape *));
+    for (int i = 0; i < total_shapes; i++)
+    {
+        sorted_shapes[i] = shapes[i];
+    }
+    qsort(sorted_shapes, total_shapes, sizeof(Shape *), compare_shape_y);
+
+    int words_capacity = 4;
+    int words_count = 0;
+    Shape ***words = malloc(words_capacity * sizeof(Shape **));
+    if (!words)
+    {
+        printf("Cannot allocate memory for words\n");
+        exit(EXIT_FAILURE);
+    }
+
+    // Process each shape
+    for (int i = 0; i < total_shapes; i++)
+    {
+        if (sorted_shapes[i]->has_been_removed != 0)
+            continue;
+
+        //new word
+        int word_capacity = 4;
+        int word_count = 0;
+        Shape **current_word = malloc(word_capacity * sizeof(Shape *));
+        if (!current_word)
+        {
+            printf("Cannot allocate memory for current word\n");
+            exit(EXIT_FAILURE);
+        }
+
+        // first shape
+        current_word[word_count++] = sorted_shapes[i];
+        sorted_shapes[i]->has_been_removed = 1;
+
+        // Fix the horizontal line
+        int reference_y = (sorted_shapes[i]->min_y + sorted_shapes[i]->max_y) / 2;
+        int reference_height = shape_height(sorted_shapes[i]);
+
+        // Tolerance for vertical alignment
+        int vertical_tolerance = reference_height / 2;
+
+        int *spacings = malloc(total_shapes * sizeof(int));
+        int spacing_count = 0;
+
+        // Find all shapes in the same word
+        int found = 1;
+        while (found)
+        {
+            found = 0;
+
+            Shape *current_shape = current_word[word_count - 1];
+            int current_max_x = current_shape->max_x;
+
+            Shape *closest = NULL;
+            int closest_idx = -1;
+            int min_min_x = INT_MAX;
+
+            for (int j = 0; j < total_shapes; j++)
+            {
+                if (sorted_shapes[j]->has_been_removed != 0)
+                    continue;
+
+                const int shape_y = (sorted_shapes[j]->min_y + sorted_shapes[j]->max_y) / 2;
+                const int shape_min_x = sorted_shapes[j]->min_x;
+
+                if (abs(shape_y - reference_y) > vertical_tolerance)
+                    continue;
+
+                if (shape_min_x < current_word[0]->min_x)
+                    continue;
+
+                if (shape_min_x < min_min_x)
+                {
+                    min_min_x = shape_min_x;
+                    closest = sorted_shapes[j];
+                    closest_idx = j;
+                }
+            }
+
+            if (closest != NULL)
+            {
+                const int actual_spacing = closest->min_x - current_max_x;
+
+                int accept = 0;
+
+                if (spacing_count == 0)
+                {
+                    int avg_width = (shape_width(current_shape) + shape_width(closest)) / 2;
+
+                    if (actual_spacing < 0 || actual_spacing <= avg_width * 2.5)
+                        accept = 1;
+                }
+                else
+                {
+                    if (actual_spacing < 0)
+                    {
+                        accept = 1;
+                    }
+                    else
+                    {
+                        double sum_spacing = 0;
+                        for (int k = 0; k < spacing_count; k++)
+                        {
+                            sum_spacing += spacings[k];
+                        }
+                        double avg_spacing = sum_spacing / spacing_count;
+
+                        double threshold = avg_spacing * 4;
+
+                        if (threshold < 40)
+                            threshold = 40;
+
+                        if (actual_spacing <= threshold)
+                            accept = 1;
+                    }
+                }
+
+                if (accept)
+                {
+                    if (word_count >= word_capacity)
+                    {
+                        word_capacity *= 2;
+                        current_word = realloc(current_word, word_capacity * sizeof(Shape *));
+                        if (!current_word)
+                        {
+                            printf("Cannot realloc memory for word\n");
+                            exit(EXIT_FAILURE);
+                        }
+                    }
+
+                    current_word[word_count++] = closest;
+                    sorted_shapes[closest_idx]->has_been_removed = 1;
+
+                    if (actual_spacing > 0)
+                        spacings[spacing_count++] = actual_spacing;
+
+                    found = 1;
+                }
+            }
+        }
+
+        free(spacings);
+
+        // Sort shapes in word by x position
+        qsort(current_word, word_count, sizeof(Shape *), compare_shape_x);
+
+        // Null-terminate word array
+        current_word = realloc(current_word, (word_count + 1) * sizeof(Shape *));
+        current_word[word_count] = NULL;
+
+        // Add word to words array
+        if (words_count >= words_capacity)
+        {
+            words_capacity *= 2;
+            words = realloc(words, words_capacity * sizeof(Shape **));
+            if (!words)
+            {
+                printf("Cannot realloc memory for words\n");
+                exit(EXIT_FAILURE);
+            }
+        }
+        words[words_count++] = current_word;
+    }
+
+    // Null-terminate  words array
+    words = realloc(words, (words_count + 1) * sizeof(Shape **));
+    words[words_count] = NULL;
+
+    free(sorted_shapes);
+
+    return words;
 }

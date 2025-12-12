@@ -80,13 +80,6 @@ void image_remove_shape(Image *img, Shape *s);
  */
 void image_add_shape(Image *img, Shape *s, uint8_t r, uint8_t g, uint8_t b);
 
-/**
- * @brief free all pixel and shape
- *
- * @param s     the shape we want free
- */
-
-
 
 /**
 * @brief Computes the width of a shape.

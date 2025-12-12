@@ -1,4 +1,6 @@
 #include "rotation.h"
+#include "../grid/grid_detection.h"
+#include "../utils/shapes.h"
 
 static SDL_Window *hidden_window = NULL;
 static SDL_Renderer *hidden_renderer = NULL;
@@ -66,6 +68,71 @@ Image *manual_rotate_image(const Image *src, const double angle)
 
 
     return result;
+}
+
+double get_auto_rotation_angle(const Image *img)
+{
+    Image* copy = copy_image(img);
+    Shape **shapes = get_all_shape(copy);
+
+    remove_small_shape(copy, shapes, 8);
+    remove_outliers_shape(copy, shapes, 25,75,2.5,3);
+    remove_aspect_ration(copy, shapes, 0.1, 5);
+    Image *circle_img = circle_image(copy, shapes, 0.25);
+
+    // //export the circle image for debug use randon id in filename to avoid overwrite
+    // SDL_Surface *circle_surf = image_to_sdl_surface(circle_img);
+    // char circle_filename[256];
+    // snprintf(circle_filename, sizeof(circle_filename), "../../resources/pre_process/output/circle_image_%ld.bmp", random());
+    // export_image(circle_surf, circle_filename);
+    // SDL_FreeSurface(circle_surf);
+    free_image(copy);
+    int theta_range, rho_max;
+    int **hs = hough_space(circle_img, &theta_range, &rho_max);
+    hough_space_filter(hs, theta_range, rho_max, 0.75);
+    //get the line that are the most horizontal
+    int **h_lines = horizontal_lines(hs, theta_range, rho_max, 30);
+
+    // //for debug draw all line and export image
+    // Image *debug_img = copy_image(circle_img);
+    // draw_lines(debug_img, h_lines, theta_range, rho_max, 255, 0, 0);
+    // SDL_Surface *debug_surf = image_to_sdl_surface(debug_img);
+    // char debug_filename[256];
+    // snprintf(debug_filename, sizeof(debug_filename), "../../resources/pre_process/output/horizontal_lines_%ld.bmp", random());
+    // export_image(debug_surf, debug_filename);
+    // SDL_FreeSurface(debug_surf);
+    // free_image(debug_img);
+
+    // get the average angle of these lines
+    double total_angle = 0.0;
+    int count = 0;
+    for (int r = 0; r < theta_range; r++)
+    {
+        for (int d = 0; d < 2 * rho_max; d++)
+        {
+            if (h_lines[r][d] > 0)
+            {
+                double angle = (double)r - 90.0; // convert to -90 to 90 degrees
+                total_angle += angle;
+                count++;
+            }
+        }
+    }
+    double average_angle = 0.0;
+    if (count > 0)
+    {
+            average_angle = total_angle / (double)count;
+    }
+    // free memory
+    free_hough(h_lines, theta_range);
+    free_hough(hs, theta_range);
+    free_image(circle_img);
+    for (int j = 0; shapes[j] != NULL; j++)
+    {
+            free_shape(shapes[j]);
+    }
+    free(shapes);
+    return average_angle * 1.12;
 }
 
 void cleanup_hidden_renderer() {

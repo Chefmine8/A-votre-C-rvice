@@ -118,6 +118,7 @@ void ReLU_activation_function(const struct  layer *layer) {
 void soft_max_activation_function(const struct  layer *layer) {
     long double sum = 0;
     for (int i = 0; i < layer->layer_size; i++) {
+<<<<<<< HEAD
         if(isnanf(layer->outputs[i])){
             printf("ist nan here\n");
         }
@@ -129,6 +130,9 @@ void soft_max_activation_function(const struct  layer *layer) {
         {
             layer->outputs[i] = 0;
         }
+=======
+        layer->outputs[i] = isnanf(layer->outputs[i]) ? 0 : exp(layer->outputs[i]);
+>>>>>>> pre-process
         sum += layer->outputs[i];
 
     }

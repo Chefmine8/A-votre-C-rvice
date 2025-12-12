@@ -1,6 +1,6 @@
 #include "grayscale.h"
 #include "../core/image.h"
-#include "rotation.h"
+#include "rotation/rotation.h"
 #include "scale.h"
 #include <time.h>
 #include "grid/grid_detection.h"
@@ -26,19 +26,20 @@ int main()
         imgs[i] = load_image(files[i]);
 
         /* Manual Rotation for specific images */
-        if (i == 2)
-        {
-            Image *tmp = manual_rotate_image(imgs[2], -24.5);
-            free_image(imgs[2]);
-            imgs[2] = tmp;
-        }
-        if (i == 3)
-        {
-            Image *tmp = manual_rotate_image(imgs[3], 4.5);
-            free_image(imgs[3]);
-            imgs[3] = tmp;
-        }
-        /* */
+
+        // if (i == 2)
+        // {
+        //     Image *tmp = manual_rotate_image(imgs[2], -24.5);
+        //     free_image(imgs[2]);
+        //     imgs[2] = tmp;
+        // }
+        // if (i == 3)
+        // {
+        //     Image *tmp = manual_rotate_image(imgs[3], 4.5);
+        //     free_image(imgs[3]);
+        //     imgs[3] = tmp;
+        // }
+
 
         /* grayscal and Binarization */
         grayscale_image(imgs[i]);
@@ -48,6 +49,13 @@ int main()
         imgs[i] = tmp;
         /* */
 
+        //printf("image %d : angle detected : %.2f degrees\n", i + 1, get_auto_rotation_angle(imgs[i]));
+        /* Rotate image to correct orientation */
+        double angle = get_auto_rotation_angle(imgs[i]);
+        Image *rotated = manual_rotate_image(imgs[i], -angle);
+        free_image(imgs[i]);
+        imgs[i] = rotated;
+
         /* get components connected */
         Shape **shapes = get_all_shape(imgs[i]);
 
@@ -55,6 +63,7 @@ int main()
         remove_small_shape(imgs[i], shapes, 8);
         remove_outliers_shape(imgs[i], shapes, 25,75,2.5,3);
         remove_aspect_ration(imgs[i], shapes, 0.1, 5);
+
 
         // copy of original image
         Image *orig = copy_image(imgs[i]);
@@ -105,6 +114,16 @@ int main()
 //        set_pixel_color(imgs[i], x_end, y_end, 0, 255, 0);
 //        set_pixel_color(imgs[i], x_start, y_end, 0, 255, 0);
 //        set_pixel_color(imgs[i], x_end, y_start, 0, 255, 0);
+
+        //check if err on bounding box
+        if (x_end <= x_start || y_end <= y_start)
+        {
+            printf("Error detecting grid bounding box on image %d\n", i + 1);
+            x_start = 0;
+            y_start = 0;
+            x_end = imgs[i]->width -1;
+            y_end = imgs[i]->height -1;
+        }
 
         // free memory
         free_hough(h_lines, theta_range);
@@ -159,9 +178,9 @@ int main()
 
         // shape of grid area
         Shape *sub_shape = create_shape();
-        for (int y = y_start; y <= y_end; y++)
+        for (int y = y_start - 30 < 0 ? 0 : y_start - 30; y <= (y_end + 30 >= before->height ? before->height -1 : y_end + 30); y++)
         {
-            for (int x = x_start; x <= x_end; x++)
+            for (int x = x_start - 30 < 0 ? 0 : x_start - 30; x <= (x_end + 30 >= before->width ? before->width -1 : x_end + 30); x++)
             {
                 shape_add_pixel(sub_shape, get_pixel(before, x, y));
             }
@@ -170,10 +189,106 @@ int main()
         image_remove_shape(before, sub_shape);
         free_shape(sub_shape);
 
-        Shape ** before_shapes = get_all_shape(before);
-        remove_small_shape(before, before_shapes, 8);
-        remove_aspect_ration(before, before_shapes, 0.1, 5);
 
+
+        Shape ** before_shapes = get_all_shape(before);
+        remove_small_shape(before, before_shapes, 20);
+        remove_aspect_ration(before, before_shapes, 0.1, 6);
+
+
+        filter_by_density_v(before,before_shapes, 1);
+        clean_shapes(before_shapes);
+
+        Shape ***words = get_all_world(before_shapes);
+        // for each word, channge pixel color to random color (letters in the same word have the same color)
+
+        //if word is to long (> 15 letters) remove it from the list
+        int valid_word_count = 0;
+        for (int w = 0; words[w] != NULL; w++)
+        {
+            Shape **word = words[w];
+            int letter_count = 0;
+            for (int l = 0; word[l] != NULL; l++)
+            {
+                letter_count++;
+            }
+            if (letter_count <= 15)
+            {
+                words[valid_word_count] = words[w];
+                valid_word_count++;
+            }
+            else
+            {
+                free(word);
+            }
+        }
+        words[valid_word_count] = NULL;  // Null-terminate properly
+
+        //export each letter from each word
+        for (int w = 0; words[w] != NULL; w++)
+        {
+            Shape **word = words[w];
+            for (int l = 0; word[l] != NULL; l++)
+            {
+                Shape *letter = word[l];
+                char letter_filename[256];
+                snprintf(letter_filename, sizeof(letter_filename), "../../resources/pre_process/output/word_list/image%d/word_%d_letter_%d.bmp", i + 1, w + 1, l + 1);
+                int start_x = letter->min_x;
+                int start_y = letter->min_y;
+                int end_x = letter->max_x;
+                int end_y = letter->max_y;
+                Image *letter_img = extract_sub_image(before, start_x, start_y, end_x, end_y);
+                SDL_Surface *letter_surf = image_to_sdl_surface(letter_img);
+                export_image(letter_surf, letter_filename);
+                SDL_FreeSurface(letter_surf);
+                free_image(letter_img);
+            }
+        }
+
+        for (int w = 0; words[w] != NULL; w++)
+        {
+            free(words[w]);
+        }
+        free(words);
+        /*
+        srand(time(NULL));
+        for (int w = 0; words[w] != NULL; w++)
+        {
+            Uint8 r = rand() % 256;
+            Uint8 g = rand() % 256;
+            Uint8 b = rand() % 256;
+            for (int l = 0; words[w][l] != NULL; l++)
+            {
+                Shape *letter = words[w][l];
+                image_change_shape_color(before, letter, r, g, b);
+            }
+            free(words[w]);
+        }
+        free(words);
+*/
+        //export image, but before draw box around each shape
+        for (int k = 0; before_shapes[k] != NULL; ++k)
+        {
+            // draw bounding box of each shape
+            int x_min = before_shapes[k]->min_x;
+            int y_min = before_shapes[k]->min_y;
+            int x_max = before_shapes[k]->max_x;
+            int y_max = before_shapes[k]->max_y;
+            draw_line(before, x_min, y_min, x_max, y_min, 0, 255, 0);
+            draw_line(before, x_min, y_max, x_max, y_max, 0, 255, 0);
+            draw_line(before, x_min, y_min, x_min, y_max, 0, 255, 0);
+            draw_line(before, x_max, y_min, x_max, y_max, 0, 255, 0);
+        }
+
+
+        // export before image for debug
+        SDL_Surface *orig_surf = image_to_sdl_surface(before);
+        char orig_filename[256];
+        snprintf(orig_filename, sizeof(orig_filename), "../../resources/pre_process/output/grid/orig_image_%d.bmp", i + 1);
+        export_image(orig_surf, orig_filename);
+        SDL_FreeSurface(orig_surf);
+
+        /*
         Image* before_circle = circle_image(before, before_shapes, 0.25);
         free_image(before);
         before = before_circle;
@@ -198,14 +313,14 @@ int main()
 
         // draw lines on image for debug
         draw_lines(before, h_lines__, theta_range__, rho_max__, 255, 0, 0);
-        draw_lines(before, v_lines__, theta_range__, rho_max__, 0, 0, 255);
+        //draw_lines(before, v_lines__, theta_range__, rho_max__, 0, 0, 255);
 
         // free memory
         free_hough(h_lines__, theta_range__);
         free_hough(v_lines__, theta_range__);
         free_hough(hs__, theta_range__);
 
-
+*/
         // export before image for debug
         SDL_Surface *before_surf = image_to_sdl_surface(before);
         char before_filename[256];
