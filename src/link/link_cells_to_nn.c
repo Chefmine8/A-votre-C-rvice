@@ -18,7 +18,7 @@ la pluis élevé du reseau et tu le met dans un fichier txt qui represente la gr
 */
 char* get_dir_data(char* identifiant)
 {
-    const char* partial_path = "../../resources/pre_process/output/grid/cells/";
+    const char* partial_path = "../../resources/pre_process/output/";
     char* id = identifiant;
     DIR *dir;
     struct dirent *entry;
@@ -93,7 +93,7 @@ int get_column(char* str)
 void create_grid(char* id,struct neural_network* neural_net)
 {
     // recup du chemin
-    char* partial_path = "../../resources/pre_process/output/grid/cells/";
+    char* partial_path = "../../resources/pre_process/output/";
     char* dir = get_dir_data(id);
     char* full_path = malloc(sizeof(char) * 300);   
     sprintf(full_path,"%s%s/",partial_path,dir);
@@ -119,7 +119,7 @@ void create_grid(char* id,struct neural_network* neural_net)
     {
         for(int j =1;j<=column;j++) // col
         {
-            sprintf(letter,"%scell_%d_%d.bmp",full_path,j,i); // reversed for the Q
+            sprintf(letter,"%scell_%d_%d.png",full_path,j,i); // reversed for the Q
             printf("Recherche du fichier : %s\n",letter);
             image = load_image(letter);
             printf("image loaded\n");
