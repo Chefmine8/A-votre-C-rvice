@@ -1,0 +1,39 @@
+diff --git a/src/training/importTrainingData.c b/src/training/importTrainingData.c
+index 8018bdc..4079a24 100644
+--- a/src/training/importTrainingData.c
++++ b/src/training/importTrainingData.c
+@@ -54,11 +54,13 @@ void single_train_cession(const struct neural_network *neural_network,
+                     free_image(img);
+                 }
+             }
++            closedir(letter);
+         }
+         // free(letter_char);
+-
++        
+         // printf("%Lg\n", sum_loss / sum);
+     }
++    closedir(directory);
+ }
+ 
+ void test_neural_network(struct neural_network *neural_network)
+@@ -111,9 +113,12 @@ void test_neural_network(struct neural_network *neural_network)
+                     free_image(img);
+                 }
+             }
++
++            closedir(letter);
+         }
+         // free(letter_char);
+     }
++    closedir(directory);
+ }
+ 
+ int main()
+@@ -134,4 +139,4 @@ int main()
+ 
+     test_neural_network(neural_network);
+     // free_neural_network(neural_network);
+-}
+\ No newline at end of file
++}

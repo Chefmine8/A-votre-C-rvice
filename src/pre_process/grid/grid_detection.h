@@ -168,6 +168,12 @@ void get_bounding_box(int **vertical_lines, int **horizontal_lines,
  */
 void filter_by_density(Image *img, Shape **shapes, int min_neighbors);
 
+// Same as above but only in one direction
+void filter_by_density_h(Image *img,Shape **shapes, int min_neighbors);
+
+// Same as above but only in one direction
+void filter_by_density_v(Image *img,Shape **shapes, int min_neighbors);
+
 /** * @brief Detects the grid size (number of rows and columns) from the shapes.
  *
  * @param shapes NULL-terminated array of detected Shape pointers.
@@ -186,3 +192,10 @@ void detect_grid_size(Shape **shapes, int *rows, int *cols);
  * @return 2D array of Image pointers representing the extracted grid cells.
  */
 Image ***get_grid_cells(Image *img, Shape **shapes, int rows, int cols);
+
+/** * @brief Retrieves all world from the world liste using the shapes.
+ *  * use this function on a image without the grid present
+ * @param shapes NULL-terminated array of detected Shape pointers.
+ * @return 2D array of Shape pointers representing all world.
+ */
+Shape ***get_all_world(Shape **shapes);
