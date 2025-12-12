@@ -36,14 +36,16 @@ char* get_dir_data(char* identifiant)
             if(strncmp(entry->d_name,id,strlen(id)) ==0)
             {
                 printf("Folder found : %s\n",entry->d_name);
+                char* temp = malloc(sizeof(char)*256);
+                sprintf(temp,"%s",entry->d_name);
                 closedir(dir);
-                return entry->d_name;
+                return temp;
             }
         }
     }
     closedir(dir);
     printf("Folder not found\n");
-    return "NOTHING";
+    return NULL;
 }
 
 int get_row(char* str)
@@ -90,12 +92,9 @@ void create_grid(char* id)
 {
     char* partial_path = "../../resources/pre_process/output/grid/cells/";
     char* dir = get_dir_data(id);
-    char full_path[1024];
-    full_path[0] = 0;
-
-    strcat(full_path,partial_path);
-    strcat(full_path,dir);
-    strcat(full_path,"/");
+    char* full_path = malloc(sizeof(char) * 300);   
+    printf("1\n");
+    sprintf(full_path,"%s%s/",partial_path,dir);
     
     printf("Chemin complet : %s\n",full_path);
 
@@ -109,27 +108,35 @@ void create_grid(char* id)
         errx(1,"ouvertur du fichier");
     }
 
-    char* letter = malloc(sizeof(char)*50);
+    char* letter = malloc(sizeof(char)*500);
+    long double* input_nn = malloc(sizeof(long double)*784);
 
-    for(int i = 0;i<10;i++)
+    Image* image;
+    for(int i = 1;i<=row;i++) // row
     {
-        for(int j =0;j<15;j++)
+        for(int j =1;j<=column;j++) // col
         {
-            sprintf(letter,"cell_%d_%d.bmp",j,i);
+            sprintf(letter,"%scell_%d_%d.bmp",full_path,j,i);
             printf("Recherche du fichier : %s\n",letter);
-            //Image* image = load_image(letter);
+            image = load_image(letter);
+            printf("image loaded\n");
+            get_nn_input(image,input_nn);
+            printf("nn input get\n");
             //recup la lettre
+            //print la lettre dans le fichier
             letter[0] = 0;
         }
         fprintf(fichier,"\n");
     }
-
+    free(image);
+    free(dir);
+    free(full_path);
+    free(input_nn);
     free(letter);
+
+
     fclose(fichier);
 
-
-
-    
 }
 
 

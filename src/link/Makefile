@@ -1,6 +1,7 @@
 CC = gcc
 CFLAGS = -Wall -Wextra
-SANIT = -g -fsanitize=address
+SANIT = -fsanitize=address
+GDB = -g
 
 CFLAGS += $(shell sdl2-config --cflags)
 LDFLAGS = $(shell sdl2-config --libs) -lSDL2_image
@@ -17,6 +18,10 @@ simple:
 
 fsanit:
 	$(CC) -o $(TARGET) $(CFLAGS) $(SANIT) $(SOURCES) $(CORE) $(PRE_PROCESS) $(LDFLAGS)
+
+gdb:
+	$(CC) -o $(TARGET) $(CFLAGS) $(GDB) $(SOURCES) $(CORE) $(PRE_PROCESS) $(LDFLAGS) 
+
 
 
 .PHONY: all clean simple fsanit
