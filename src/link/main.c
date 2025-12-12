@@ -3,6 +3,10 @@
 
 int main()
 {
-    create_grid("img");
+    int nb_arr = 3;
+    int arr[3] = {784,784,26};
+    struct neural_network *nn = create_neural_network(nb_arr,arr);
+    create_grid("img",nn);
+    free_neural_network(nn);
     return 0;
 }

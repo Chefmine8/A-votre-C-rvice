@@ -1,4 +1,6 @@
+
 #include "link_cells_to_nn.h"
+
 #include "../neural_network/neural_network.h"
 #include "../core/image.h"
 #include "../pre_process/scale.h"
@@ -88,16 +90,17 @@ int get_column(char* str)
     buf[j] = 0;
     return atoi(buf);
 }
-void create_grid(char* id)
+void create_grid(char* id,struct neural_network* neural_net)
 {
+    // recup du chemin
     char* partial_path = "../../resources/pre_process/output/grid/cells/";
     char* dir = get_dir_data(id);
     char* full_path = malloc(sizeof(char) * 300);   
-    printf("1\n");
     sprintf(full_path,"%s%s/",partial_path,dir);
     
     printf("Chemin complet : %s\n",full_path);
 
+    // recup des lignes
     int row = get_row(dir);
     int column = get_column(dir);
     printf("Nbr de lignes / colonnes : %d/%d\n",row,column);
@@ -116,15 +119,19 @@ void create_grid(char* id)
     {
         for(int j =1;j<=column;j++) // col
         {
-            sprintf(letter,"%scell_%d_%d.bmp",full_path,j,i);
+            sprintf(letter,"%scell_%d_%d.bmp",full_path,j,i); // reversed for the Q
             printf("Recherche du fichier : %s\n",letter);
             image = load_image(letter);
             printf("image loaded\n");
-            get_nn_input(image,input_nn);
+            get_nn_input(image,neural_net->inputs);
             printf("nn input get\n");
+            char letter_output = get_neural_network_output(neural_net);
+            printf("lettre recuperer : %c\n",letter_output);
+
             //recup la lettre
             //print la lettre dans le fichier
             letter[0] = 0;
+            fprintf(fichier,"%c",letter_output);
         }
         fprintf(fichier,"\n");
     }
@@ -138,5 +145,4 @@ void create_grid(char* id)
     fclose(fichier);
 
 }
-
 
