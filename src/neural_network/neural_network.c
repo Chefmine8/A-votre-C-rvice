@@ -71,9 +71,20 @@ void neural_network_calculate_output(const struct neural_network *neural_network
  * @param expected_output The expected output
  * @return The calculated loss
  */
-float categorical_cross_entropy(const struct neural_network *neural_network, char expected_output) {
-     return - log((*neural_network->outputs)[expected_output - 'A'] + 1e-15);
+float calculate_loss(const struct neural_network *neural_network, char expected_output) {
+
+    return -logf((*(neural_network->outputs))[expected_output - 'A'] + 1e-15f);
+    /*float res = 0.0;
+    for(int i = 0; i < neural_network->output_size; i++) {
+        float y_true = (i == (expected_output - 'A')) ? 1.0 : 0.0;
+        float y_pred = (*(neural_network->outputs))[i];
+        res += (y_true - y_pred) * (y_true - y_pred);
+    }
+
+    return  1.0/((float)neural_network->output_size) * res;*/
 }
+
+
 
 
 char get_neural_network_output(const struct neural_network *neural_network) {
@@ -88,9 +99,107 @@ char get_neural_network_output(const struct neural_network *neural_network) {
     return 'A' + max_index;
 }
 
+int backprop_update_4(struct neural_network *neural_network, char expected_output, float learning_rate)
+{
+    float **dE_dz = m
+    // https://doug919.github.io/notes-on-backpropagation-with-cross-entropy/
+}
 
-// language: c
-// Add to `src/neural_network/neural_network.c`
+int backprop_update_3(struct neural_network *neural_network, char expected_output, float learning_rate)
+{
+    neural_network_calculate_output(neural_network);
+    float **sum_h = malloc(sizeof(float*) * neural_network->number_of_layers);
+    float **h = malloc(sizeof(float*) * neural_network->number_of_layers);
+
+    for (int i = 0; i < neural_network->number_of_layers; i++) {
+        sum_h[i] = calloc(neural_network->layers[i]->layer_size, sizeof(float));
+        h[i] = calloc(neural_network->layers[i]->layer_size, sizeof(float));
+        for (int j = 0; j < neural_network->layers[i]->layer_size; j++) {
+            //printf("neural_network->layers[i]->weights[j]=%p\n*(neural_network->layers[i]->inputs)=%p\nneural_network->layers[i]->prev_layer_size=%d\nneural_network->layers[i]->biases[j]=%f\n\n", neural_network->layers[i]->weights[j], *(neural_network->layers[i]->inputs), neural_network->layers[i]->prev_layer_size, neural_network->layers[i]->biases[j]);
+            sum_h[i][j] = dot_product(neural_network->layers[i]->weights[j], *(neural_network->layers[i]->inputs), neural_network->layers[i]->prev_layer_size) + neural_network->layers[i]->biases[j];
+            //printf("dot_product = %f + biases=%f = sum_h[%d][%d]=%f\n", dot_product(neural_network->layers[i]->weights[j], *(neural_network->layers[i]->inputs), neural_network->layers[i]->prev_layer_size), neural_network->layers[i]->biases[j], i, j, sum_h[i][j]);
+            //printf("sigmoid(%f) -> %f\n", sum_h[i][j], 1.0 / (1.0 + exp(-sum_h[i][j])));
+            h[i][j] = 1.0 / (1.0 + expf(-sum_h[i][j]));
+            //printf("sigmoid(%f) -> %f\n", sum_h[i][j], h[i][j]);
+            //if(h[i][j] < -1e5 || h[i][j] > 1e5 || isnanf(h[i][j]) || isinff(h[i][j]) ) {
+            //    printf("h[%d][%d] = %f\t dot_product(neural_network->layers[i]->weights[j]=%p, *(neural_network->layers[i]->inputs)=%p, neural_network->layers[i]->prev_layer_size=%d) + neural_network->layers[i]->biases[j]=%f\n", i, j, h[i][j], neural_network->layers[i]->weights[j], *(neural_network->layers[i]->inputs), neural_network->layers[i]->prev_layer_size, neural_network->layers[i]->biases[j]);
+            //    return -1;
+            //}
+        }
+    }
+
+    float y_pred = (*(neural_network->outputs))[expected_output - 'A'];
+
+    // printf("y_pred = %f -> %f\n", y_pred, -2.0/(1 - y_pred));
+    float dL_dypred = -2.0/(float)(neural_network->output_size) * (1 - y_pred);
+
+
+    float ***dypred_dw = malloc(sizeof(float**) * neural_network->number_of_layers);
+    float **dypred_db = malloc(sizeof(float*) * neural_network->number_of_layers);
+
+    float **dypred_dh = malloc(sizeof(float*) * neural_network->number_of_layers);
+    for(int i = 0; i < neural_network->number_of_layers; i++) {
+        dypred_dw[i] = malloc(sizeof(float*) * neural_network->layers[i]->layer_size);
+        dypred_db[i] = malloc(sizeof(float) * neural_network->layers[i]->layer_size);
+        dypred_dh[i] = malloc(sizeof(float) * neural_network->layers[i]->layer_size);
+        for(int j = 0; j < neural_network->layers[i]->layer_size; j++) {
+            dypred_dw[i][j] = malloc(sizeof(float) * neural_network->layers[i]->prev_layer_size);
+            for(int k = 0; k < neural_network->layers[i]->prev_layer_size; k++) {
+                dypred_dw[i][j][k] = (i == 0 ? neural_network->inputs[k] : h[i-1][k]) * deriv_sigmoid(sum_h[i][j]);
+                if(dypred_dw[i][j][k] < -1e5 || dypred_dw[i][j][k] > 1e5 || isnanf(dypred_dw[i][j][k]) || isinff(dypred_dw[i][j][k]) ) {
+
+                    printf("dypred_dw[%d][%d][%d] = %f\t (i == 0 =%d ? neural_network->inputs[k]=%f : h[i-1][k]=%f) * deriv_sigmoid(sum_h[i][j]%f)\n", i, j, k, dypred_dw[i][j][k], i == 0, neural_network->inputs[k], h[i-1][k], deriv_sigmoid(sum_h[i][j]));
+                    return -1;
+                }
+            }
+            dypred_db[i][j] = deriv_sigmoid(sum_h[i][j]);
+
+            dypred_dh[i][j] = 1;
+            if(j + 1 != neural_network->layers[i]->layer_size) {
+                dypred_dh[i][j] = 0;
+                for(int k = 0; k < neural_network->layers[i]->layer_size; k++) {
+                    dypred_dh[i][j] += neural_network->layers[i]->weights[j + 1][k] * deriv_sigmoid(sum_h[i][j]);
+                }
+            }
+        }
+    }
+    for(int i = 0; i < neural_network->number_of_layers; i++) {
+        for(int j = 0; j < neural_network->layers[i]->layer_size; j++) {
+            for(int k = 0; k < neural_network->layers[i]->prev_layer_size; k++) {
+                /*printf("Updating weight[%d][%d] of layer %d: old value=%f \t newvalue = %f \t learning_rate=%f \t dL_dypred=%f \t dypred_dh[i][j]=%f \t dypred_dw[i][j][k]=%f\n", j, k, i,
+                        neural_network->layers[i]->weights[j][k],
+                         neural_network->layers[i]->weights[j][k] - learning_rate * dL_dypred * dypred_dh[i][j] * dypred_dw[i][j][k],
+                         learning_rate, dL_dypred, dypred_dh[i][j], dypred_dw[i][j][k]);*/
+                neural_network->layers[i]->weights[j][k] -= learning_rate * dL_dypred * dypred_dh[i][j] * dypred_dw[i][j][k];
+                if(neural_network->layers[i]->weights[j][k] < -1e2 || neural_network->layers[i]->weights[j][k] > 1e2 || isnanf(neural_network->layers[i]->weights[j][k]) || isinff(neural_network->layers[i]->weights[j][k]) ) {
+                    printf("Weight became nan : learning_rate=%f dL_dypred=%f dypred_dh=%f dypred_dw=%f\n", learning_rate, dL_dypred, dypred_dh[i][j], dypred_dw[i][j][k]);
+                    return -1;
+                }
+            }
+            neural_network->layers[i]->biases[j] -= learning_rate * dL_dypred * dypred_dh[i][j] * dypred_db[i][j];
+            if(neural_network->layers[i]->biases[j] < -1e2 || neural_network->layers[i]->biases[j] > 1e2 || isnanf(neural_network->layers[i]->biases[j]) || isinff(neural_network->layers[i]->biases[j]) ) {
+                printf("Bias became nan : learning_rate=%f dL_dypred=%f dypred_dh=%f dypred_db=%f\n", learning_rate, dL_dypred, dypred_dh[i][j], dypred_db[i][j]);
+                return -1;
+            }
+        }
+    }
+    for (int i = 0; i < neural_network->number_of_layers; i++) {
+        free(sum_h[i]);
+        free(h[i]);
+        for(int j = 0; j < neural_network->layers[i]->layer_size; j++) {
+            free(dypred_dw[i][j]);
+        }
+        free(dypred_dw[i]);
+        free(dypred_db[i]);
+        free(dypred_dh[i]);
+    }
+    free(sum_h);
+    free(h);
+    free(dypred_dw);
+    free(dypred_db);
+    free(dypred_dh);
+    return 0;
+}
 
 #include <stdlib.h>
 #include <string.h>
@@ -98,110 +207,119 @@ char get_neural_network_output(const struct neural_network *neural_network) {
 /* Replace minimise_loss or add this new function and call it instead.
  * Assumes layer->outputs, layer->weights, layer->biases, layer->inputs, layer->prev_layer_size are valid.
  */
-int backprop_update(struct neural_network *neural_network, char expected_output, float learning_rate)
+
+int backprop_update_2(struct neural_network *neural_network, char expected_output, float learning_rate)
 {
     int L = neural_network->number_of_layers;
-    if (L <= 0) return;
+    if (L <= 0) return -1;
 
-    // Forward pass: ensure outputs are computed
+    /* forward pass */
     neural_network_calculate_output(neural_network);
 
-    // Allocate deltas per layer
+    /* allocate deltas */
     float **deltas = malloc(sizeof(float*) * L);
+    if (!deltas) return -1;
     for (int i = 0; i < L; ++i) {
         int sz = neural_network->layers[i]->layer_size;
         deltas[i] = calloc(sz, sizeof(float));
+        if (!deltas[i]) {
+            for (int k = 0; k < i; ++k) free(deltas[k]);
+            free(deltas);
+            return -1;
+        }
     }
 
-    // Output layer delta: softmax + cross-entropy => delta = y_pred - y_true
+    /* output layer delta: use MSE gradient and sigmoid derivative */
     int out_idx = expected_output - 'A';
     struct layer *out_layer = neural_network->layers[L - 1];
-    for (int i = 0; i < out_layer->layer_size; ++i) {
+    int out_size = out_layer->layer_size;
+    float loss_factor = 2.0f / (float)out_size; /* dL/dy_pred factor for MSE */
+
+    for (int i = 0; i < out_size; ++i) {
         float y_pred = out_layer->outputs[i];
-        if(isnanf(y_pred)) {
-            for (int i = 0; i < L; ++i) free(deltas[i]);
+        if (isnanf(y_pred)) {
+            for (int k = 0; k < L; ++k) free(deltas[k]);
             free(deltas);
-
+            printf("Output prediction became NaN: y_pred=%f\n", y_pred);
             return -1;
-            // errx(EXIT_FAILURE, "Output prediction became nan : y_pred=%f\n", y_pred); // errx(EXIT_FAILURE,
         }
-        float y_true = (i == out_idx) ? 1.0L : 0.0L;
-        deltas[L - 1][i] = y_pred - y_true;
-        if(isnanf(deltas[L - 1][i])) {
-            for (int i = 0; i < L; ++i) free(deltas[i]);
+        float y_true = (i == out_idx) ? 1.0f : 0.0f;
+        float dL_dypred = loss_factor * (y_pred - y_true); /* dL/dy_pred */
+        float sigmoid_deriv = y_pred * (1.0f - y_pred);     /* sigmoid'(z) using output */
+        deltas[L - 1][i] = dL_dypred * sigmoid_deriv;
+        if (isnanf(deltas[L - 1][i])) {
+            for (int k = 0; k < L; ++k) free(deltas[k]);
             free(deltas);
-
-            return -1; //errx(EXIT_FAILURE, "Output delta became nan : y_pred=%f y_true=%f", y_pred, y_true);
+            printf("Output delta became NaN: dL_dypred=%f sigmoid_deriv=%f\n", dL_dypred, sigmoid_deriv);
+            return -1;
         }
     }
 
-    // Backpropagate deltas through hidden layers (from L-2 down to 0)
+    /* backpropagate through hidden layers (all assumed sigmoid) */
     for (int li = L - 2; li >= 0; --li) {
         struct layer *cur = neural_network->layers[li];
         struct layer *next = neural_network->layers[li + 1];
         for (int i = 0; i < cur->layer_size; ++i) {
-            float sum = 0.0L;
-            // sum over next layer neurons: next.weights[k][i] * delta_next[k]
+            float sum = 0.0f;
             for (int k = 0; k < next->layer_size; ++k) {
                 sum += next->weights[k][i] * deltas[li + 1][k];
-                if(isnanf(sum)) {
-                    for (int i = 0; i < L; ++i) free(deltas[i]);
+                if (isnanf(sum)) {
+                    for (int t = 0; t < L; ++t) free(deltas[t]);
                     free(deltas);
-
-                    return -1; // errx(EXIT_FAILURE, "Sum became nan: next->weights[%d][%d]=%f deltas[%d][%d]=%f", k, i, next->weights[k][i], li + 1, k, deltas[li + 1][k]);
+                    printf("Sum became NaN during backprop\n");
+                    return -1;
                 }
             }
-            // ReLU derivative: output > 0 => 1 else 0
-            float deriv = cur->outputs[i] > 0.0L ? 1.0L : 0.0L;
+            float out = cur->outputs[i];
+            float deriv = out * (1.0f - out); /* sigmoid'(z) */
             deltas[li][i] = sum * deriv;
-            if(isnanf(deltas[li][i])) {
-                for (int i = 0; i < L; ++i) free(deltas[i]);
+            if (isnanf(deltas[li][i])) {
+                for (int t = 0; t < L; ++t) free(deltas[t]);
                 free(deltas);
-
-                return -1; // errx(EXIT_FAILURE, "Delta became nan : sum=%f deriv=%f", sum, deriv);
+                printf("Hidden delta became NaN: sum=%f deriv=%f\n", sum, deriv);
+                return -1;
             }
         }
     }
 
-    // Update weights and biases using gradients: grad_w = delta_i * input_j
+    /* update weights and biases */
     for (int li = 0; li < L; ++li) {
         struct layer *layer = neural_network->layers[li];
-        float *input_arr = NULL;
-        input_arr = *(layer->inputs);
-
+        float *input_arr = *(layer->inputs); /* pointer to inputs for this layer */
         for (int i = 0; i < layer->layer_size; ++i) {
             float delta = deltas[li][i];
-            // bias update
+            /* update bias */
             layer->biases[i] -= learning_rate * delta;
-            if (isnanf(layer->biases[i]) || layer->biases[i] > 1e15) {
-                for (int i = 0; i < L; ++i) free(deltas[i]);
+            if (isnanf(layer->biases[i])) {
+                for (int t = 0; t < L; ++t) free(deltas[t]);
                 free(deltas);
-
-                return -1; //errx(EXIT_FAILURE, "Bias became nan : learning_rate=%f delta=%f", learning_rate, delta);
+                printf("Bias became NaN during update\n");
+                return -1;
             }
-            // weight updates
+            /* update weights */
             for (int j = 0; j < layer->prev_layer_size; ++j) {
                 float grad = delta * input_arr[j];
                 layer->weights[i][j] -= learning_rate * grad;
-                if (isnanf(layer->weights[i][j]) ||layer->weights[i][j] > 1e15) {
-                    for (int i = 0; i < L; ++i) free(deltas[i]);
+                if (isnanf(layer->weights[i][j])) {
+                    for (int t = 0; t < L; ++t) free(deltas[t]);
                     free(deltas);
-
-                    return -1; //errx(EXIT_FAILURE, "Weight became nan : learning_rate=%f grad=%f", learning_rate, grad);
+                    printf("Weight became NaN during update\n");
+                    return -1;
                 }
             }
         }
     }
 
-    // free deltas
+    /* free deltas */
     for (int i = 0; i < L; ++i) free(deltas[i]);
     free(deltas);
 
     return 0;
 }
 /*
-void minimise_loss(const struct neural_network *neural_network, char expected_output, float learning_rate, float epsilon)
+int backprop_update(struct neural_network *neural_network, char expected_output, float learning_rate)
 {
+    float epsilon = 1e-15;
      for (int i = 0; i < neural_network->number_of_layers; ++i)
      {
           struct layer *layer = neural_network->layers[i];
@@ -210,7 +328,7 @@ void minimise_loss(const struct neural_network *neural_network, char expected_ou
           for (int j = 0; j < layer->layer_size; ++j)
           {
                float original_bias = layer->biases[j];
-               float original_loss = categorical_cross_entropy(neural_network, expected_output);
+               float original_loss = calculate_loss(neural_network, expected_output);
                float *tweaked_losses = malloc(sizeof(float) * layer->prev_layer_size);
 
 
@@ -219,12 +337,14 @@ void minimise_loss(const struct neural_network *neural_network, char expected_ou
                {
                     layer->weights[j][k] += epsilon;
                     neural_network_calculate_output(neural_network);
-                    tweaked_losses[k] = categorical_cross_entropy(neural_network, expected_output);
+                    tweaked_losses[k] = calculate_loss(neural_network, expected_output);
                     layer->weights[j][k] -= epsilon;
 
                     if (isnanf(tweaked_losses[k]))
                     {
-                        errx(EXIT_FAILURE, "Loss is nan");
+			            free(tweaked_losses);
+			            printf("Loss is nan\n");
+                        return -1;
                     }
                }
 
@@ -232,7 +352,7 @@ void minimise_loss(const struct neural_network *neural_network, char expected_ou
 
               layer->biases[j] += epsilon;
               neural_network_calculate_output(neural_network);
-              float tweaked_loss = categorical_cross_entropy(neural_network, expected_output);
+              float tweaked_loss = calculate_loss(neural_network, expected_output);
 
               layer->biases[j] = (layer->biases[j] - epsilon) - learning_rate * ( tweaked_loss + (layer->biases[j] - epsilon) )/epsilon;
 
@@ -244,6 +364,7 @@ void minimise_loss(const struct neural_network *neural_network, char expected_ou
               free(tweaked_losses);
           }
      }
+     return 0;
 }
 */
 void export_neural_network(struct neural_network *neural_network, float learning_rate, int batch_size, int nb_sessions, int success)
