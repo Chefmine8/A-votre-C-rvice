@@ -16,7 +16,7 @@ struct neural_network {
     /**
      * An array of size input_size
      */
-    long double *inputs;
+    float *inputs;
 
     /**
      * Number of layers inside the neural network
@@ -34,7 +34,7 @@ struct neural_network {
     /**
      * A pointer to an array of size output_size
      */
-    long double **outputs;
+    float **outputs;
 };
 
 /**
@@ -63,11 +63,13 @@ void check_neural_network(const struct neural_network *neural_network);
  */
 void neural_network_calculate_output(const struct neural_network *neural_network);
 
-long double categorical_cross_entropy(const struct neural_network *neural_network, char expected_output);
+float categorical_cross_entropy(const struct neural_network *neural_network, char expected_output);
 
 char get_neural_network_output(const struct neural_network *neural_network);
 
-void minimise_loss(const struct neural_network *neural_network, char expected_output, long double learning_rate, long double epsilon);
+int backprop_update(struct neural_network *neural_network, char expected_output, float learning_rate);
 
-void export_neural_network(struct neural_network *neural_network);
+// void minimise_loss(const struct neural_network *neural_network, char expected_output, float learning_rate, float epsilon);
+
+void export_neural_network(struct neural_network *neural_network, float learning_rate, int batch_size, int nb_sessions, int success);
 #endif //A_VOTRE_C_RVICE_NEURAL_NETWORK_H

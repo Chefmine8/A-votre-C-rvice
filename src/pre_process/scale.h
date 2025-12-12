@@ -50,8 +50,8 @@ Image *resize_image(const Image *src, int width, int height, bool keep_aspect_ra
  * The resulting pixel values are stored in a provided array.
  *
  * @param img   Pointer to the source Image
- * @param input Pointer to a pre-allocated array of long doubles with at least 784 elements (28*28)
+ * @param input Pointer to a pre-allocated array of floats with at least 784 elements (28*28)
  */
-void get_nn_input(const Image *img, long double *input);
+void get_nn_input(const Image *img, float *input);
 
 void cleanup_hidden_renderer_scale(void);
