@@ -42,7 +42,9 @@ void rotate_image(GtkWidget *window, GtkEntry *entry) {
     remove_small_shape(scale, shapes, 8);
     remove_outliers_shape(scale, shapes, 25, 75, 2.5, 3);
     remove_aspect_ration(scale, shapes, 0.1, 5);
-
+    
+    gtk_window_set_default_size(GTK_WINDOW(window), 450, 450);
+    gtk_container_add(GTK_CONTAINER(window), image);
     gtk_widget_show_all(window);
 }
 
