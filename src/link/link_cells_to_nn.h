@@ -8,12 +8,12 @@
 #include <dirent.h>
 #include <string.h>
 #include <stddef.h>
-
-
-#include "../neural_network/neural_network.h"
-
+#include <SDL2/SDL_image.h>
+#include <stdint.h>
 
 char* get_dir_data(char* identifiant);
+
+void create_grid(char* id);
 
 #endif
 
