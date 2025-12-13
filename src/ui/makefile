@@ -27,4 +27,5 @@ a.out: $(OBJ)
 
 clean:
 	rm -f $(OBJ) a.out
+	rm -rf ./output
 
