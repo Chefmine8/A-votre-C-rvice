@@ -133,7 +133,7 @@ void softmax_activation_function_2(struct layer *layer, float max)
 
 float sigmoid(float input)
 {
-    printf("1.0 / (1.0 + expf(-input = %f)) = %f\n", input, 1.0 / (1.0 + expf(-input)));
+    //printf("1.0 / (1.0 + expf(-input = %f)) = %f\n", input, 1.0 / (1.0 + expf(-input)));
     return 1.0 / (1.0 + expf(-input));
 }
 
@@ -183,7 +183,7 @@ void layer_calculate_output(const struct layer *layer)
         {
             max = (*layer->inputs)[0];
         }
-        // printf("output + layer->biases[i] = %f\n", output + layer->biases[i]);
+        //printf("output + layer->biases[i] = %f\n", output + layer->biases[i]);
         layer->outputs[i] = layer->is_output_layer ? output + layer->biases[i] : ReLU_activation_function(output + layer->biases[i] );
 
         //if(layer->outputs[i] < -1e10 || layer->outputs[i] > 1e10 || isnanf(layer->outputs[i]) || isinff(layer->outputs[i]) ) {

@@ -87,33 +87,21 @@ Image* get_image(char *expected_output)
     return DATASET[row][col];
 }
 
-int single_train_cession(const struct neural_network *neural_network, float learning_rate, int batch_size) {
-    int returned_value = 0;
-    for(int b = 0; b < batch_size && returned_value == 0; b++) {
-        char expected_output;
-        Image *img = get_image(&expected_output);
-        if(img != NULL) {
-            get_nn_input(img, neural_network->inputs);
-            returned_value = backprop_update_3(neural_network, expected_output, learning_rate);
-        }
-    }
-    return returned_value;
+
+void zero_vector(double *v, int size)
+{
+    for (int i = 0; i < size; i++)
+        v[i] = 0.0;
 }
 
-int all_dataset_train_session(struct neural_network *neural_network, float learning_rate) {
-    int returned_value = 0;
-    for(int i = 0; i < 26 && returned_value == 0; i++) {
-        for(int j = 0; j < 570 && returned_value == 0; j++) {
-            char expected_output = i + 'A';
-            Image *img = DATASET[i][j];
-            if(img != NULL){
-                get_nn_input(img, neural_network->inputs);
-                returned_value = backprop_update_3(neural_network, expected_output, learning_rate);
-            }
-        }
-    }
-    return returned_value;
+void zero_matrix(double **m, int rows, int cols)
+{
+    for (int i = 0; i < rows; i++)
+        for (int j = 0; j < cols; j++)
+            m[i][j] = 0.0;
 }
+
+
 
 int test_neural_network(struct neural_network *neural_network) {
     char* path = "../../resources/dataset/data/testing_data/";
@@ -178,27 +166,131 @@ int test_neural_network(struct neural_network *neural_network) {
     printf("\t\ttotal_success=%d, %f%\n", total_success, ((float)total_success) / (28*26) * 100.0);
     return total_success;
 }
+void train_nn(
+    struct neural_network *nn,
+    int epochs,
+    double learning_rate
+)
+{
+
+    double *dZ2 = malloc(sizeof(double) * 26);
+    double *db2 = malloc(sizeof(double) * 26);
+    double **dW2 = malloc(sizeof(double*) * 26);
+    for (int i = 0; i < 26; i++)
+        dW2[i] = malloc(sizeof(double) * 128);
+
+    double *dA1 = malloc(sizeof(double) * 128);
+    double *dZ1 = malloc(sizeof(double) * 128);
+    double *db1 = malloc(sizeof(double) * 128);
+    double **dW1 = malloc(sizeof(double*) * 128);
+    for (int i = 0; i < 128; i++)
+        dW1[i] = malloc(sizeof(double) * 784);
+
+    double *dA0 = malloc(sizeof(double) * 784);
+    printf("fini de malloc\n");
+    for (int e = 0; e < epochs; e++) 
+    {
+        double epoch_loss = 0.0;
+        for(int i = 0; i < 26; i++) 
+        {
+            for(int j = 0; j < 570; j++) 
+            {
+                char expected = i + 'A';
+                printf("\n\nTry : %d with %c\n\n",i*570+j,expected);
+                Image *img = DATASET[i][j];
+                if(img != NULL)
+                {
+                    get_nn_input(img, nn->inputs);
+                    printf("image loaded\n");
+                }
+                
+                printf("feed forward\n");
+                get_neural_network_output(nn);
+
+                printf("calculate loss\n");
+                epoch_loss += calculate_loss(nn, expected);
+
+                zero_vector(db2, 26);
+                zero_matrix(dW2, 26, 128);
+                zero_vector(db1, 128);
+                zero_matrix(dW1, 128, 784);
+
+                printf("softmax\n");
+                softmax_cross_entropy_backward(nn, expected, dZ2);
+
+                printf("linear output\n");
+                linear_backward_output(nn, dZ2, dW2, db2, dA1);
+
+    
+                printf("Relu\n");
+                relu_backward(
+                    dA1,
+                    nn->layers[0]->outputs,
+                    dZ1,
+                    128
+                );
+                
+                printf("linear hidden\n");
+                linear_backward_hidden(nn, dZ1, dW1, db1, dA0);
+
+
+                printf("update output\n");
+                update_layer(
+                    nn->layers[1]->weights,
+                    nn->layers[1]->biases,
+                    dW2,
+                    db2,
+                    26,
+                    128,
+                    learning_rate
+                );
+
+                printf("update hidden\n");
+                update_layer(
+                    nn->layers[0]->weights,
+                    nn->layers[0]->biases,
+                    dW1,
+                    db1,
+                    128,
+                    784,
+                    learning_rate
+                );
+            }
+        }
+        
+
+        printf("Epoch %d | loss = %f\n", e, epoch_loss / (570*26));
+    }
+
+
+    free(dZ2); free(db2);
+    for (int i = 0; i < 26; i++) free(dW2[i]);
+    free(dW2);
+
+    free(dA1); free(dZ1); free(db1); free(dA0);
+    for (int i = 0; i < 128; i++) free(dW1[i]);
+    free(dW1);
+}
 
 int main()
 {
     load_dataset();
-    int nb_sessions = 1000;
-    int batch_size  = 30;
+    int nb_sessions = 100;
+    int batch_size  = 1;
 
     float learning_rate = 0.1;
-    int layer_1 = 28*28;
 
-    int arr[] = {28*28, layer_1, 26};
+    int arr[] = {28*28, 128, 26};
     struct neural_network *neural_network = create_neural_network(3, arr);
     int success = 0;
     int returned_value = 0;
 
     int total_success = 0;
-
+    train_nn(neural_network,nb_sessions,learning_rate);
     for(int i = 0; i < nb_sessions && returned_value == 0; i++) {
         printf("i'm in\n");
 
-        returned_value = all_dataset_train_session(neural_network, learning_rate); //, batch_size);
+        //returned_value = all_dataset_train_session(neural_network, learning_rate); //, batch_size);
         success = test_neural_network(neural_network);
         total_success += success;
         printf(" Average nb of success : %f\n", ((float)total_success) / ((float)i + 1));
