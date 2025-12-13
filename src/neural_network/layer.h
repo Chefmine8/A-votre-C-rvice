@@ -104,4 +104,7 @@ void check_layer(const struct layer *layer);
 
 void print_values(const struct layer *layer);
 
+float dot_product(const float *a, const float *b, int size);
+
+float deriv_sigmoid(float input);
 #endif //A_VOTRE_C_RVICE_LAYER_H

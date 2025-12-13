@@ -82,7 +82,9 @@ Image* get_image(char *expected_output)
 {
     int row = rand() % 26;
     *expected_output = 'A' + row;
-    return DATASET[row][rand() % 27];
+    int col = rand() % 570;
+    // printf("Getting image %d/%d\n", row, col);
+    return DATASET[row][col];
 }
 
 int single_train_cession(const struct neural_network *neural_network, float learning_rate, int batch_size) {
@@ -90,10 +92,25 @@ int single_train_cession(const struct neural_network *neural_network, float lear
     for(int b = 0; b < batch_size && returned_value == 0; b++) {
         char expected_output;
         Image *img = get_image(&expected_output);
+        if(img != NULL) {
+            get_nn_input(img, neural_network->inputs);
+            returned_value = backprop_update_3(neural_network, expected_output, learning_rate);
+        }
+    }
+    return returned_value;
+}
 
-        get_nn_input(img, neural_network->inputs);
-
-        returned_value = backprop_update(neural_network, expected_output, learning_rate);
+int all_dataset_train_session(struct neural_network *neural_network, float learning_rate) {
+    int returned_value = 0;
+    for(int i = 0; i < 26 && returned_value == 0; i++) {
+        for(int j = 0; j < 570 && returned_value == 0; j++) {
+            char expected_output = i + 'A';
+            Image *img = DATASET[i][j];
+            if(img != NULL){
+                get_nn_input(img, neural_network->inputs);
+                returned_value = backprop_update_3(neural_network, expected_output, learning_rate);
+            }
+        }
     }
     return returned_value;
 }
@@ -125,10 +142,17 @@ int test_neural_network(struct neural_network *neural_network) {
                     Image *img = load_image(path_to_file);
 
                     get_nn_input(img, neural_network->inputs);
+                    for(int i = 0; i < neural_network->input_size; i++){
+                        if(isnanf(neural_network->inputs[i])){
+                            errx(EXIT_FAILURE, "Input is nan for image %s\n", path_to_file);
+                        }
+                    }
+
 
                     neural_network_calculate_output(neural_network);
-
+                    printf("\n");
                     char output = get_neural_network_output(neural_network);
+                    printf("Expected: %s, Got: %c\n", letter_char, output);
                     total_success += output == letter_char[0];
 
 
@@ -151,85 +175,37 @@ int test_neural_network(struct neural_network *neural_network) {
     // if(isnan(total_success)){
     //     errx(EXIT_FAILURE, "total_success is nan\n");
     //}
-    printf("\t\ttotal_success=%d, %f%\n", total_success, ((float)total_success) / 728.0 * 100.0);
+    printf("\t\ttotal_success=%d, %f%\n", total_success, ((float)total_success) / (28*26) * 100.0);
     return total_success;
 }
 
 int main()
 {
     load_dataset();
-    int max_success = 0;
     int nb_sessions = 1000;
-        for(float batch_size = 5; batch_size < 100; batch_size++){
-            for(int layer_1 = 40; layer_1 < 100; layer_1++){
-                for(int layer_2 = 40; layer_2 < 100; layer_2++){
-                    for(float learning_rate = 0.001; learning_rate < 1.0; learning_rate += 0.001){
+    int batch_size  = 10;
 
-                        int arr[] = {28*28, layer_1, layer_2, 26};
-                        struct neural_network *neural_network = create_neural_network(4, arr);
-                        int returned_value = 0;
-                        for(int i = 0; i < nb_sessions && returned_value == 0; i++)
-                        {
-                            returned_value = single_train_cession(neural_network, learning_rate, batch_size);
-                        }
-                        if(returned_value == 0)
-                        {
-                            int success = test_neural_network(neural_network);
-                            if(success > max_success)
-                            {
-                                max_success = success;
-                                export_neural_network(neural_network, learning_rate, batch_size, nb_sessions, success);
-                                printf("New model: layer1=%d, layer2=%d, learning_rate=%f, batch_size=%f, nb_sessions=%d, nb of success= %f / 728 = %f%\n", layer_1, layer_2, learning_rate, batch_size, nb_sessions, success, success / 728.0 * 100.0);
-                            }
-                        }
-                        free_neural_network(neural_network);
-                    }
-                }
-            }
-        }
+    float learning_rate = 0.1;
+    int layer_1 = 70;
+    int layer_2 = 50;
 
+    int arr[] = {28*28, layer_1, layer_2, 26};
+    struct neural_network *neural_network = create_neural_network(4, arr);
+    int success = 0;
+    int returned_value = 0;
 
+    int total_success = 0;
 
-
-
-    free_dataset();
-
-    /*
-    float max_success = 0.0;
-    for(int layer_1 = 5; layer_1 < 100; layer_1++)
-    {
-        for(int layer_2 = 5; layer_2 < 100; layer_2++)
-        {
-            for(float learning_rate = 0.001; learning_rate < 1.0; learning_rate += 0.001)
-            {
-                for(float learning_rate_decay = 0.999; learning_rate_decay > 0.0; learning_rate_decay -= 0.001)
-                {
-                    for(int nb_sessions = 1; nb_sessions < 15; nb_sessions++)
-                    {
-                        int arr[] = {28*28, layer_1, layer_2, 26};
-                        struct neural_network *neural_network = create_neural_network(4, arr);
-                        float current_learning_rate = learning_rate;
-                        int returned_value = 0;
-                        for(int i = 0; i < nb_sessions && returned_value == 0; i++)
-                        {
-                            returned_value = single_train_cession(neural_network, current_learning_rate);
-                            current_learning_rate *= learning_rate_decay;
-                        }
-                        if(returned_value == 0)
-                        {
-                            float success = test_neural_network(neural_network);
-                            if(success > max_success)
-                            {
-                                max_success = success;
-                                export_neural_network(neural_network, learning_rate, learning_rate_decay, nb_sessions, success / 728.0L);
-                                printf("New best model: layer1=%d, layer2=%d, learning_rate=%f, learning_rate_decay=%f, nb_sessions=%d, nb of success= %f / 728 = %f%\n", layer_1, layer_2, learning_rate, learning_rate_decay, nb_sessions, success, success / 728.0 * 100.0);
-                            }
-                        }
-                        free_neural_network(neural_network);
-                    }
-                }
-            }
-        }
+    for(int i = 0; i < nb_sessions && returned_value == 0; i++) {
+        returned_value = all_dataset_train_session(neural_network, learning_rate); //, batch_size);
+        success = test_neural_network(neural_network);
+        total_success += success;
+        printf(" Average nb of success : %f\n", ((float)total_success) / ((float)i + 1));
+        // learning_rate *= 0.999;
     }
-    */
+
+    export_neural_network(neural_network, learning_rate, batch_size, nb_sessions, success);
+
+    free_neural_network(neural_network);
+    free_dataset();
 }
