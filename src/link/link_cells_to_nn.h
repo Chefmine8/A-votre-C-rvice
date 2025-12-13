@@ -19,5 +19,13 @@ char* get_dir_data(char* identifiant);
 
 void create_grid(char* id,struct neural_network* neural_net);
 
+int get_row(char* str);
+
+int get_column(char* str);
+
+char* get_word_letter(int n_word,int n_letter);
+
+void create_word_list(char* id,struct neural_network* neural_net);
+
 #endif
 
