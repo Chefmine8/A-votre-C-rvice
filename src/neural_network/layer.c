@@ -174,7 +174,7 @@ void layer_calculate_output(const struct layer *layer)
         layer->outputs[i] = layer->is_output_layer ? softmax_activation_function_1(output + layer->biases[i]) : ReLU_activation_function(output + layer->biases[i] );
         sum += layer->outputs[i];
         if(layer->outputs[i] < -1e10 || layer->outputs[i] > 1e10 || isnanf(layer->outputs[i]) || isinff(layer->outputs[i]) ) {
-            printf("layer nb %d : layer->outputs[%d] layer->is_output_layer=%d output=%f\n", layer->layer_size, i, layer->is_output_layer, output);
+            //printf("layer nb %d : layer->outputs[%d] layer->is_output_layer=%d output=%f\n", layer->layer_size, i, layer->is_output_layer, output);
         }
         if(isnanf(layer->outputs[i]) || isinff(layer->outputs[i]) ) {
             errx(EXIT_FAILURE, "layer nb %d : layer->outputs[%d] layer->is_output_layer=%d output=%f", layer->layer_size, i, layer->is_output_layer, output);

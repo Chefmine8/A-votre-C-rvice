@@ -183,20 +183,21 @@ int main()
 {
     load_dataset();
     int nb_sessions = 1000;
-    int batch_size  = 10;
+    int batch_size  = 30;
 
     float learning_rate = 0.1;
-    int layer_1 = 70;
-    int layer_2 = 50;
+    int layer_1 = 28*28;
 
-    int arr[] = {28*28, layer_1, layer_2, 26};
-    struct neural_network *neural_network = create_neural_network(4, arr);
+    int arr[] = {28*28, layer_1, 26};
+    struct neural_network *neural_network = create_neural_network(3, arr);
     int success = 0;
     int returned_value = 0;
 
     int total_success = 0;
 
     for(int i = 0; i < nb_sessions && returned_value == 0; i++) {
+        printf("i'm in\n");
+
         returned_value = all_dataset_train_session(neural_network, learning_rate); //, batch_size);
         success = test_neural_network(neural_network);
         total_success += success;
@@ -208,4 +209,5 @@ int main()
 
     free_neural_network(neural_network);
     free_dataset();
+    printf("\n\nfinish\n\n");
 }

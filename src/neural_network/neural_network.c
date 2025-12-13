@@ -55,8 +55,11 @@ void check_neural_network(const struct neural_network *neural_network) {
      neural_network->inputs[0] = 69;
 
      ((*(neural_network->outputs))[0]) = 69;
-
-     check_layer(neural_network->layers[neural_network->number_of_layers - 1]);
+     for(int i = 0; i<neural_network->number_of_layers;i++)
+     {
+        check_layer(neural_network->layers[i]);
+        //print_values(neural_network->layers[i]);
+     }
 
 }
 
@@ -89,7 +92,7 @@ float calculate_loss(const struct neural_network *neural_network, char expected_
 
 char get_neural_network_output(const struct neural_network *neural_network) {
      float max = (*neural_network->outputs)[0];
-    float max_index = 0;
+     float max_index = 0;
      for (int i = 1; i < neural_network->output_size; ++i) {
           if (max < (*neural_network->outputs)[i]) {
                max = (*neural_network->outputs)[i];
@@ -98,12 +101,27 @@ char get_neural_network_output(const struct neural_network *neural_network) {
      }
     return 'A' + max_index;
 }
-
+/*
 int backprop_update_4(struct neural_network *neural_network, char expected_output, float learning_rate)
 {
     float **dE_dz = m
     // https://doug919.github.io/notes-on-backpropagation-with-cross-entropy/
 }
+*/
+
+int b_p(struct neural_network *neural, char expected)
+{
+    struct layer *l1 = neural->layers[0];
+    struct layer *l2 = neural->layers[1];
+    struct layer *l3 = neural->layers[2];
+    layer_calculate_output(l1);
+    layer_calculate_output(l2);
+    layer_calculate_output(l3);
+
+    float loss = calculate_loss(neural,expected);
+
+}
+
 
 int backprop_update_3(struct neural_network *neural_network, char expected_output, float learning_rate)
 {
@@ -205,7 +223,7 @@ int backprop_update_3(struct neural_network *neural_network, char expected_outpu
 #include <string.h>
 
 /* Replace minimise_loss or add this new function and call it instead.
- * Assumes layer->outputs, layer->weights, layer->biases, layer->inputs, layer->prev_layer_size are valid.
+   Assumes layer->outputs, layer->weights, layer->biases, layer->inputs, layer->prev_layer_size are valid.
  */
 
 int backprop_update_2(struct neural_network *neural_network, char expected_output, float learning_rate)
@@ -367,6 +385,12 @@ int backprop_update(struct neural_network *neural_network, char expected_output,
      return 0;
 }
 */
+
+
+
+
+
+
 void export_neural_network(struct neural_network *neural_network, float learning_rate, int batch_size, int nb_sessions, int success)
 {
     FILE *file = fopen("exported_neural_network.nn", "w");
@@ -403,3 +427,4 @@ void export_neural_network(struct neural_network *neural_network, float learning
 
     fclose(file);
 }
+
