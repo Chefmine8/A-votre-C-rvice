@@ -1,7 +1,7 @@
 CC = gcc -g
 CFLAGS = -Wall -Wextra -g `sdl2-config --cflags`
 LDFLAGS = `sdl2-config --libs` -lSDL2_image -lm
-
+SANIT = -fsanitize=address
 SRC = importTrainingData.c \
       ../core/image.c \
       ../neural_network/layer.c \
@@ -15,12 +15,16 @@ TARGET = training
 all: $(TARGET)
 
 $(TARGET): $(OBJ)
-	$(CC) $(OBJ) -o $@ $(LDFLAGS)
+	$(CC) $(CFLAGS) $(OBJ) -o $@ $(LDFLAGS)
+
+sanit:$(OBJ)
+	$(CC) $(CFLAGS) $(SANIT) $(OBJ) -o san $(LDFLAGS)
+
 
 %.o: %.c
 	$(CC) $(CFLAGS) -c $< -o $@
 
 clean:
-	rm -f $(OBJ) $(TARGET)
+	rm -f $(OBJ) $(TARGET) san
 
 .PHONY: all clean run
