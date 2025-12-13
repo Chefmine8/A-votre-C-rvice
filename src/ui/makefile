@@ -1,8 +1,9 @@
 CC = gcc
-CFLAGS = -Wall -Wextra -fsanitize=address -O2 -g \
-         `pkg-config --cflags gtk+-3.0 sdl2 SDL2_image`
 
-LDFLAGS = `pkg-config --libs gtk+-3.0 sdl2 SDL2_image` -lm -fsanitize=address
+
+
+CFLAGS = -Wall -I$(SRC_DIR) -Wextra -g `pkg-config --cflags gtk+-3.0 sdl2 SDL2_image`
+LDFLAGS =  `pkg-config --libs gtk+-3.0 sdl2 SDL2_image` -lm
 
 SRC = ui.c \
       ../core/image.c \

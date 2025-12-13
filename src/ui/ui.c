@@ -347,7 +347,7 @@ void rotate_image(GtkWidget *window, GtkEntry *entry, double manual_angle)
             if (cell_images[r][c] == NULL)
                 continue;
             char cell_filename[256];
-            snprintf(cell_filename, sizeof(cell_filename), "./output/%d_%d/cell_%d_%d.png",rows, cols, c + 1, r + 1);
+            snprintf(cell_filename, sizeof(cell_filename), "./output/img_%d_%d/cell_%d_%d.png",rows, cols, c + 1, r + 1);
             SDL_Surface *cell_surf = image_to_sdl_surface(cell_images[r][c]);
             export_image(cell_surf, cell_filename);
             SDL_FreeSurface(cell_surf);
