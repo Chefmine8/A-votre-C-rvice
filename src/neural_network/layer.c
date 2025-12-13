@@ -112,20 +112,28 @@ float ReLU_activation_function(float input)
  */
 float softmax_activation_function_1(float input)
 {
+    printf("%f -> %f\n", input, expf(input));
     return expf(input);
 }
 
-void softmax_activation_function_2(struct layer *layer, float sum)
+void softmax_activation_function_2(struct layer *layer, float max)
 {
+    float sum = 0;
     for (int i = 0; i < layer->layer_size; i++)
     {
-        layer->outputs[i] = layer->outputs[i] / sum;
+        layer->outputs[i] = expf(layer->outputs[i] - max) ;
+        sum += layer->outputs[i];
+    }
+    for (int i = 0; i < layer->layer_size; i++)
+    {
+        layer->outputs[i] = layer->outputs[i] / sum ;
     }
 }
 
 
 float sigmoid(float input)
 {
+    printf("1.0 / (1.0 + expf(-input = %f)) = %f\n", input, 1.0 / (1.0 + expf(-input)));
     return 1.0 / (1.0 + expf(-input));
 }
 
@@ -153,7 +161,8 @@ void layer_calculate_output(const struct layer *layer)
         layer_calculate_output(layer->prev_layer);
     }
 
-    float sum = 0;
+
+    float max = (*layer->inputs)[0];
     for (int i = 0; i < layer->layer_size; i++)
     {
         float output = 0;
@@ -170,18 +179,26 @@ void layer_calculate_output(const struct layer *layer)
                 errx(EXIT_FAILURE, "layer nb %d : output is nan at ((*layer->inputs)[%d]=%f) * (weight[%d][%d]=%f) = %f %f\n", layer->layer_size, i, (*(layer->inputs))[j], i, j, layer->weights[i][j], (*(layer->inputs))[i] < 0.00001 ? 0 : (*(layer->inputs))[i] * layer->weights[i][j], output);
             }
         }
-
-        layer->outputs[i] = layer->is_output_layer ? softmax_activation_function_1(output + layer->biases[i]) : ReLU_activation_function(output + layer->biases[i] );
-        sum += layer->outputs[i];
-        if(layer->outputs[i] < -1e10 || layer->outputs[i] > 1e10 || isnanf(layer->outputs[i]) || isinff(layer->outputs[i]) ) {
-            printf("layer nb %d : layer->outputs[%d] layer->is_output_layer=%d output=%f\n", layer->layer_size, i, layer->is_output_layer, output);
+        if (max < (*layer->inputs)[0])
+        {
+            max = (*layer->inputs)[0];
         }
-        if(isnanf(layer->outputs[i]) || isinff(layer->outputs[i]) ) {
-            errx(EXIT_FAILURE, "layer nb %d : layer->outputs[%d] layer->is_output_layer=%d output=%f", layer->layer_size, i, layer->is_output_layer, output);
+        // printf("output + layer->biases[i] = %f\n", output + layer->biases[i]);
+        layer->outputs[i] = layer->is_output_layer ? output + layer->biases[i] : ReLU_activation_function(output + layer->biases[i] );
+
+        //if(layer->outputs[i] < -1e10 || layer->outputs[i] > 1e10 || isnanf(layer->outputs[i]) || isinff(layer->outputs[i]) ) {
+        //    printf("layer nb %d : layer->outputs[%d] layer->is_output_layer=%d output=%f\n", layer->layer_size, i, layer->is_output_layer, output);
+        //}
+        if(isnanf(layer->outputs[i]) || isinff(layer->outputs[i]) || layer->outputs[i] < -1.0e5 || layer->outputs[i] > 1.0e5 ) {
+            printf("isnanf(layer->outputs[i]) = %d\n", isnanf(layer->outputs[i]));
+            printf("isinff(layer->outputs[i]) = %d\n", isinff(layer->outputs[i]));
+            printf("layer->outputs[i] < -1.0e5 = %d\n", layer->outputs[i] < -1.0e5);
+            printf("layer->outputs[i] > 1.0e5 = %d\n", layer->outputs[i] > 1.0e5);
+            errx(EXIT_FAILURE, "layer nb %d : layer->outputs[%d] layer->is_output_layer=%d output=%f layer->outputs[i]=%f", layer->layer_size, i, layer->is_output_layer, output, layer->outputs[i]);
         }
     }
     if(layer->is_output_layer) {
-        softmax_activation_function_2((struct layer *)layer, sum);
+        softmax_activation_function_2((struct layer *)layer, max);
     }
 }
 

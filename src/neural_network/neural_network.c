@@ -101,8 +101,12 @@ char get_neural_network_output(const struct neural_network *neural_network) {
 
 int backprop_update_4(struct neural_network *neural_network, char expected_output, float learning_rate)
 {
-    float **dE_dz = m
+    float *dE_dz = malloc(sizeof(float) * neural_network->output_size );
+    for (int i = 0; i < neural_network->output_size; i++) {
+        dE_dz[i] = (*neural_network->outputs)[i] - i == (expected_output - 'A');
+    }
     // https://doug919.github.io/notes-on-backpropagation-with-cross-entropy/
+    return 0;
 }
 
 int backprop_update_3(struct neural_network *neural_network, char expected_output, float learning_rate)
@@ -129,10 +133,10 @@ int backprop_update_3(struct neural_network *neural_network, char expected_outpu
     }
 
     float y_pred = (*(neural_network->outputs))[expected_output - 'A'];
-
+    // printf("y_pred = %f\n", y_pred);
     // printf("y_pred = %f -> %f\n", y_pred, -2.0/(1 - y_pred));
     float dL_dypred = -2.0/(float)(neural_network->output_size) * (1 - y_pred);
-
+    printf("-2.0/(float)(neural_network->output_size=%d) * (1 - y_pred=%f)\n", neural_network->output_size, y_pred);
 
     float ***dypred_dw = malloc(sizeof(float**) * neural_network->number_of_layers);
     float **dypred_db = malloc(sizeof(float*) * neural_network->number_of_layers);
