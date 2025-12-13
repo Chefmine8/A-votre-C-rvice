@@ -28,5 +28,5 @@ gdb:
 .PHONY: all clean simple fsanit
 
 clean:
-	rm -f $(TARGET) img
+	rm -f $(TARGET) img word_list_file
 
