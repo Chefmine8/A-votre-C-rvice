@@ -13,7 +13,7 @@
 struct neural_network *create_neural_network(int size_of_arr, int arr[size_of_arr])
 {
 
-     if (size_of_arr <= 2) {
+     if (size_of_arr < 2) {
           errx(EXIT_FAILURE, "Do you have a brain of that size ?");
      }
      struct neural_network *neural_network = malloc(sizeof(struct neural_network));
@@ -101,10 +101,36 @@ char get_neural_network_output(const struct neural_network *neural_network) {
 
 int backprop_update_4(struct neural_network *neural_network, char expected_output, float learning_rate)
 {
-    float *dE_dz = malloc(sizeof(float) * neural_network->output_size );
+    // k -> neural_network->output_size
+    // j ->  neural_network->layers[neural_network->number_of_layers - 1]->prev_layer_size
+    // L = last layer
+    float *sigma_L_k = malloc(sizeof(float) * neural_network->output_size ); // dE / dz^L_k
     for (int i = 0; i < neural_network->output_size; i++) {
-        dE_dz[i] = (*neural_network->outputs)[i] - i == (expected_output - 'A');
+        sigma_L_k[i] = (*neural_network->outputs)[i] - i == (expected_output - 'A');
     }
+
+    float *aL1j = neural_network->layers[neural_network->number_of_layers - 1]->outputs; // a^(L-1)_j
+
+    float **dE_WLkj = malloc(sizeof(float*) * neural_network->output_size); // dE / dW^L_kj
+    for(int k = 0; k < neural_network->output_size; k++) {
+        dE_WLkj[k] = malloc(sizeof(float) * neural_network->layers[neural_network->number_of_layers - 1]->prev_layer_size);
+        for(int j = 0; j < neural_network->layers[neural_network->number_of_layers - 1]->prev_layer_size; j++) {
+            dE_WLkj[k][j] = sigma_L_k[k] * aL1j[j];
+        }
+    }
+
+    float *dE_bLk = sigma_L_k; // dE / db^L_k
+
+    for(int k = 0; k < neural_network->output_size; k++) {
+        for(int j = 0; j < neural_network->layers[neural_network->number_of_layers - 1]->prev_layer_size; j++) {
+            neural_network->layers[neural_network->number_of_layers - 1]->weights[k][j] -= learning_rate * dE_WLkj[k][j];
+        }
+        neural_network->layers[neural_network->number_of_layers - 1]->biases[k] -= learning_rate * dE_bLk[k];
+    }
+    // Backprop for last layer is done
+    // l-1 = L - 1
+
+
     // https://doug919.github.io/notes-on-backpropagation-with-cross-entropy/
     return 0;
 }
