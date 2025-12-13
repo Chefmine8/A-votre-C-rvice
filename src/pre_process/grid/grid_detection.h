@@ -191,8 +191,7 @@ void detect_grid_size(Shape **shapes, int *rows, int *cols);
  * @param cols Number of columns in the grid.
  * @return 2D array of Image pointers representing the extracted grid cells.
  */
-Image ***get_grid_cells(Image *img, Shape **shapes, int rows, int cols);
-
+Image ***get_grid_cells(Image *img, Shape **shapes, int rows, int cols, char *path);
 /** * @brief Retrieves all world from the world liste using the shapes.
  *  * use this function on a image without the grid present
  * @param shapes NULL-terminated array of detected Shape pointers.

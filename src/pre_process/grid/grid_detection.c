@@ -841,7 +841,7 @@ void detect_grid_size(Shape **shapes, int *rows, int *cols)
     free(shapes_by_y);
 }
 
-Image ***get_grid_cells(Image *img, Shape **shapes, int rows, int cols)
+Image ***get_grid_cells(Image *img, Shape **shapes, int rows, int cols, char *path)
 {
     Image ***grid = malloc(rows * sizeof(Image **));
     if (!grid)
@@ -918,24 +918,39 @@ Image ***get_grid_cells(Image *img, Shape **shapes, int rows, int cols)
             assigned[row][col] = s;
         }
     }
-    for (int r = 0; r < rows; r++)
+    //create path file
+    if (path != NULL)
     {
-        for (int c = 0; c < cols; c++)
-        {
-            if (assigned[r][c] == NULL)
+            FILE *f = fopen(path, "w");
+            if (f != NULL)
             {
-                grid[r][c] = NULL;
-                continue;
+                for (int r = 0; r < rows; r++)
+                {
+                    for (int c = 0; c < cols; c++)
+                    {
+                        if (assigned[r][c] == NULL)
+                        {
+                            grid[r][c] = NULL;
+                            continue;
+                        }
+
+                        Shape *s = assigned[r][c];
+                        int x_start = s->min_x;
+                        int y_start = s->min_y;
+                        int x_end = s->max_x;
+                        int y_end = s->max_y;
+
+                        int center_x = (x_start + x_end) / 2;
+                        int center_y = (y_start + y_end) / 2;
+
+                        //write r_c:center_x_center_y
+                        fprintf(f, "%d_%d:%d_%d\n", r, c, center_x, center_y);
+
+                        grid[r][c] = extract_sub_image(img, x_start, y_start, x_end, y_end);
+                    }
+                }
+            fclose(f);
             }
-
-            Shape *s = assigned[r][c];
-            int x_start = s->min_x;
-            int y_start = s->min_y;
-            int x_end = s->max_x;
-            int y_end = s->max_y;
-
-            grid[r][c] = extract_sub_image(img, x_start, y_start, x_end, y_end);
-        }
     }
 
     for (int r = 0; r < rows; r++)
