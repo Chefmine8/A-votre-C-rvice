@@ -352,32 +352,4 @@ void export_neural_network(struct neural_network *neural_network, float learning
     fclose(file);
 }
 
-void import_neural_network(struct neural_network *neural_network, const char *filename)
-{
-    FILE *file = fopen(filename, "r");
 
-    char str[1000000];
-    int is_bias = 0;
-    int is_weights = 0;
-    int l = 0;
-    while(fgets(str, 1000000, file) != NULL)
-    {
-        if(is_bias)
-        {
-            for(int i = 0; str[i] != '\0'; i++)
-            {
-                 char *bias = strtok(&str[i],  "\t ");
-                 while(bias != NULL)
-                 {
-                      neural_network->layers[is_bias - 1]->biases[i] = atof(bias);
-                      bias = strtok(NULL, "\t");
-                 }
-            }
-        }
-
-        is_bias str[0] == 'B';
-        is_weights str[0] == 'W';
-    }
-
-    fclose(file);
-}
