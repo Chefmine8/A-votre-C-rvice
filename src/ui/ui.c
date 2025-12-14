@@ -204,13 +204,62 @@ void nn_transf(GtkButton *button, gpointer user_data)
 /* Transmet au solveur */
 void to_solver(GtkButton *button, gpointer user_data)
 {
+    Cooord coords[255][255];
+    FILE *fp = fopen("./output/map", "r");
+    int x, y, x1, y1;
+    while (fscanf(fp, "%d_%d:%d_%d\n", &x, &y, &x1, &y1) == 4)
+    {
+        coords[x][y].x1 = x1;
+        coords[x][y].y1 = y1;
+    }
+    fclose(fp);
+    Image* original = load_image("./original.png");
+    if (original->height > 500)
+    {
+        int height_objective = (int)(original->height * 0.8);
+        float scale_x = (float)height_objective / (float)(original->height);
+        Image *scale = manual_image_scaling(original, scale_x, scale_x);
+        original = scale;
+    }
+    else
+    {
+        int height_objective = (int)(original->height * 1.3);
+        float scale_x = (float)height_objective / (float)(original->height);
+        Image *scale = manual_image_scaling(original, scale_x, scale_x);
+        original = scale;
+    }
+
     FILE *f = fopen("word_list_file", "r");
     char s[256];
     while (fgets(s, sizeof(s), f) != NULL)
     {
         struct coord *c = solv(s);
+
+        int _x0 = coords[c->y_0][c->x_0].x1;
+        int _y0 = coords[c->y_0][c->x_0].y1;
+        int _x1 = coords[c->y_1][c->x_1].x1;
+        int _y1 = coords[c->y_1][c->x_1].y1;
+        printf("x:%d y:%d | x:%d y:%d", _x0, _y0, _x1, _y1);
+
+        draw_line(original, _x1, _y1, _x0, _y0, 255,0,0);
     }
+
     fclose(f);
+
+    export_image(image_to_sdl_surface(original), "FINAL.png");
+
+    GtkWidget *window = GTK_WIDGET(user_data);
+
+    /* Blank screen */
+    GList *children = gtk_container_get_children(GTK_CONTAINER(window));
+    for (GList *iter = children; iter != NULL; iter = g_list_next(iter))
+        gtk_widget_destroy(iter->data);
+    g_list_free(children);
+
+    GtkWidget *image = gtk_image_new_from_file("./FINAL.png");
+    gtk_container_add(GTK_CONTAINER(window), image);
+
+    gtk_widget_show_all(window);
 }
 
 /* Fonction qui gére le pré processing */
@@ -237,6 +286,8 @@ void rotate_image(GtkWidget *window, GtkEntry *entry, double manual_angle)
 
     Image *img = load_image(text);
     Image *original = load_image(text);
+
+    //export_image(image_to_sdl_surface(original), "original.png");
 
     grayscale_image(img);
 
@@ -343,7 +394,7 @@ void rotate_image(GtkWidget *window, GtkEntry *entry, double manual_angle)
               0);
 
     Image *sub_img = extract_sub_image(before, x_start, y_start, x_end, y_end);
-
+    export_image(image_to_sdl_surface(sub_img), "original.png");
     Shape *sub_shape = create_shape();
     for (int y = y_start - 30 < 0 ? 0 : y_start - 30;
          y <= (y_end + 30 >= before->height ? before->height - 1 : y_end + 30);
@@ -557,7 +608,7 @@ void rotate_image(GtkWidget *window, GtkEntry *entry, double manual_angle)
 
     /* Bouton Transmettre au solver */
     GtkWidget *solver_button =
-        gtk_button_new_with_label("Transmettre au réseau");
+        gtk_button_new_with_label("Transmettre au solveur");
     g_signal_connect(solver_button, "clicked", G_CALLBACK(to_solver), window);
 
     GtkWidget *vbox_display = gtk_box_new(GTK_ORIENTATION_VERTICAL, 6);
