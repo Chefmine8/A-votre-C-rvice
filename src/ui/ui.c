@@ -466,10 +466,6 @@ void rotate_image(GtkWidget *window, GtkEntry *entry, double manual_angle)
     export_image(image_to_sdl_surface(img), "rotate_tmp.png");
 
 
-    /* Affichage */
-    int display_width = 400;
-    int display_height = 400;
-
     GdkPixbuf* pixbuf_original = gdk_pixbuf_new_from_file(text, NULL);
     int new_width, new_height;
     get_scaled_size(gdk_pixbuf_get_width(pixbuf_original), gdk_pixbuf_get_height(pixbuf_original),
