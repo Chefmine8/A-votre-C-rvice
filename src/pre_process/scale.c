@@ -112,7 +112,7 @@ void get_nn_input(const Image *img, float *input)
             const Pixel *p = get_pixel(resized, i, j);
             // Convert to grayscale using standard luminance formula and normalize to [0, 1]
             float gray = (0.299 * p->r + 0.587 * p->g + 0.114 * p->b) / 255.0;
-            input[index++] = gray - 0.5;
+            input[index++] = gray;
         }
     }
     free_image(resized);
