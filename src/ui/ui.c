@@ -1,6 +1,7 @@
 #include "struct.h"
 
 
+/* Crée un dossier si il n'existe pas déjà. */
 int create_directory_if_not_exists(const char *path)
 {
     struct stat st = {0};
@@ -14,6 +15,7 @@ int create_directory_if_not_exists(const char *path)
     return 1;
 }
 
+/* Permet d'effacer le dossier au moment de quitter. */
 int remove_directory(const char *path) {
     DIR *d = opendir(path);
     size_t path_len = strlen(path);
@@ -28,7 +30,6 @@ int remove_directory(const char *path) {
             char *buf;
             size_t len;
 
-            /* Skip the names "." and ".." as we don't want to recurse on them. */
             if (!strcmp(p->d_name, ".") || !strcmp(p->d_name, ".."))
                 continue;
 
@@ -58,6 +59,7 @@ int remove_directory(const char *path) {
     return r;
 }
 
+/* Adapte l'image à la taille de la fenetre en concervant le bon ratio. */
 void get_scaled_size(int orig_width, int orig_height, int max_width, int max_height, int *new_width, int *new_height) {
     double ratio = (double)orig_width / (double)orig_height;
 
@@ -78,6 +80,16 @@ void get_scaled_size(int orig_width, int orig_height, int max_width, int max_hei
     }
 }
 
+/* Fonction qui transmet au reseau de neurone. */
+void nn_transf(GtkButton *button, gpointer user_data) {
+    GtkEntry *entry = GTK_ENTRY(user_data);
+
+    GtkWidget *window = gtk_widget_get_toplevel(GTK_WIDGET(button));
+
+    rotate_image(window, entry, 0.0);
+}
+
+/* Fonction qui gére le pré processing */
 void rotate_image(GtkWidget *window, GtkEntry *entry, double manual_angle)
 {
     const gchar *text_tmp = gtk_entry_get_text(entry);
@@ -95,15 +107,11 @@ void rotate_image(GtkWidget *window, GtkEntry *entry, double manual_angle)
     g_list_free(children);
 
 
-    /* Show Image */
     SDL_Init(SDL_INIT_VIDEO);
     IMG_Init(IMG_INIT_PNG);
 
     Image *img = load_image(text);
-
     Image *original = load_image(text);
-    //Image *scale = resize_image(img, 430, 430, true);
-    //free_image(img);
 
     grayscale_image(img);
 
@@ -132,7 +140,7 @@ void rotate_image(GtkWidget *window, GtkEntry *entry, double manual_angle)
     remove_aspect_ration(img, shapes, 0.1, 5);
 
     Image* before = copy_image(img);
-    // for each pixel in before
+
     for (int y = 0; y < before->height; y++)
     {
         for (int x = 0; x < before->width; x++)
@@ -141,31 +149,22 @@ void rotate_image(GtkWidget *window, GtkEntry *entry, double manual_angle)
             get_pixel(before, x, y)->shape_ptr = NULL;
         }
     }
-    /* Transform to circle image for better hough transform */
     Image *circle = circle_image(img, shapes, 0.25);
-    //free_image(img);
     int theta_range, rho_max;
     int **hs = hough_space(circle, &theta_range, &rho_max);
-    // filter the hough space the only peak important lines
     hough_space_filter(hs, theta_range, rho_max, 0.495);
 
-    // remove lines that are not 90 or 180 or 0 degrees
-    // also remove lines that are too close to each other
     filter_line(hs, theta_range, rho_max, 15 ,20);
 
-    // sort all lines to have horizontal and vertical lines
     int **h_lines = horizontal_lines(hs, theta_range, rho_max, 5);
     int **v_lines = vertical_lines(hs, theta_range, rho_max, 5);
 
-    // filter horizontal and vertical lines independently
-    // this will only keep the lines that form the biggest set with regular gaps
     filter_gaps(h_lines, theta_range, rho_max);
     filter_gaps(v_lines, theta_range, rho_max);
 
     int x_start, y_start, x_end, y_end;
     get_bounding_box(v_lines, h_lines, theta_range, rho_max, &x_start, &x_end, &y_start, &y_end);
 
-    // free memory
     free_hough(h_lines, theta_range);
     free_hough(v_lines, theta_range);
     free_hough(hs, theta_range);
@@ -192,7 +191,6 @@ void rotate_image(GtkWidget *window, GtkEntry *entry, double manual_angle)
     x_end = x_end + offset_x >= img->width ? img->width - 1 : x_end + offset_x;
     y_end = y_end + offset_y >= img->height ? img->height - 1 : y_end + offset_y;
 
-    // if x_start is in first 5% of image width, set to 0 ans same for x_end
     if (x_start < img->width * 0.1 && x_end > img->width * 0.90)
     {
         x_start = offset_x;
@@ -204,7 +202,6 @@ void rotate_image(GtkWidget *window, GtkEntry *entry, double manual_angle)
     draw_line(img, x_start - 1 < 0 ? 0 : x_start - 1, y_start - 1 < 0 ? 0 : y_start - 1, x_start - 1 < 0 ? 0 : x_start - 1, y_end + 1 >= img->height ? img->height - 1 : y_end + 1, 0, 255, 0);
     draw_line(img, x_end + 1 >= img->width ? img->width - 1 : x_end + 1, y_start - 1 < 0 ? 0 : y_start - 1, x_end + 1 >= img->width ? img->width - 1 : x_end + 1, y_end + 1 >= img->height ? img->height - 1 : y_end + 1, 0, 255, 0);
 
-    /* Extract sub-image of the grid */
     Image *sub_img = extract_sub_image(before, x_start, y_start, x_end, y_end);
 
     Shape *sub_shape = create_shape();
@@ -215,7 +212,6 @@ void rotate_image(GtkWidget *window, GtkEntry *entry, double manual_angle)
             shape_add_pixel(sub_shape, get_pixel(before, x, y));
         }
     }
-    // remove grid shape from before image
     image_remove_shape(before, sub_shape);
     free_shape(sub_shape);
 
@@ -228,9 +224,7 @@ void rotate_image(GtkWidget *window, GtkEntry *entry, double manual_angle)
     clean_shapes(before_shapes);
 
     Shape ***words = get_all_world(before_shapes);
-    // for each word, channge pixel color to random color (letters in the same word have the same color)
 
-    //if word is to long (> 15 letters) remove it from the list
     int valid_word_count = 0;
     for (int w = 0; words[w] != NULL; w++)
     {
@@ -250,13 +244,11 @@ void rotate_image(GtkWidget *window, GtkEntry *entry, double manual_angle)
             free(word);
         }
     }
-    words[valid_word_count] = NULL;  // Null-terminate properly
+    words[valid_word_count] = NULL;
 
     remove_directory("./output/");
-    //create dir output if not exists
     create_directory_if_not_exists("./output");
     create_directory_if_not_exists("./output/word_list");
-    //export each letter from each word
     for (int w = 0; words[w] != NULL; w++)
     {
         Shape **word = words[w];
@@ -290,7 +282,6 @@ void rotate_image(GtkWidget *window, GtkEntry *entry, double manual_angle)
     }
     free(before_shapes);
 
-    /* Manual scaling of sub-image to have better processing later */
     if (sub_img->height > 500)
     {
         int height_objective = (int)(sub_img->height * 0.8);
@@ -323,23 +314,19 @@ void rotate_image(GtkWidget *window, GtkEntry *entry, double manual_angle)
 
     int rows, cols;
     detect_grid_size(sub_shapes, &rows, &cols);
-    //printf("Detected grid size: %d rows x %d cols\n", rows, cols);
 
     int min = rows < cols ? rows : cols;
     filter_by_density(sub_img, sub_shapes, (int)(min * 0.9));
     clean_shapes(sub_shapes);
 
     detect_grid_size(sub_shapes, &rows, &cols);
-    //printf("After filtering, grid size: %d rows x %d cols\n", rows, cols);
 
 
-    //cretate dir output/{nom_du_fichier}_{nbr_ligne}_{nbr_colonnes} if not exists
     create_directory_if_not_exists("./output");
     char filename[256];
     snprintf(filename, sizeof(filename), "./output/img_%d_%d",rows, cols);
     create_directory_if_not_exists(filename);
     Image *** cell_images = get_grid_cells(sub_img,sub_shapes, rows, cols, "./output/map");
-    //export each cell image with name cell_x_y.bmp
     for (int r = 0; r < rows; r++)
     {
         for (int c = 0; c < cols; c++)
@@ -374,7 +361,7 @@ void rotate_image(GtkWidget *window, GtkEntry *entry, double manual_angle)
     export_image(image_to_sdl_surface(img), "rotate_tmp.png");
 
 
-    /* Create GtkImages */
+    /* Affichage */
     int display_width = 400;
     int display_height = 400;
 
@@ -401,7 +388,7 @@ void rotate_image(GtkWidget *window, GtkEntry *entry, double manual_angle)
     free_image(img);
     free_image(original);
 
-    /* Horizontal box to hold both images */
+    /* Génére la boite horizontal pour aligner les objets. */
     GtkWidget *hbox = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 5);
     gtk_box_pack_start(GTK_BOX(hbox), image_original, TRUE, TRUE, 0);
     gtk_box_pack_start(GTK_BOX(hbox), image_rotated, TRUE, TRUE, 0);
@@ -414,11 +401,15 @@ void rotate_image(GtkWidget *window, GtkEntry *entry, double manual_angle)
     GtkWidget *manual_button = gtk_button_new_with_label("Rotation Manuelle");
     g_signal_connect(manual_button, "clicked", G_CALLBACK(manual_rotation_clicked), window);
 
+    /* Bouton Transmettre au réseau de neuronne */
+    GtkWidget *neural_button = gtk_button_new_with_label("Transmettre au réseau");
+    //g_signal_connect(manual_button, "clicked", G_CALLBACK(manual_rotation_clicked), window);
+
     GtkWidget *vbox_display = gtk_box_new(GTK_ORIENTATION_VERTICAL, 6);
     gtk_box_pack_start(GTK_BOX(vbox_display), hbox, TRUE, TRUE, 0);
     gtk_box_pack_start(GTK_BOX(vbox_display), restart_button, FALSE, FALSE, 0);
     gtk_box_pack_start(GTK_BOX(vbox_display), manual_button, FALSE, FALSE, 0);
-
+    gtk_box_pack_start(GTK_BOX(vbox_display), neural_button, FALSE, FALSE, 0);
 
     gtk_window_set_default_size(GTK_WINDOW(window), 850, 450);
 
@@ -432,6 +423,7 @@ void rotate_image(GtkWidget *window, GtkEntry *entry, double manual_angle)
     SDL_Quit();
 }
 
+/* Menu pour charger une nouvelle image. */
 void restart_clicked(GtkButton *button, gpointer user_data) {
     GtkWidget *window = GTK_WIDGET(user_data);
 
@@ -464,9 +456,9 @@ void restart_clicked(GtkButton *button, gpointer user_data) {
     gtk_widget_destroy(dialog);
 }
 
+/* Menu pour la rotation manuel */
 void manual_rotation_clicked(GtkButton *button, gpointer user_data)
 {
-    // popup to enter angle
     GtkWidget *window = GTK_WIDGET(user_data);
     const char *cur_filename = (const char *)g_object_get_data(G_OBJECT(window), "current-filename");
     if (!cur_filename)
@@ -506,6 +498,7 @@ void manual_rotation_clicked(GtkButton *button, gpointer user_data)
 
 }
 
+/* */
 void validate_path(GtkButton *button, gpointer user_data) {
     GtkEntry *entry = GTK_ENTRY(user_data);
 
@@ -541,11 +534,13 @@ void on_path_button_clicked(GtkButton *button, gpointer user_data) {
     gtk_widget_destroy(dialog);
 }
 
+/* Exit fonction */
 void on_window_destroy(GtkWidget *widget, gpointer data) {
+    remove_directory("./output");
     gtk_main_quit();
 }
 
-
+/* Fonction principal */
 int main(int argc, char *argv[]) {
     gtk_init(&argc, &argv);
 
