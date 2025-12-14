@@ -1,5 +1,5 @@
-#include "../global.h"
 #include "solver.h"
+#include "../global.h"
 
 void upper(char *grid)
 {
@@ -30,7 +30,8 @@ char **read_file(char *file)
     {
         if (c == '\n')
         {
-            if (n_c >= capacity_c) {
+            if (n_c >= capacity_c)
+            {
                 ++capacity_c;
                 current_line = realloc(current_line, capacity_c * sizeof(char));
             }
@@ -109,19 +110,11 @@ void solver_algorithme(char **grid, char *word)
             if (word[1] == '\0')
             {
                 printf("(%i,%i)(%i,%i)\n", x, y, x, y);
-                return ;
+                return;
             }
 
-            int directions[8][2] = {
-                {1, 0},
-                {-1, 0},
-                {0, 1},
-                {0, -1},
-                {1, 1},
-                {-1, 1},
-                {1, -1},
-                {-1, -1}
-            };
+            int directions[8][2] = {{1, 0}, {-1, 0}, {0, 1},  {0, -1},
+                                    {1, 1}, {-1, 1}, {1, -1}, {-1, -1}};
 
             for (int i = 0; i < 8; ++i)
             {
@@ -131,16 +124,20 @@ void solver_algorithme(char **grid, char *word)
                 int next_x = x + inc_x;
                 int next_y = y + inc_y;
 
-                if (next_y >= 0 && next_y < height && next_x >= 0 && next_x < width){
+                if (next_y >= 0 && next_y < height && next_x >= 0 &&
+                    next_x < width)
+                {
                     if (grid[next_y][next_x] == word[1])
                     {
-                        int *result = solv_rec(grid, word + 1, inc_x, inc_y, x, y, height, width);
+                        int *result = solv_rec(grid, word + 1, inc_x, inc_y, x,
+                                               y, height, width);
 
                         if (result[0] != -1)
                         {
-                            printf("(%i,%i)(%i,%i)\n", x, y, result[0], result[1]);
+                            printf("(%i,%i)(%i,%i)\n", x, y, result[0],
+                                   result[1]);
                             free(result);
-                            return ;
+                            return;
                         }
                         free(result);
                     }
@@ -157,7 +154,8 @@ void solver_algorithme(char **grid, char *word)
     printf("Not Found");
 }
 
-int *solv_rec(char **grid, char *word, int inc_x, int inc_y, int x, int y, int h, int w)
+int *solv_rec(char **grid, char *word, int inc_x, int inc_y, int x, int y,
+              int h, int w)
 {
     x += inc_x;
     y += inc_y;

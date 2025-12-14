@@ -23,4 +23,5 @@ clean:
 	rm -f $(OBJS) $(TARGET) *.bmp
 	rm -f ../../resources/pre_process/output/grid/*/*/*.bmp
 	rm -f ../../resources/pre_process/output/grid/*.bmp
+	rm -f ../../resources/pre_process/output/*.bmp
 .PHONY: all clean
