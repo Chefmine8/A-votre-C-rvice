@@ -90,7 +90,7 @@ void free_matrix(char **matrice)
     free(matrice);
 }
 
-void solver_algorithme(char **grid, char *word)
+struct coord *solver_algorithme(char **grid, char *word)
 {
     int x = 0;
     int y = 0;
@@ -110,7 +110,7 @@ void solver_algorithme(char **grid, char *word)
             if (word[1] == '\0')
             {
                 printf("(%i,%i)(%i,%i)\n", x, y, x, y);
-                return;
+                return NULL;
             }
 
             int directions[8][2] = {{1, 0}, {-1, 0}, {0, 1},  {0, -1},
@@ -136,8 +136,15 @@ void solver_algorithme(char **grid, char *word)
                         {
                             printf("(%i,%i)(%i,%i)\n", x, y, result[0],
                                    result[1]);
+                            int x_1 = result[0];
+                            int y_1 = result[1];
                             free(result);
-                            return;
+                            struct coord *c = malloc(sizeof(struct coord));
+                            c->x_0 = x;
+                            c->y_0 = y;
+                            c->x_1 = x_1;
+                            c->y_1 = y_1;
+                            return c;
                         }
                         free(result);
                     }
@@ -152,6 +159,7 @@ void solver_algorithme(char **grid, char *word)
         }
     }
     printf("Not Found");
+    return NULL;
 }
 
 int *solv_rec(char **grid, char *word, int inc_x, int inc_y, int x, int y,
@@ -170,7 +178,7 @@ int *solv_rec(char **grid, char *word, int inc_x, int inc_y, int x, int y,
 
     if (grid[y][x] == *word)
     {
-        if (*(word + 1) == '\0')
+        if (*(word + 1) == '\0' || *(word + 1) == '\n')
         {
             i[0] = x;
             i[1] = y;
@@ -186,11 +194,9 @@ int *solv_rec(char **grid, char *word, int inc_x, int inc_y, int x, int y,
     return i;
 }
 
-int main(int argc, char *argv[])
-{
-    (void)argc;
-    char **grid = read_file(argv[1]);
-    solver_algorithme(grid, argv[2]);
+struct coord *solv(char *w) {
+    char **grid = read_file("img");
+    struct coord *c = solver_algorithme(grid, w);
     free_matrix(grid);
-    return 0;
+    return c;
 }

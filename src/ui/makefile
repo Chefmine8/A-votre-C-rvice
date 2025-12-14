@@ -14,7 +14,8 @@ SRC = ui.c \
   ../pre_process/utils/shapes.c \
   ../link/link_cells_to_nn.c \
   ../neural_network/neural_network.c \
-  ../neural_network/layer.c
+  ../neural_network/layer.c \
+  ../solver/solver.c
 
 OBJ = $(SRC:.c=.o)
 

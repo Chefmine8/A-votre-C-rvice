@@ -80,6 +80,53 @@ void get_scaled_size(int orig_width, int orig_height, int max_width, int max_hei
     }
 }
 
+/* Sauvegarde word_list.txt. */
+void save_file_word_list(GtkWidget *fenetre, gpointer user_data)
+{
+    GtkTextBuffer *buffer = GTK_TEXT_BUFFER(user_data);
+    GtkTextIter start, end;
+    gchar *texte;
+
+    gtk_text_buffer_get_start_iter(buffer, &start);
+    gtk_text_buffer_get_end_iter(buffer, &end);
+
+    texte = gtk_text_buffer_get_text(buffer, &start, &end, FALSE);
+
+    g_file_set_contents("word_list_file", texte, -1, NULL);
+
+    g_free(texte);
+}
+
+/* Fonction qui transmet au reseau de neurone. */
+void word_list_edit() {
+    GtkWidget *fenetre;
+    GtkWidget *scroll;
+    GtkWidget *textview;
+    GtkTextBuffer *buffer;
+
+    fenetre = gtk_window_new(GTK_WINDOW_TOPLEVEL);
+    gtk_window_set_title(GTK_WINDOW(fenetre), "Éditeur de texte");
+    gtk_window_set_default_size(GTK_WINDOW(fenetre), 600, 400);
+
+    scroll = gtk_scrolled_window_new(NULL, NULL);
+    gtk_container_add(GTK_CONTAINER(fenetre), scroll);
+
+    textview = gtk_text_view_new();
+    gtk_container_add(GTK_CONTAINER(scroll), textview);
+
+    buffer = gtk_text_view_get_buffer(GTK_TEXT_VIEW(textview));
+
+    gchar *contenu = NULL;
+    gsize longueur;
+
+    if (g_file_get_contents("word_list_file", &contenu, &longueur, NULL)) {
+        gtk_text_buffer_set_text(buffer, contenu, -1);
+        g_free(contenu);
+    }
+    g_signal_connect(fenetre, "destroy", G_CALLBACK(save_file_word_list), buffer);
+    gtk_widget_show_all(fenetre);
+}
+
 /* Sauvegarde img.txt. */
 void save_file(GtkWidget *fenetre, gpointer user_data)
 {
@@ -95,6 +142,8 @@ void save_file(GtkWidget *fenetre, gpointer user_data)
     g_file_set_contents("img", texte, -1, NULL);
 
     g_free(texte);
+
+    word_list_edit();
 }
 
 
@@ -133,6 +182,16 @@ void nn_transf(GtkButton *button, gpointer user_data) {
     }
     g_signal_connect(fenetre, "destroy", G_CALLBACK(save_file), buffer);
     gtk_widget_show_all(fenetre);
+}
+
+/* Transmet au solveur */
+void to_solver(GtkButton *button, gpointer user_data) {
+    FILE *f = fopen("word_list_file", "r");
+    char s[256];
+    while (fgets(s, sizeof(s), f) != NULL) {
+        struct coord *c = solv(s);
+    }
+    fclose(f);
 }
 
 /* Fonction qui gére le pré processing */
@@ -451,11 +510,16 @@ void rotate_image(GtkWidget *window, GtkEntry *entry, double manual_angle)
     GtkWidget *neural_button = gtk_button_new_with_label("Transmettre au réseau");
     g_signal_connect(neural_button, "clicked", G_CALLBACK(nn_transf), window);
 
+    /* Bouton Transmettre au solver */
+    GtkWidget *solver_button = gtk_button_new_with_label("Transmettre au réseau");
+    g_signal_connect(solver_button, "clicked", G_CALLBACK(to_solver), window);
+
     GtkWidget *vbox_display = gtk_box_new(GTK_ORIENTATION_VERTICAL, 6);
     gtk_box_pack_start(GTK_BOX(vbox_display), hbox, TRUE, TRUE, 0);
     gtk_box_pack_start(GTK_BOX(vbox_display), restart_button, FALSE, FALSE, 0);
     gtk_box_pack_start(GTK_BOX(vbox_display), manual_button, FALSE, FALSE, 0);
     gtk_box_pack_start(GTK_BOX(vbox_display), neural_button, FALSE, FALSE, 0);
+    gtk_box_pack_start(GTK_BOX(vbox_display), solver_button, FALSE, FALSE, 0);
 
     gtk_window_set_default_size(GTK_WINDOW(window), 850, 450);
 

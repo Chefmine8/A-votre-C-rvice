@@ -15,6 +15,7 @@
 #include "../link/link_cells_to_nn.h"
 #include "../neural_network/neural_network.h"
 #include "../neural_network/layer.h"
+#include "../solver/solver.h"
 
 int create_directory_if_not_exists(const char *path);
 int remove_directory(const char *path);
