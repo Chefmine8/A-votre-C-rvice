@@ -35,7 +35,7 @@ struct layer *create_layer(const int prev_layer_size, const int layer_size)
 
     res->weights = malloc(layer_size * sizeof(float *));
 
-    float limit = sqrtf(2.0 / (prev_layer_size + layer_size));
+    //float limit = sqrtf(2.0 / (prev_layer_size + layer_size));
     for (int i = 0; i < layer_size; i++)
     {
         res->weights[i] = malloc(prev_layer_size * sizeof(float));
@@ -100,7 +100,7 @@ void link_layer_input(struct layer *layer, int input_size, float **inputs)
  * Activation function used inside the neural network
  * @param layer The layer.
  */
-void ReLU_activation_function(struct layer *layer)
+void ReLU_activation_function(const struct layer *layer)
 {
     for(int i = 0; i < layer->layer_size; i++)
     {
@@ -134,7 +134,7 @@ float deriv_sigmoid(float input)
  */
 
 
-void softmax_activation_function(struct layer *layer, float max)
+void softmax_activation_function(const struct layer *layer, float max)
 {
     float sum = 0;
     for (int i = 0; i < layer->layer_size; i++)
