@@ -5,8 +5,8 @@
 #ifndef A_VOTRE_C_RVICE_LAYER_H
 #define A_VOTRE_C_RVICE_LAYER_H
 
-#include <stdbool.h>
 #include "neural_network.h"
+#include <stdbool.h>
 
 /**
  * struct representing a layer of the neural network
@@ -28,7 +28,6 @@ struct layer
      */
     int layer_size;
 
-
     /**
      * pointer of inputs[prev_layer_size]
      */
@@ -38,7 +37,6 @@ struct layer
      * weights[layer_size][prev_layer_size]
      */
     float **weights;
-
 
     /**
      * biases[layer_size]
@@ -75,13 +73,15 @@ void link_layers(struct layer **back_layer, struct layer **front_layer);
  * @param layer the layer to link
  * @param neural_network the neural network the layer will belong to
  */
-void link_layer_output(struct layer *layer, const struct neural_network *neural_network);
+void link_layer_output(struct layer *layer,
+                       const struct neural_network *neural_network);
 
 /**
  * Link the last layer of the neural network to an array
  * @param layer the layer to link
  * @param input_size the size of inputs (for security)
- * @param inputs the array of size input_size that will contain the input of the neural network
+ * @param inputs the array of size input_size that will contain the input of the
+ * neural network
  */
 void link_layer_input(struct layer *layer, int input_size, float **inputs);
 
@@ -110,4 +110,4 @@ float dot_product(const float *a, const float *b, int size);
 float deriv_ReLU_activation_function(float input);
 
 float deriv_sigmoid(float input);
-#endif //A_VOTRE_C_RVICE_LAYER_H
+#endif // A_VOTRE_C_RVICE_LAYER_H

@@ -1,13 +1,14 @@
 #include "struct.h"
 
-
 /* Crée un dossier si il n'existe pas déjà. */
 int create_directory_if_not_exists(const char *path)
 {
     struct stat st = {0};
 
-    if (stat(path, &st) == -1) {
-        if (mkdir(path, 0700) != 0) {
+    if (stat(path, &st) == -1)
+    {
+        if (mkdir(path, 0700) != 0)
+        {
             perror("mkdir");
             return 0;
         }
@@ -16,16 +17,19 @@ int create_directory_if_not_exists(const char *path)
 }
 
 /* Permet d'effacer le dossier au moment de quitter. */
-int remove_directory(const char *path) {
+int remove_directory(const char *path)
+{
     DIR *d = opendir(path);
     size_t path_len = strlen(path);
     int r = -1;
 
-    if (d) {
+    if (d)
+    {
         struct dirent *p;
 
         r = 0;
-        while (!r && (p=readdir(d))) {
+        while (!r && (p = readdir(d)))
+        {
             int r2 = -1;
             char *buf;
             size_t len;
@@ -36,11 +40,13 @@ int remove_directory(const char *path) {
             len = path_len + strlen(p->d_name) + 2;
             buf = malloc(len);
 
-            if (buf) {
+            if (buf)
+            {
                 struct stat statbuf;
 
                 snprintf(buf, len, "%s/%s", path, p->d_name);
-                if (!stat(buf, &statbuf)) {
+                if (!stat(buf, &statbuf))
+                {
                     if (S_ISDIR(statbuf.st_mode))
                         r2 = remove_directory(buf);
                     else
@@ -60,20 +66,27 @@ int remove_directory(const char *path) {
 }
 
 /* Adapte l'image à la taille de la fenetre en concervant le bon ratio. */
-void get_scaled_size(int orig_width, int orig_height, int max_width, int max_height, int *new_width, int *new_height) {
+void get_scaled_size(int orig_width, int orig_height, int max_width,
+                     int max_height, int *new_width, int *new_height)
+{
     double ratio = (double)orig_width / (double)orig_height;
 
-    if (orig_width > orig_height) {
+    if (orig_width > orig_height)
+    {
         *new_width = max_width;
         *new_height = (int)(max_width / ratio);
-        if (*new_height > max_height) {
+        if (*new_height > max_height)
+        {
             *new_height = max_height;
             *new_width = (int)(max_height * ratio);
         }
-    } else {
+    }
+    else
+    {
         *new_height = max_height;
         *new_width = (int)(max_height * ratio);
-        if (*new_width > max_width) {
+        if (*new_width > max_width)
+        {
             *new_width = max_width;
             *new_height = (int)(max_width / ratio);
         }
@@ -98,7 +111,8 @@ void save_file_word_list(GtkWidget *fenetre, gpointer user_data)
 }
 
 /* Fonction qui transmet au reseau de neurone. */
-void word_list_edit() {
+void word_list_edit()
+{
     GtkWidget *fenetre;
     GtkWidget *scroll;
     GtkWidget *textview;
@@ -119,11 +133,13 @@ void word_list_edit() {
     gchar *contenu = NULL;
     gsize longueur;
 
-    if (g_file_get_contents("word_list_file", &contenu, &longueur, NULL)) {
+    if (g_file_get_contents("word_list_file", &contenu, &longueur, NULL))
+    {
         gtk_text_buffer_set_text(buffer, contenu, -1);
         g_free(contenu);
     }
-    g_signal_connect(fenetre, "destroy", G_CALLBACK(save_file_word_list), buffer);
+    g_signal_connect(fenetre, "destroy", G_CALLBACK(save_file_word_list),
+                     buffer);
     gtk_widget_show_all(fenetre);
 }
 
@@ -146,14 +162,14 @@ void save_file(GtkWidget *fenetre, gpointer user_data)
     word_list_edit();
 }
 
-
 /* Fonction qui transmet au reseau de neurone. */
-void nn_transf(GtkButton *button, gpointer user_data) {
+void nn_transf(GtkButton *button, gpointer user_data)
+{
     int nb_arr = 3;
-    int arr[3] = {784,784,26};
-    struct neural_network *nn = create_neural_network(nb_arr,arr);
-    create_grid("img",nn);
-    create_word_list("word_list",nn);
+    int arr[3] = {784, 784, 26};
+    struct neural_network *nn = create_neural_network(nb_arr, arr);
+    create_grid("img", nn);
+    create_word_list("word_list", nn);
     free_neural_network(nn);
 
     GtkWidget *fenetre;
@@ -176,7 +192,8 @@ void nn_transf(GtkButton *button, gpointer user_data) {
     gchar *contenu = NULL;
     gsize longueur;
 
-    if (g_file_get_contents("img", &contenu, &longueur, NULL)) {
+    if (g_file_get_contents("img", &contenu, &longueur, NULL))
+    {
         gtk_text_buffer_set_text(buffer, contenu, -1);
         g_free(contenu);
     }
@@ -185,10 +202,12 @@ void nn_transf(GtkButton *button, gpointer user_data) {
 }
 
 /* Transmet au solveur */
-void to_solver(GtkButton *button, gpointer user_data) {
+void to_solver(GtkButton *button, gpointer user_data)
+{
     FILE *f = fopen("word_list_file", "r");
     char s[256];
-    while (fgets(s, sizeof(s), f) != NULL) {
+    while (fgets(s, sizeof(s), f) != NULL)
+    {
         struct coord *c = solv(s);
     }
     fclose(f);
@@ -198,19 +217,20 @@ void to_solver(GtkButton *button, gpointer user_data) {
 void rotate_image(GtkWidget *window, GtkEntry *entry, double manual_angle)
 {
     const gchar *text_tmp = gtk_entry_get_text(entry);
-    if (!text_tmp || *text_tmp == '\0') {
+    if (!text_tmp || *text_tmp == '\0')
+    {
         g_print("No file path provided.\n");
         return;
     }
     gchar *text = g_strdup(text_tmp);
-    g_object_set_data_full(G_OBJECT(window), "current-filename", g_strdup(text), g_free);
+    g_object_set_data_full(G_OBJECT(window), "current-filename", g_strdup(text),
+                           g_free);
 
     /* Blank screen */
     GList *children = gtk_container_get_children(GTK_CONTAINER(window));
     for (GList *iter = children; iter != NULL; iter = g_list_next(iter))
         gtk_widget_destroy(iter->data);
     g_list_free(children);
-
 
     SDL_Init(SDL_INIT_VIDEO);
     IMG_Init(IMG_INIT_PNG);
@@ -244,7 +264,7 @@ void rotate_image(GtkWidget *window, GtkEntry *entry, double manual_angle)
     remove_outliers_shape(img, shapes, 25, 75, 2.5, 3);
     remove_aspect_ration(img, shapes, 0.1, 5);
 
-    Image* before = copy_image(img);
+    Image *before = copy_image(img);
 
     for (int y = 0; y < before->height; y++)
     {
@@ -259,7 +279,7 @@ void rotate_image(GtkWidget *window, GtkEntry *entry, double manual_angle)
     int **hs = hough_space(circle, &theta_range, &rho_max);
     hough_space_filter(hs, theta_range, rho_max, 0.495);
 
-    filter_line(hs, theta_range, rho_max, 15 ,20);
+    filter_line(hs, theta_range, rho_max, 15, 20);
 
     int **h_lines = horizontal_lines(hs, theta_range, rho_max, 5);
     int **v_lines = vertical_lines(hs, theta_range, rho_max, 5);
@@ -268,7 +288,8 @@ void rotate_image(GtkWidget *window, GtkEntry *entry, double manual_angle)
     filter_gaps(v_lines, theta_range, rho_max);
 
     int x_start, y_start, x_end, y_end;
-    get_bounding_box(v_lines, h_lines, theta_range, rho_max, &x_start, &x_end, &y_start, &y_end);
+    get_bounding_box(v_lines, h_lines, theta_range, rho_max, &x_start, &x_end,
+                     &y_start, &y_end);
 
     free_hough(h_lines, theta_range);
     free_hough(v_lines, theta_range);
@@ -288,13 +309,13 @@ void rotate_image(GtkWidget *window, GtkEntry *entry, double manual_angle)
     mean_shape_width /= shape_count;
     mean_shape_height /= shape_count;
 
-
-    int offset_x = ceil(mean_shape_width *1.6);
-    int offset_y = ceil(mean_shape_height *1.2);
+    int offset_x = ceil(mean_shape_width * 1.6);
+    int offset_y = ceil(mean_shape_height * 1.2);
     x_start = x_start - offset_x < 0 ? 0 : x_start - offset_x;
     y_start = y_start - offset_y < 0 ? 0 : y_start - offset_y;
     x_end = x_end + offset_x >= img->width ? img->width - 1 : x_end + offset_x;
-    y_end = y_end + offset_y >= img->height ? img->height - 1 : y_end + offset_y;
+    y_end =
+        y_end + offset_y >= img->height ? img->height - 1 : y_end + offset_y;
 
     if (x_start < img->width * 0.1 && x_end > img->width * 0.90)
     {
@@ -302,17 +323,36 @@ void rotate_image(GtkWidget *window, GtkEntry *entry, double manual_angle)
         x_end = img->width - offset_x;
     }
 
-    draw_line(img, x_start - 1 < 0 ? 0 : x_start - 1, y_start - 1 < 0 ? 0 : y_start - 1, x_end + 1 >= img->width ? img->width - 1 : x_end + 1, y_start - 1 < 0 ? 0 : y_start - 1, 0, 255, 0);
-    draw_line(img, x_start - 1 < 0 ? 0 : x_start - 1, y_end + 1 >= img->height ? img->height - 1 : y_end + 1, x_end + 1 >= img->width ? img->width - 1 : x_end + 1, y_end + 1 >= img->height ? img->height - 1 : y_end + 1, 0, 255, 0);
-    draw_line(img, x_start - 1 < 0 ? 0 : x_start - 1, y_start - 1 < 0 ? 0 : y_start - 1, x_start - 1 < 0 ? 0 : x_start - 1, y_end + 1 >= img->height ? img->height - 1 : y_end + 1, 0, 255, 0);
-    draw_line(img, x_end + 1 >= img->width ? img->width - 1 : x_end + 1, y_start - 1 < 0 ? 0 : y_start - 1, x_end + 1 >= img->width ? img->width - 1 : x_end + 1, y_end + 1 >= img->height ? img->height - 1 : y_end + 1, 0, 255, 0);
+    draw_line(img, x_start - 1 < 0 ? 0 : x_start - 1,
+              y_start - 1 < 0 ? 0 : y_start - 1,
+              x_end + 1 >= img->width ? img->width - 1 : x_end + 1,
+              y_start - 1 < 0 ? 0 : y_start - 1, 0, 255, 0);
+    draw_line(img, x_start - 1 < 0 ? 0 : x_start - 1,
+              y_end + 1 >= img->height ? img->height - 1 : y_end + 1,
+              x_end + 1 >= img->width ? img->width - 1 : x_end + 1,
+              y_end + 1 >= img->height ? img->height - 1 : y_end + 1, 0, 255,
+              0);
+    draw_line(
+        img, x_start - 1 < 0 ? 0 : x_start - 1,
+        y_start - 1 < 0 ? 0 : y_start - 1, x_start - 1 < 0 ? 0 : x_start - 1,
+        y_end + 1 >= img->height ? img->height - 1 : y_end + 1, 0, 255, 0);
+    draw_line(img, x_end + 1 >= img->width ? img->width - 1 : x_end + 1,
+              y_start - 1 < 0 ? 0 : y_start - 1,
+              x_end + 1 >= img->width ? img->width - 1 : x_end + 1,
+              y_end + 1 >= img->height ? img->height - 1 : y_end + 1, 0, 255,
+              0);
 
     Image *sub_img = extract_sub_image(before, x_start, y_start, x_end, y_end);
 
     Shape *sub_shape = create_shape();
-    for (int y = y_start - 30 < 0 ? 0 : y_start - 30; y <= (y_end + 30 >= before->height ? before->height -1 : y_end + 30); y++)
+    for (int y = y_start - 30 < 0 ? 0 : y_start - 30;
+         y <= (y_end + 30 >= before->height ? before->height - 1 : y_end + 30);
+         y++)
     {
-        for (int x = x_start - 30 < 0 ? 0 : x_start - 30; x <= (x_end + 30 >= before->width ? before->width -1 : x_end + 30); x++)
+        for (int x = x_start - 30 < 0 ? 0 : x_start - 30;
+             x <=
+             (x_end + 30 >= before->width ? before->width - 1 : x_end + 30);
+             x++)
         {
             shape_add_pixel(sub_shape, get_pixel(before, x, y));
         }
@@ -320,12 +360,11 @@ void rotate_image(GtkWidget *window, GtkEntry *entry, double manual_angle)
     image_remove_shape(before, sub_shape);
     free_shape(sub_shape);
 
-    Shape ** before_shapes = get_all_shape(before);
+    Shape **before_shapes = get_all_shape(before);
     remove_small_shape(before, before_shapes, 20);
     remove_aspect_ration(before, before_shapes, 0.1, 6);
 
-
-    filter_by_density_v(before,before_shapes, 1);
+    filter_by_density_v(before, before_shapes, 1);
     clean_shapes(before_shapes);
 
     Shape ***words = get_all_world(before_shapes);
@@ -361,12 +400,14 @@ void rotate_image(GtkWidget *window, GtkEntry *entry, double manual_angle)
         {
             Shape *letter = word[l];
             char letter_filename[256];
-            snprintf(letter_filename, sizeof(letter_filename), "./output/word_list/word_%d_letter_%d.png", w + 1, l + 1);
+            snprintf(letter_filename, sizeof(letter_filename),
+                     "./output/word_list/word_%d_letter_%d.png", w + 1, l + 1);
             int start_x = letter->min_x;
             int start_y = letter->min_y;
             int end_x = letter->max_x;
             int end_y = letter->max_y;
-            Image *letter_img = extract_sub_image(before, start_x, start_y, end_x, end_y);
+            Image *letter_img =
+                extract_sub_image(before, start_x, start_y, end_x, end_y);
             SDL_Surface *letter_surf = image_to_sdl_surface(letter_img);
             export_image(letter_surf, letter_filename);
             SDL_FreeSurface(letter_surf);
@@ -406,15 +447,15 @@ void rotate_image(GtkWidget *window, GtkEntry *entry, double manual_angle)
 
     Shape **sub_shapes = get_all_shape(sub_img);
 
-    remove_small_shape(sub_img,sub_shapes , 15);
-    remove_outliers_shape(sub_img,sub_shapes , 25,75,2.5,3);
-    remove_aspect_ration(sub_img,sub_shapes , 0.1, 2);
+    remove_small_shape(sub_img, sub_shapes, 15);
+    remove_outliers_shape(sub_img, sub_shapes, 25, 75, 2.5, 3);
+    remove_aspect_ration(sub_img, sub_shapes, 0.1, 2);
 
     clean_shapes(sub_shapes);
 
     merge_shapes(sub_shapes, 3);
 
-    filter_by_density(sub_img,sub_shapes, 5);
+    filter_by_density(sub_img, sub_shapes, 5);
     clean_shapes(sub_shapes);
 
     int rows, cols;
@@ -426,12 +467,12 @@ void rotate_image(GtkWidget *window, GtkEntry *entry, double manual_angle)
 
     detect_grid_size(sub_shapes, &rows, &cols);
 
-
     create_directory_if_not_exists("./output");
     char filename[256];
-    snprintf(filename, sizeof(filename), "./output/img_%d_%d",rows, cols);
+    snprintf(filename, sizeof(filename), "./output/img_%d_%d", rows, cols);
     create_directory_if_not_exists(filename);
-    Image *** cell_images = get_grid_cells(sub_img,sub_shapes, rows, cols, "./output/map");
+    Image ***cell_images =
+        get_grid_cells(sub_img, sub_shapes, rows, cols, "./output/map");
     for (int r = 0; r < rows; r++)
     {
         for (int c = 0; c < cols; c++)
@@ -439,7 +480,9 @@ void rotate_image(GtkWidget *window, GtkEntry *entry, double manual_angle)
             if (cell_images[r][c] == NULL)
                 continue;
             char cell_filename[256];
-            snprintf(cell_filename, sizeof(cell_filename), "./output/img_%d_%d/cell_%d_%d.png",rows, cols, c + 1, r + 1);
+            snprintf(cell_filename, sizeof(cell_filename),
+                     "./output/img_%d_%d/cell_%d_%d.png", rows, cols, c + 1,
+                     r + 1);
             SDL_Surface *cell_surf = image_to_sdl_surface(cell_images[r][c]);
             export_image(cell_surf, cell_filename);
             SDL_FreeSurface(cell_surf);
@@ -465,23 +508,26 @@ void rotate_image(GtkWidget *window, GtkEntry *entry, double manual_angle)
 
     export_image(image_to_sdl_surface(img), "rotate_tmp.png");
 
-
-    GdkPixbuf* pixbuf_original = gdk_pixbuf_new_from_file(text, NULL);
+    GdkPixbuf *pixbuf_original = gdk_pixbuf_new_from_file(text, NULL);
     int new_width, new_height;
-    get_scaled_size(gdk_pixbuf_get_width(pixbuf_original), gdk_pixbuf_get_height(pixbuf_original),
-                    400, 400, &new_width, &new_height);
-    GdkPixbuf* pixbuf_scaled_original = gdk_pixbuf_scale_simple(
+    get_scaled_size(gdk_pixbuf_get_width(pixbuf_original),
+                    gdk_pixbuf_get_height(pixbuf_original), 400, 400,
+                    &new_width, &new_height);
+    GdkPixbuf *pixbuf_scaled_original = gdk_pixbuf_scale_simple(
         pixbuf_original, new_width, new_height, GDK_INTERP_BILINEAR);
-    GtkWidget* image_original = gtk_image_new_from_pixbuf(pixbuf_scaled_original);
+    GtkWidget *image_original =
+        gtk_image_new_from_pixbuf(pixbuf_scaled_original);
     g_object_unref(pixbuf_original);
     g_object_unref(pixbuf_scaled_original);
 
-    GdkPixbuf* pixbuf_rotated = gdk_pixbuf_new_from_file("rotate_tmp.png", NULL);
-    get_scaled_size(gdk_pixbuf_get_width(pixbuf_rotated), gdk_pixbuf_get_height(pixbuf_rotated),
-                    400, 400, &new_width, &new_height);
-    GdkPixbuf* pixbuf_scaled_rotated = gdk_pixbuf_scale_simple(
+    GdkPixbuf *pixbuf_rotated =
+        gdk_pixbuf_new_from_file("rotate_tmp.png", NULL);
+    get_scaled_size(gdk_pixbuf_get_width(pixbuf_rotated),
+                    gdk_pixbuf_get_height(pixbuf_rotated), 400, 400, &new_width,
+                    &new_height);
+    GdkPixbuf *pixbuf_scaled_rotated = gdk_pixbuf_scale_simple(
         pixbuf_rotated, new_width, new_height, GDK_INTERP_BILINEAR);
-    GtkWidget* image_rotated = gtk_image_new_from_pixbuf(pixbuf_scaled_rotated);
+    GtkWidget *image_rotated = gtk_image_new_from_pixbuf(pixbuf_scaled_rotated);
     g_object_unref(pixbuf_rotated);
     g_object_unref(pixbuf_scaled_rotated);
 
@@ -496,18 +542,22 @@ void rotate_image(GtkWidget *window, GtkEntry *entry, double manual_angle)
 
     /* Bouton recommencer */
     GtkWidget *restart_button = gtk_button_new_with_label("Recommencer");
-    g_signal_connect(restart_button, "clicked", G_CALLBACK(restart_clicked), window);
+    g_signal_connect(restart_button, "clicked", G_CALLBACK(restart_clicked),
+                     window);
 
     /* Bouton rotation manuelle */
     GtkWidget *manual_button = gtk_button_new_with_label("Rotation Manuelle");
-    g_signal_connect(manual_button, "clicked", G_CALLBACK(manual_rotation_clicked), window);
+    g_signal_connect(manual_button, "clicked",
+                     G_CALLBACK(manual_rotation_clicked), window);
 
     /* Bouton Transmettre au réseau de neuronne */
-    GtkWidget *neural_button = gtk_button_new_with_label("Transmettre au réseau");
+    GtkWidget *neural_button =
+        gtk_button_new_with_label("Transmettre au réseau");
     g_signal_connect(neural_button, "clicked", G_CALLBACK(nn_transf), window);
 
     /* Bouton Transmettre au solver */
-    GtkWidget *solver_button = gtk_button_new_with_label("Transmettre au réseau");
+    GtkWidget *solver_button =
+        gtk_button_new_with_label("Transmettre au réseau");
     g_signal_connect(solver_button, "clicked", G_CALLBACK(to_solver), window);
 
     GtkWidget *vbox_display = gtk_box_new(GTK_ORIENTATION_VERTICAL, 6);
@@ -530,25 +580,23 @@ void rotate_image(GtkWidget *window, GtkEntry *entry, double manual_angle)
 }
 
 /* Menu pour charger une nouvelle image. */
-void restart_clicked(GtkButton *button, gpointer user_data) {
+void restart_clicked(GtkButton *button, gpointer user_data)
+{
     GtkWidget *window = GTK_WIDGET(user_data);
 
     GtkWidget *dialog = gtk_file_chooser_dialog_new(
-        "Choisir une image",
-        GTK_WINDOW(window),
-        GTK_FILE_CHOOSER_ACTION_OPEN,
-        "_Annuler", GTK_RESPONSE_CANCEL,
-        "_Ouvrir", GTK_RESPONSE_ACCEPT,
-        NULL
-    );
+        "Choisir une image", GTK_WINDOW(window), GTK_FILE_CHOOSER_ACTION_OPEN,
+        "_Annuler", GTK_RESPONSE_CANCEL, "_Ouvrir", GTK_RESPONSE_ACCEPT, NULL);
 
     GtkFileFilter *filter = gtk_file_filter_new();
     gtk_file_filter_add_pixbuf_formats(filter);
     gtk_file_filter_set_name(filter, "Images");
     gtk_file_chooser_add_filter(GTK_FILE_CHOOSER(dialog), filter);
 
-    if (gtk_dialog_run(GTK_DIALOG(dialog)) == GTK_RESPONSE_ACCEPT) {
-        char *filename = gtk_file_chooser_get_filename(GTK_FILE_CHOOSER(dialog));
+    if (gtk_dialog_run(GTK_DIALOG(dialog)) == GTK_RESPONSE_ACCEPT)
+    {
+        char *filename =
+            gtk_file_chooser_get_filename(GTK_FILE_CHOOSER(dialog));
 
         GtkEntry *tmp_entry = GTK_ENTRY(gtk_entry_new());
         gtk_entry_set_text(tmp_entry, filename);
@@ -566,22 +614,20 @@ void restart_clicked(GtkButton *button, gpointer user_data) {
 void manual_rotation_clicked(GtkButton *button, gpointer user_data)
 {
     GtkWidget *window = GTK_WIDGET(user_data);
-    const char *cur_filename = (const char *)g_object_get_data(G_OBJECT(window), "current-filename");
+    const char *cur_filename =
+        (const char *)g_object_get_data(G_OBJECT(window), "current-filename");
     if (!cur_filename)
     {
-        g_print("Aucun fichier courant enregistré pour la rotation manuelle.\n");
+        g_print(
+            "Aucun fichier courant enregistré pour la rotation manuelle.\n");
         return;
     }
     GtkWidget *dialog = gtk_dialog_new_with_buttons(
-            "Rotation Manuelle",
-            GTK_WINDOW(window),
-            GTK_DIALOG_MODAL,
-            "_Annuler", GTK_RESPONSE_CANCEL,
-            "_Valider", GTK_RESPONSE_ACCEPT,
-            NULL
-    );
+        "Rotation Manuelle", GTK_WINDOW(window), GTK_DIALOG_MODAL, "_Annuler",
+        GTK_RESPONSE_CANCEL, "_Valider", GTK_RESPONSE_ACCEPT, NULL);
     GtkWidget *content_area = gtk_dialog_get_content_area(GTK_DIALOG(dialog));
-    GtkWidget *label = gtk_label_new("Entrez l'angle de rotation (en degrés) :");
+    GtkWidget *label =
+        gtk_label_new("Entrez l'angle de rotation (en degrés) :");
     gtk_container_add(GTK_CONTAINER(content_area), label);
     GtkWidget *angle_entry = gtk_entry_new();
     gtk_container_add(GTK_CONTAINER(content_area), angle_entry);
@@ -601,11 +647,11 @@ void manual_rotation_clicked(GtkButton *button, gpointer user_data)
     }
 
     gtk_widget_destroy(dialog);
-
 }
 
 /* */
-void validate_path(GtkButton *button, gpointer user_data) {
+void validate_path(GtkButton *button, gpointer user_data)
+{
     GtkEntry *entry = GTK_ENTRY(user_data);
 
     GtkWidget *window = gtk_widget_get_toplevel(GTK_WIDGET(button));
@@ -614,25 +660,23 @@ void validate_path(GtkButton *button, gpointer user_data) {
 }
 
 /* path  */
-void on_path_button_clicked(GtkButton *button, gpointer user_data) {
+void on_path_button_clicked(GtkButton *button, gpointer user_data)
+{
     GtkEntry *entry = GTK_ENTRY(user_data);
 
     GtkWidget *dialog = gtk_file_chooser_dialog_new(
-        "Choisir une image",
-        NULL,
-        GTK_FILE_CHOOSER_ACTION_OPEN,
-        "_Annuler", GTK_RESPONSE_CANCEL,
-        "_Ouvrir", GTK_RESPONSE_ACCEPT,
-        NULL
-    );
+        "Choisir une image", NULL, GTK_FILE_CHOOSER_ACTION_OPEN, "_Annuler",
+        GTK_RESPONSE_CANCEL, "_Ouvrir", GTK_RESPONSE_ACCEPT, NULL);
 
     GtkFileFilter *filter = gtk_file_filter_new();
     gtk_file_filter_add_pixbuf_formats(filter);
     gtk_file_filter_set_name(filter, "Images");
     gtk_file_chooser_add_filter(GTK_FILE_CHOOSER(dialog), filter);
 
-    if (gtk_dialog_run(GTK_DIALOG(dialog)) == GTK_RESPONSE_ACCEPT) {
-        char *filename = gtk_file_chooser_get_filename(GTK_FILE_CHOOSER(dialog));
+    if (gtk_dialog_run(GTK_DIALOG(dialog)) == GTK_RESPONSE_ACCEPT)
+    {
+        char *filename =
+            gtk_file_chooser_get_filename(GTK_FILE_CHOOSER(dialog));
         gtk_entry_set_text(entry, filename);
         g_free(filename);
     }
@@ -641,13 +685,15 @@ void on_path_button_clicked(GtkButton *button, gpointer user_data) {
 }
 
 /* Exit fonction */
-void on_window_destroy(GtkWidget *widget, gpointer data) {
+void on_window_destroy(GtkWidget *widget, gpointer data)
+{
     remove_directory("./output");
     gtk_main_quit();
 }
 
 /* Fonction principal */
-int main(int argc, char *argv[]) {
+int main(int argc, char *argv[])
+{
     gtk_init(&argc, &argv);
 
     GtkWidget *window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
@@ -671,11 +717,12 @@ int main(int argc, char *argv[]) {
     GtkWidget *validate_button = gtk_button_new_with_label("Valider");
     gtk_box_pack_end(GTK_BOX(vbox), validate_button, FALSE, FALSE, 0);
 
-    g_signal_connect(path_button, "clicked", G_CALLBACK(on_path_button_clicked), entry);
-    g_signal_connect(validate_button, "clicked", G_CALLBACK(validate_path), entry);
+    g_signal_connect(path_button, "clicked", G_CALLBACK(on_path_button_clicked),
+                     entry);
+    g_signal_connect(validate_button, "clicked", G_CALLBACK(validate_path),
+                     entry);
 
     gtk_widget_show_all(window);
     gtk_main();
     return 0;
 }
-

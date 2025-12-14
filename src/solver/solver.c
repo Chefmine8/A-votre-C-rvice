@@ -194,7 +194,8 @@ int *solv_rec(char **grid, char *word, int inc_x, int inc_y, int x, int y,
     return i;
 }
 
-struct coord *solv(char *w) {
+struct coord *solv(char *w)
+{
     char **grid = read_file("img");
     struct coord *c = solver_algorithme(grid, w);
     free_matrix(grid);

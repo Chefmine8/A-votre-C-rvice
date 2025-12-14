@@ -547,8 +547,8 @@ void get_bounding_box(int **vertical_lines, int **horizontal_lines,
         }
     }
 
-    //check if no lines detected
-    if (h_count ==0 || v_count ==0)
+    // check if no lines detected
+    if (h_count == 0 || v_count == 0)
     {
         printf("No lines detected for bounding box calculation\n");
         return;
@@ -556,14 +556,16 @@ void get_bounding_box(int **vertical_lines, int **horizontal_lines,
     }
 
     int *list_rho_h = malloc(h_count * sizeof(int));
-    if (list_rho_h == NULL) {
+    if (list_rho_h == NULL)
+    {
         printf("Memory allocation failed\n");
         exit(EXIT_FAILURE);
     }
     int *list_rho_v = malloc(v_count * sizeof(int));
-    if (list_rho_v == NULL) {
-            printf("Memory allocation failed\n");
-            exit(EXIT_FAILURE);
+    if (list_rho_v == NULL)
+    {
+        printf("Memory allocation failed\n");
+        exit(EXIT_FAILURE);
     }
     int i_h = 0, i_v = 0;
     for (int theta = 0; theta < theta_range; theta++)
@@ -652,8 +654,7 @@ void filter_by_density(Image *img, Shape **shapes, int min_neighbors)
     clean_shapes(shapes);
 }
 
-
-void filter_by_density_h(Image *img,Shape **shapes, int min_neighbors)
+void filter_by_density_h(Image *img, Shape **shapes, int min_neighbors)
 {
     if (shapes == NULL)
         return;
@@ -688,7 +689,7 @@ void filter_by_density_h(Image *img,Shape **shapes, int min_neighbors)
                 h_count++;
         }
 
-        if(h_count < min_neighbors)
+        if (h_count < min_neighbors)
         {
             s->has_been_removed = 1;
             image_remove_shape(img, s);
@@ -699,7 +700,7 @@ void filter_by_density_h(Image *img,Shape **shapes, int min_neighbors)
     clean_shapes(shapes);
 }
 
-void filter_by_density_v(Image *img,Shape **shapes, int min_neighbors)
+void filter_by_density_v(Image *img, Shape **shapes, int min_neighbors)
 {
     if (shapes == NULL)
         return;
@@ -734,7 +735,7 @@ void filter_by_density_v(Image *img,Shape **shapes, int min_neighbors)
                 v_count++;
         }
 
-        if(v_count < min_neighbors)
+        if (v_count < min_neighbors)
         {
             s->has_been_removed = 1;
             image_remove_shape(img, s);
@@ -841,7 +842,8 @@ void detect_grid_size(Shape **shapes, int *rows, int *cols)
     free(shapes_by_y);
 }
 
-Image ***get_grid_cells(Image *img, Shape **shapes, int rows, int cols, char *path)
+Image ***get_grid_cells(Image *img, Shape **shapes, int rows, int cols,
+                        char *path)
 {
     Image ***grid = malloc(rows * sizeof(Image **));
     if (!grid)
@@ -918,39 +920,40 @@ Image ***get_grid_cells(Image *img, Shape **shapes, int rows, int cols, char *pa
             assigned[row][col] = s;
         }
     }
-    //create path file
+    // create path file
     if (path != NULL)
     {
-            FILE *f = fopen(path, "w");
-            if (f != NULL)
+        FILE *f = fopen(path, "w");
+        if (f != NULL)
+        {
+            for (int r = 0; r < rows; r++)
             {
-                for (int r = 0; r < rows; r++)
+                for (int c = 0; c < cols; c++)
                 {
-                    for (int c = 0; c < cols; c++)
+                    if (assigned[r][c] == NULL)
                     {
-                        if (assigned[r][c] == NULL)
-                        {
-                            grid[r][c] = NULL;
-                            continue;
-                        }
-
-                        Shape *s = assigned[r][c];
-                        int x_start = s->min_x;
-                        int y_start = s->min_y;
-                        int x_end = s->max_x;
-                        int y_end = s->max_y;
-
-                        int center_x = (x_start + x_end) / 2;
-                        int center_y = (y_start + y_end) / 2;
-
-                        //write r_c:center_x_center_y
-                        fprintf(f, "%d_%d:%d_%d\n", r, c, center_x, center_y);
-
-                        grid[r][c] = extract_sub_image(img, x_start, y_start, x_end, y_end);
+                        grid[r][c] = NULL;
+                        continue;
                     }
+
+                    Shape *s = assigned[r][c];
+                    int x_start = s->min_x;
+                    int y_start = s->min_y;
+                    int x_end = s->max_x;
+                    int y_end = s->max_y;
+
+                    int center_x = (x_start + x_end) / 2;
+                    int center_y = (y_start + y_end) / 2;
+
+                    // write r_c:center_x_center_y
+                    fprintf(f, "%d_%d:%d_%d\n", r, c, center_x, center_y);
+
+                    grid[r][c] =
+                        extract_sub_image(img, x_start, y_start, x_end, y_end);
                 }
-            fclose(f);
             }
+            fclose(f);
+        }
     }
 
     for (int r = 0; r < rows; r++)
@@ -1000,7 +1003,7 @@ Shape ***get_all_world(Shape **shapes)
         if (sorted_shapes[i]->has_been_removed != 0)
             continue;
 
-        //new word
+        // new word
         int word_capacity = 4;
         int word_count = 0;
         Shape **current_word = malloc(word_capacity * sizeof(Shape *));
@@ -1015,7 +1018,8 @@ Shape ***get_all_world(Shape **shapes)
         sorted_shapes[i]->has_been_removed = 1;
 
         // Fix the horizontal line
-        int reference_y = (sorted_shapes[i]->min_y + sorted_shapes[i]->max_y) / 2;
+        int reference_y =
+            (sorted_shapes[i]->min_y + sorted_shapes[i]->max_y) / 2;
         int reference_height = shape_height(sorted_shapes[i]);
 
         // Tolerance for vertical alignment
@@ -1042,7 +1046,8 @@ Shape ***get_all_world(Shape **shapes)
                 if (sorted_shapes[j]->has_been_removed != 0)
                     continue;
 
-                const int shape_y = (sorted_shapes[j]->min_y + sorted_shapes[j]->max_y) / 2;
+                const int shape_y =
+                    (sorted_shapes[j]->min_y + sorted_shapes[j]->max_y) / 2;
                 const int shape_min_x = sorted_shapes[j]->min_x;
 
                 if (abs(shape_y - reference_y) > vertical_tolerance)
@@ -1067,7 +1072,8 @@ Shape ***get_all_world(Shape **shapes)
 
                 if (spacing_count == 0)
                 {
-                    int avg_width = (shape_width(current_shape) + shape_width(closest)) / 2;
+                    int avg_width =
+                        (shape_width(current_shape) + shape_width(closest)) / 2;
 
                     if (actual_spacing < 0 || actual_spacing <= avg_width * 2.5)
                         accept = 1;
@@ -1102,7 +1108,8 @@ Shape ***get_all_world(Shape **shapes)
                     if (word_count >= word_capacity)
                     {
                         word_capacity *= 2;
-                        current_word = realloc(current_word, word_capacity * sizeof(Shape *));
+                        current_word = realloc(current_word,
+                                               word_capacity * sizeof(Shape *));
                         if (!current_word)
                         {
                             printf("Cannot realloc memory for word\n");
@@ -1127,7 +1134,8 @@ Shape ***get_all_world(Shape **shapes)
         qsort(current_word, word_count, sizeof(Shape *), compare_shape_x);
 
         // Null-terminate word array
-        current_word = realloc(current_word, (word_count + 1) * sizeof(Shape *));
+        current_word =
+            realloc(current_word, (word_count + 1) * sizeof(Shape *));
         current_word[word_count] = NULL;
 
         // Add word to words array

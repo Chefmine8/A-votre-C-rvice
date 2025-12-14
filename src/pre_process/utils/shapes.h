@@ -3,13 +3,14 @@
 #include <limits.h>
 #include <stdint.h>
 
-
 /* Forward declarations */
 typedef struct Shape Shape;
 typedef struct Image Image;
 typedef struct Pixel Pixel;
-typedef struct { int x, y; } Coord;
-
+typedef struct
+{
+    int x, y;
+} Coord;
 
 /**
  * @brief Represents a connected region (shape) in an image.
@@ -17,15 +18,17 @@ typedef struct { int x, y; } Coord;
  * Each Shape contains a dynamically allocated list of pixel pointers
  * that belong to the shape, as well as its geometric boundaries and state.
  */
-struct Shape{
-    Pixel **pixels; /**< Dynamic list of pointers to pixels belonging to the shape. */
-    int count; /**< Number of pixels in the shape. */
-    int max_x, max_y, min_x, min_y; /**< Bounding box coordinates of the shape. */
-    int capacity; /**< Current allocated capacity for pixels. */
-    int has_been_removed; /**< Flag indicating whether the shape has been removed from the image. */
+struct Shape
+{
+    Pixel **pixels; /**< Dynamic list of pointers to pixels belonging to the
+                       shape. */
+    int count;      /**< Number of pixels in the shape. */
+    int max_x, max_y, min_x,
+        min_y;            /**< Bounding box coordinates of the shape. */
+    int capacity;         /**< Current allocated capacity for pixels. */
+    int has_been_removed; /**< Flag indicating whether the shape has been
+                             removed from the image. */
 };
-
-
 
 /**
  * @brief Creates and allocates a new empty shape.
@@ -34,20 +37,18 @@ struct Shape{
  *
  * @return Pointer to the newly allocated Shape.
  */
- Shape* create_shape(void);
-
-
+Shape *create_shape(void);
 
 /**
  * @brief Adds a pixel to the specified shape.
  *
- * Expands the shape's pixel list dynamically if needed and updates its boundaries.
+ * Expands the shape's pixel list dynamically if needed and updates its
+ * boundaries.
  *
  * @param s Pointer to the shape to modify.
  * @param p Pointer to the pixel to add.
  */
 void shape_add_pixel(Shape *s, Pixel *p);
-
 
 /**
  * @brief Recolors all pixels belonging to a shape in the given image.
@@ -58,8 +59,8 @@ void shape_add_pixel(Shape *s, Pixel *p);
  * @param g Green component (0–255).
  * @param b Blue component (0–255).
  */
-void image_change_shape_color(Image *img, Shape *s, uint8_t r, uint8_t g, uint8_t b);
-
+void image_change_shape_color(Image *img, Shape *s, uint8_t r, uint8_t g,
+                              uint8_t b);
 
 /**
  * @brief Removes a specific shape from an image by setting its pixels to white.
@@ -80,13 +81,12 @@ void image_remove_shape(Image *img, Shape *s);
  */
 void image_add_shape(Image *img, Shape *s, uint8_t r, uint8_t g, uint8_t b);
 
-
 /**
-* @brief Computes the width of a shape.
-*
-* @param s Pointer to the shape.
-* @return The width (max_x - min_x + 1).
-*/
+ * @brief Computes the width of a shape.
+ *
+ * @param s Pointer to the shape.
+ * @return The width (max_x - min_x + 1).
+ */
 int shape_width(Shape *s);
 
 /**
@@ -132,7 +132,6 @@ double shape_density(Shape *s);
  * @return A NULL-terminated array of pointers to Shape structures.
  */
 
-
 /**
  * @brief Frees the memory allocated for a shape and its pixel list.
  *
@@ -140,9 +139,7 @@ double shape_density(Shape *s);
  */
 void free_shape(Shape *s);
 
-
 // --- shape detection --- //
-
 
 /**
  * @brief Detects and extracts all shapes from an image.
@@ -152,7 +149,7 @@ void free_shape(Shape *s);
  * @param img Pointer to the Image structure to analyze.
  * @return A NULL-terminated array of pointers to Shape structures.
  */
-Shape **get_all_shape(Image* img);
+Shape **get_all_shape(Image *img);
 
 /**
  * @brief Removes shapes marked as removed from the shape list.
@@ -184,7 +181,9 @@ void remove_small_shape(Image *img, Shape **shapes, int threshold);
  * @param iqr_factor Multiplier for the interquartile range threshold.
  * @param mean_factor Multiplier for the mean area threshold.
  */
-void remove_outliers_shape(Image *img, Shape **shapes, int low_percentile, int high_percentile, double iqr_factor, double mean_factor);
+void remove_outliers_shape(Image *img, Shape **shapes, int low_percentile,
+                           int high_percentile, double iqr_factor,
+                           double mean_factor);
 
 /**
  * @brief Removes shapes whose aspect ratios fall outside the given range.
@@ -194,7 +193,8 @@ void remove_outliers_shape(Image *img, Shape **shapes, int low_percentile, int h
  * @param min_ration Minimum aspect ratio allowed.
  * @param max_ratio Maximum aspect ratio allowed.
  */
-void remove_aspect_ration(Image *img, Shape **shapes, double min_ration, double max_ratio);
+void remove_aspect_ration(Image *img, Shape **shapes, double min_ration,
+                          double max_ratio);
 
 /**
  * @brief Merges shapes that are within a specified spacing of each other.

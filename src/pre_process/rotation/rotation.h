@@ -16,7 +16,8 @@
 Image *manual_rotate_image(const Image *src, double angle);
 
 /**
- * @brief Automatically determines the rotation angle of an image based on its content.
+ * @brief Automatically determines the rotation angle of an image based on its
+ * content.
  *
  * This function analyzes the image to find the optimal rotation angle
  *

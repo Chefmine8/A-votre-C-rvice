@@ -8,7 +8,8 @@ int *solv_rec(char **grid, char *word, int inc_x, int inc_y, int x, int y,
               int h, int w);
 
 struct coord *solv(char *w);
-struct coord {
+struct coord
+{
     int x_0;
     int y_0;
     int x_1;
