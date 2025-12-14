@@ -18,7 +18,7 @@ la pluis élevé du reseau et tu le met dans un fichier txt qui represente la gr
 */
 char* get_dir_data(char* identifiant)
 {
-    const char* partial_path = "../../resources/pre_process/output/";
+    const char* partial_path = "../ui/output/";
     char* id = identifiant;
     DIR *dir;
     struct dirent *entry;
@@ -94,7 +94,7 @@ void create_grid(char* id,struct neural_network* neural_net)
 {
     printf("\n\nGrid correction\n\n");
     // recup du chemin
-    char* partial_path = "../../resources/pre_process/output/";
+    char* partial_path = "../ui/output/";
     char* dir = get_dir_data(id);
     char* full_path = malloc(sizeof(char) * 300);   
     sprintf(full_path,"%s%s/",partial_path,dir);
@@ -149,7 +149,7 @@ void create_grid(char* id,struct neural_network* neural_net)
 
 char* get_word_letter(int n_word,int n_letter)
 {
-    const char* partial_path = "../../resources/pre_process/output/word_list";
+    const char* partial_path = "../ui/output/word_list";
     DIR *dir;
     struct dirent *entry;
     char image_search[512];
@@ -184,7 +184,7 @@ char* get_word_letter(int n_word,int n_letter)
 void create_word_list(char* id,struct neural_network* neural_net)
 {
     printf("\n\nCreation de la liste de mots\n\n");
-    char* partial_path = "../../resources/pre_process/output/";
+    char* partial_path = "../ui/output/";
     char* dir = id;
     char* full_path = malloc(sizeof(char) * 300);   
     sprintf(full_path,"%s%s/",partial_path,dir);
