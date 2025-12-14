@@ -69,7 +69,7 @@ void free_dataset()
 {
     for(int i = 0; i < 26; i++)
     {
-        for(int j = 0; j < 27; j++)
+        for(int j = 0; j < 570; j++)
         {
             free_image(DATASET[i][j]);
         }
@@ -87,18 +87,32 @@ Image* get_image(char *expected_output)
     return DATASET[row][col];
 }
 
-
-void zero_vector(double *v, int size)
-{
-    for (int i = 0; i < size; i++)
-        v[i] = 0.0;
+int single_train_cession( struct neural_network *neural_network, float learning_rate, int batch_size) {
+    int returned_value = 0;
+    for(int b = 0; b < batch_size && returned_value == 0; b++) {
+        char expected_output;
+        Image *img = get_image(&expected_output);
+        if(img != NULL) {
+            get_nn_input(img, neural_network->inputs);
+            returned_value = backprop_update_4(neural_network, expected_output, learning_rate);
+        }
+    }
+    return returned_value;
 }
 
-void zero_matrix(double **m, int rows, int cols)
-{
-    for (int i = 0; i < rows; i++)
-        for (int j = 0; j < cols; j++)
-            m[i][j] = 0.0;
+int all_dataset_train_session(struct neural_network *neural_network, float learning_rate) {
+    int returned_value = 0;
+    for(int i = 0; i < 26 && returned_value == 0; i++) {
+        for(int j = 0; j < 570 && returned_value == 0; j++) {
+            char expected_output = i + 'A';
+            Image *img = DATASET[i][j];
+            if(img != NULL){
+                get_nn_input(img, neural_network->inputs);
+                returned_value = backprop_update_4(neural_network, expected_output, learning_rate);
+            }
+        }
+    }
+    return returned_value;
 }
 
 
@@ -121,6 +135,7 @@ int test_neural_network(struct neural_network *neural_network) {
             DIR *letter = opendir( path_w_letter );
             if (letter == NULL) errx(EXIT_FAILURE, "letter is null\n");
 
+            printf("Testing letter %s\n", letter_char);
             while ((entry2 = readdir(letter)) != NULL)
             {
                 char *file_name = entry2->d_name;
@@ -138,9 +153,9 @@ int test_neural_network(struct neural_network *neural_network) {
 
 
                     neural_network_calculate_output(neural_network);
-                    printf("\n");
+                    //printf("\n");
                     char output = get_neural_network_output(neural_network);
-                    printf("Expected: %s, Got: %c\n", letter_char, output);
+                    printf("%c ", output);
                     total_success += output == letter_char[0];
 
 
@@ -150,7 +165,7 @@ int test_neural_network(struct neural_network *neural_network) {
                 }
 
             }
-
+            printf("\n");
 			closedir(letter);
         }
         // free(letter_char);
@@ -275,13 +290,14 @@ void train_nn(
 int main()
 {
     load_dataset();
-    int nb_sessions = 100;
-    int batch_size  = 1;
+    int nb_sessions = 1;
+    int batch_size  = 10;
 
     float learning_rate = 0.1;
 
-    int arr[] = {28*28, 128, 26};
-    struct neural_network *neural_network = create_neural_network(3, arr);
+    int arr[] = {28*28, layer_1, layer_2, 26};
+    struct neural_network *neural_network = create_neural_network(4, arr);
+    //test_neural_network(neural_network);
     int success = 0;
     int returned_value = 0;
 
@@ -290,7 +306,9 @@ int main()
     for(int i = 0; i < nb_sessions && returned_value == 0; i++) {
         printf("i'm in\n");
 
-        //returned_value = all_dataset_train_session(neural_network, learning_rate); //, batch_size);
+    for(int i = 0; i < nb_sessions && returned_value == 0; i++) {
+        // returned_value = all_dataset_train_session(neural_network, learning_rate); //, batch_size);
+        returned_value = single_train_cession(neural_network, learning_rate, batch_size);
         success = test_neural_network(neural_network);
         total_success += success;
         printf(" Average nb of success : %f\n", ((float)total_success) / ((float)i + 1));

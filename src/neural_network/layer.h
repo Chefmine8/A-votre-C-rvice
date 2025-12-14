@@ -50,6 +50,7 @@ struct layer
      *  output[layer_size]
      */
     float *outputs;
+    float *z;
 
     bool is_output_layer;
 };
