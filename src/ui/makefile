@@ -11,7 +11,10 @@ SRC = ui.c \
       ../pre_process/grid/grid_detection.c \
       ../pre_process/rotation/rotation.c \
       ../pre_process/scale.c \
-	  ../pre_process/utils/shapes.c
+  ../pre_process/utils/shapes.c \
+  ../link/link_cells_to_nn.c \
+  ../neural_network/neural_network.c \
+  ../neural_network/layer.c
 
 OBJ = $(SRC:.c=.o)
 

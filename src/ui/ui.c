@@ -80,13 +80,59 @@ void get_scaled_size(int orig_width, int orig_height, int max_width, int max_hei
     }
 }
 
+/* Sauvegarde img.txt. */
+void save_file(GtkWidget *fenetre, gpointer user_data)
+{
+    GtkTextBuffer *buffer = GTK_TEXT_BUFFER(user_data);
+    GtkTextIter start, end;
+    gchar *texte;
+
+    gtk_text_buffer_get_start_iter(buffer, &start);
+    gtk_text_buffer_get_end_iter(buffer, &end);
+
+    texte = gtk_text_buffer_get_text(buffer, &start, &end, FALSE);
+
+    g_file_set_contents("img", texte, -1, NULL);
+
+    g_free(texte);
+}
+
+
 /* Fonction qui transmet au reseau de neurone. */
 void nn_transf(GtkButton *button, gpointer user_data) {
-    GtkEntry *entry = GTK_ENTRY(user_data);
+    int nb_arr = 3;
+    int arr[3] = {784,784,26};
+    struct neural_network *nn = create_neural_network(nb_arr,arr);
+    create_grid("img",nn);
+    create_word_list("word_list",nn);
+    free_neural_network(nn);
 
-    GtkWidget *window = gtk_widget_get_toplevel(GTK_WIDGET(button));
+    GtkWidget *fenetre;
+    GtkWidget *scroll;
+    GtkWidget *textview;
+    GtkTextBuffer *buffer;
 
-    rotate_image(window, entry, 0.0);
+    fenetre = gtk_window_new(GTK_WINDOW_TOPLEVEL);
+    gtk_window_set_title(GTK_WINDOW(fenetre), "Éditeur de texte");
+    gtk_window_set_default_size(GTK_WINDOW(fenetre), 600, 400);
+
+    scroll = gtk_scrolled_window_new(NULL, NULL);
+    gtk_container_add(GTK_CONTAINER(fenetre), scroll);
+
+    textview = gtk_text_view_new();
+    gtk_container_add(GTK_CONTAINER(scroll), textview);
+
+    buffer = gtk_text_view_get_buffer(GTK_TEXT_VIEW(textview));
+
+    gchar *contenu = NULL;
+    gsize longueur;
+
+    if (g_file_get_contents("img", &contenu, &longueur, NULL)) {
+        gtk_text_buffer_set_text(buffer, contenu, -1);
+        g_free(contenu);
+    }
+    g_signal_connect(fenetre, "destroy", G_CALLBACK(save_file), buffer);
+    gtk_widget_show_all(fenetre);
 }
 
 /* Fonction qui gére le pré processing */
@@ -403,7 +449,7 @@ void rotate_image(GtkWidget *window, GtkEntry *entry, double manual_angle)
 
     /* Bouton Transmettre au réseau de neuronne */
     GtkWidget *neural_button = gtk_button_new_with_label("Transmettre au réseau");
-    //g_signal_connect(manual_button, "clicked", G_CALLBACK(manual_rotation_clicked), window);
+    g_signal_connect(neural_button, "clicked", G_CALLBACK(nn_transf), window);
 
     GtkWidget *vbox_display = gtk_box_new(GTK_ORIENTATION_VERTICAL, 6);
     gtk_box_pack_start(GTK_BOX(vbox_display), hbox, TRUE, TRUE, 0);
