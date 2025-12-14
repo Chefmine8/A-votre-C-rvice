@@ -314,7 +314,7 @@ int backprop_update_4(struct neural_network *neural_network, char expected_outpu
 
 void export_neural_network(struct neural_network *neural_network, float learning_rate, int batch_size, int nb_sessions, int success)
 {
-    FILE *file = fopen("exported_neural_network.nn", "w");
+    FILE *file = fopen("exported_neural_network.nnn", "w");
 
     fprintf(file, "Learning Rate: %f\t| Batch Size: %d\t| Number of sessions : %d\t| Number of Success: %d\n##############################\n", learning_rate, batch_size, nb_sessions, success);
 
@@ -344,6 +344,36 @@ void export_neural_network(struct neural_network *neural_network, float learning
              fprintf(file, "\n");
         }
          fprintf(file, "\n");
+    }
+
+    fclose(file);
+}
+
+void import_neural_network(struct neural_network *neural_network, const char *filename)
+{
+    FILE *file = fopen(filename, "r");
+
+    char str[1000000];
+    int is_bias = 0;
+    int is_weights = 0;
+    int l = 0;
+    while(fgets(str, 1000000, file) != NULL)
+    {
+        if(is_bias)
+        {
+            for(int i = 0; str[i] != '\0'; i++)
+            {
+                 char *bias = strtok(&str[i],  "\t ");
+                 while(bias != NULL)
+                 {
+                      neural_network->layers[is_bias - 1]->biases[i] = atof(bias);
+                      bias = strtok(NULL, "\t");
+                 }
+            }
+        }
+
+        is_bias str[0] == 'B';
+        is_weights str[0] == 'W';
     }
 
     fclose(file);

@@ -53,11 +53,14 @@ void load_dataset()
                     snprintf(path_to_file, sizeof(path_to_file), "%s%s%s", path_w_letter, "/", file_name);
 
                     Image *img = load_image(path_to_file);
-                    grayscale_image(img);
-                    Image *tmp = sauvola(img, 12, 128, 0.07);
-                    free_image(img);
-                    img = tmp;
-                    EXPECTED_OUTPUTS[row] = letter_char[0];
+                    if(img != NULL){
+                        grayscale_image(img);
+                        Image *tmp = sauvola(img, 12, 128, 0.07);
+                        free_image(img);
+                        img = tmp;
+                        EXPECTED_OUTPUTS[row] = letter_char[0];
+                    }
+
                     printf("%c\n", EXPECTED_OUTPUTS[row]);
                     print_image(img);
 
@@ -206,7 +209,7 @@ int test_neural_network(struct neural_network *neural_network) {
 
 int main()
 {
-    load_dataset();
+    //load_dataset();
     int nb_sessions = 1000;
     int batch_size  = 1;
 
@@ -214,11 +217,13 @@ int main()
     int layer_1 = 50;
     int layer_2 = 40;
 
-    int arr[] = {28*28, layer_1, layer_2, 26};
+    int arr[] = {28*28, 50, 40, 26};
 
     int success = 0;
 
     struct neural_network *neural_network = create_neural_network(4, arr);
+    import_neural_network(neural_network, "exported_neural_network.nn");
+    export_neural_network(neural_network, 0, 0, 0, 0);
     /*
     int max_success = 78;
     for(int i = 0; i < 10000; i++) {
@@ -255,6 +260,6 @@ int main()
 
     free_neural_network(neural_network);
 
-    free_dataset();
+    //free_dataset();
 
 }
