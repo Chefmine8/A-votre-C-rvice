@@ -6,7 +6,8 @@ SRC = importTrainingData.c \
       ../core/image.c \
       ../neural_network/layer.c \
       ../neural_network/neural_network.c \
-      ../pre_process/scale.c
+      ../pre_process/scale.c \
+      ../pre_process/grayscale.c
 
 OBJ = $(SRC:.c=.o)
 

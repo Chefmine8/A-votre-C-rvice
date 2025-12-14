@@ -35,7 +35,7 @@ struct layer *create_layer(const int prev_layer_size, const int layer_size)
 
     res->weights = malloc(layer_size * sizeof(float *));
 
-
+    float limit = sqrtf(2.0 / (prev_layer_size + layer_size));
     for (int i = 0; i < layer_size; i++)
     {
         res->weights[i] = malloc(prev_layer_size * sizeof(float));
@@ -45,10 +45,10 @@ struct layer *create_layer(const int prev_layer_size, const int layer_size)
         }
         for (int j = 0; j < prev_layer_size; j++)
         {
-            res->weights[i][j] = ((float)rand() / (float)RAND_MAX * 2.0 - 1.0) * 1.0/sqrtf(2.0/(layer_size));
-            if(res->weights[i][j] < -1.0 || res->weights[i][j] > 1.0) {
-                printf("weight[%d][%d]=%f\n", i, j, res->weights[i][j]);
-            }
+            res->weights[i][j] = ((float)rand() /(float)RAND_MAX * 2.0 - 1.0); // ((double)rand() / RAND_MAX) * 2 * limit - limit; //
+            //if(res->weights[i][j] < -1.0 || res->weights[i][j] > 1.0) {
+            //    printf("weight[%d][%d]=%f\n", i, j, res->weights[i][j]);
+            //}
         }
     }
 
@@ -184,20 +184,18 @@ void layer_calculate_output(const struct layer *layer)
     float max = -10000;
     for (int i = 0; i < layer->layer_size; i++)
     {
-        float output = 0;
+        float output = 0.0;
         for (int j = 0; j < layer->prev_layer_size; j++)
         {
 
 
             output += (*(layer->inputs))[j] * layer->weights[i][j];
+            //printf("layer[%d]\tinput[%d]=%f\t*\tweight[%d][%d]=%f\t=\t%f\t-> output=%f\n", layer->layer_size, j, (*(layer->inputs))[j], i, j, layer->weights[i][j], (*(layer->inputs))[j] * layer->weights[i][j], output);
             if(output < -1e10 || output > 1e10 || isnanf(output) || isinff(output) ) {
-                printf("output is too big at ((*layer->inputs)[%d]=%f) * (weight[%d][%d]=%f) = %f %f\n", layer->layer_size, i, (*(layer->inputs))[j], i, j, layer->weights[i][j], (*(layer->inputs))[i] < 0.00001 ? 0 : (*(layer->inputs))[i] * layer->weights[i][j], output);
-            }
-            if(isnanf(output) || isinff(output) ) {
-
-                errx(EXIT_FAILURE, "layer nb %d : output is nan at ((*layer->inputs)[%d]=%f) * (weight[%d][%d]=%f) = %f %f\n", layer->layer_size, i, (*(layer->inputs))[j], i, j, layer->weights[i][j], (*(layer->inputs))[i] < 0.00001 ? 0 : (*(layer->inputs))[i] * layer->weights[i][j], output);
+                errx(EXIT_FAILURE, "layer nb %d : output is nan at ((*layer->inputs)[%d]=%f) * (weight[%d][%d]=%f) = %f %f\n", layer->layer_size, i, (*(layer->inputs))[j], i, j, layer->weights[i][j], (*(layer->inputs))[j] < 0.00001 ? 0 : (*(layer->inputs))[j] * layer->weights[i][j], output);
             }
         }
+        //printf("output=%f\tbias=%f\n", output, layer->biases[i]);
         layer->z[i] = output + layer->biases[i];
         //printf("max=%f layer->z[%d]=%f\n", max, i, layer->z[i]);
         if (max < layer->z[i])
